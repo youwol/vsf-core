@@ -35,12 +35,13 @@ template = Template(
                 **load_dependencies,
                 # lazy loaded on demand (e.g. for default view of data)
                 "@youwol/fv-tree": "^0.2.3",
+                # `ts-essentials` is used to help the `Immutable` type definition
+                # It is not in dev-dependencies as we want it to be installed from consuming projects
+                "ts-essentials": "^9.3.1",
             },
             includedInBundle={},
         ),
         devTime={
-            # `ts-essentials` is used to help the `Immutable` type definition
-            "ts-essentials": "^9.3.1",
             # `conditional-type-checks` is used to realize 'compile time' tests on type definitions
             "conditional-type-checks": "^1.0.4",
             # `@youwol/flux-view` is used for type declarations
