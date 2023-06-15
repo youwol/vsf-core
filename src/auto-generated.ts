@@ -4,7 +4,8 @@ const runTimeDependencies = {
         "rxjs": "^6.5.5",
         "@youwol/cdn-client": "^2.0.4",
         "@youwol/logging": "^0.1.1",
-        "@youwol/fv-tree": "^0.2.3"
+        "@youwol/fv-tree": "^0.2.3",
+        "ts-essentials": "^9.3.1"
     },
     "includedInBundle": {}
 }
@@ -28,6 +29,11 @@ const externals = {
         "commonjs": "@youwol/fv-tree",
         "commonjs2": "@youwol/fv-tree",
         "root": "@youwol/fv-tree_APIv02"
+    },
+    "ts-essentials": {
+        "commonjs": "ts-essentials",
+        "commonjs2": "ts-essentials",
+        "root": "ts-essentials_APIv9"
     },
     "rxjs/operators": {
         "commonjs": "rxjs/operators",
@@ -54,6 +60,10 @@ const exportedSymbols = {
     "@youwol/fv-tree": {
         "apiKey": "02",
         "exportedSymbol": "@youwol/fv-tree"
+    },
+    "ts-essentials": {
+        "apiKey": "9",
+        "exportedSymbol": "ts-essentials"
     }
 }
 
