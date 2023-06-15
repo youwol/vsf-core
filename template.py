@@ -46,10 +46,9 @@ template = Template(
             "conditional-type-checks": "^1.0.4",
             # `@youwol/flux-view` is used for type declarations
             "@youwol/flux-view": "^1.0.3",
-            # three is a dev dependencies for testing, it is included here to work properly as external
-            # for the auxiliary module test-sphere-module.
-            # py-youwol & pipeline-ts should be improved to handle the case of external dev-dependencies.
+            # three is a dev dependencies for testing & needed to generate documentation.
             "three": "^0.152.0",
+            "@types/three": "^0.152.0",
         },
     ),
     userGuide=True,
