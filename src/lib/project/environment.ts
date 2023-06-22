@@ -247,16 +247,34 @@ export class Environment {
                         const deps = factory.declaration.dependencies
                         return deps && Object.keys(deps).length > 0
                     })
+                    .reduce(
+                        (acc, [factory]) => {
+                            const dependencies =
+                                factory.declaration.dependencies
+                            return {
+                                modules: [
+                                    ...acc.modules,
+                                    ...(dependencies.modules || []),
+                                ],
+                                scripts: [
+                                    ...acc.scripts,
+                                    ...(dependencies.scripts || []),
+                                ],
+                                css: [...acc.css, ...(dependencies.css || [])],
+                            }
+                        },
+                        { modules: [], scripts: [], css: [] },
+                    )
 
                 ctx.info('Dependencies installation', {
                     modules,
                     withDependencies,
                 })
-                await Promise.all(
-                    withDependencies.map(([factory]) =>
-                        install(asMutable(factory.declaration.dependencies)),
-                    ),
-                )
+                await install({
+                    modules: [...new Set(withDependencies.modules)],
+                    scripts: [...new Set(withDependencies.scripts)],
+                    css: [...new Set(withDependencies.css)],
+                })
             },
         )
     }
