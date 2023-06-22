@@ -51,7 +51,7 @@ template = Template(
             "@types/three": "^0.152.0",
         },
     ),
-    userGuide=True,
+    userGuide=False,
     bundles=Bundles(
         mainModule=MainModule(
             entryFile="./index.ts", loadDependencies=list(load_dependencies.keys())
