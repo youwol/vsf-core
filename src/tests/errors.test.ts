@@ -1,6 +1,8 @@
 import { from } from 'rxjs'
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { mergeMap } from 'rxjs/operators'
+
+setupCdnHttpConnection()
 
 console.error = () => {
     /*do not display expected errors*/

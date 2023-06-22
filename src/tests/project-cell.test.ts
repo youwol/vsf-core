@@ -1,5 +1,5 @@
 import { Attributes } from '..'
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import {
     BatchCells,
     CellTrait,
@@ -9,6 +9,7 @@ import {
 } from '../lib/project'
 import { BehaviorSubject, from } from 'rxjs'
 import { mergeMap, reduce } from 'rxjs/operators'
+setupCdnHttpConnection()
 
 test('JsCell no view', async () => {
     let project = emptyProject()

@@ -1,4 +1,5 @@
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
+setupCdnHttpConnection()
 
 test('import', async () => {
     let project = emptyProject()

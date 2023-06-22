@@ -1,5 +1,6 @@
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
+setupCdnHttpConnection()
 
 test('one module', async () => {
     let project = emptyProject()

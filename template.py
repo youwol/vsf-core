@@ -49,6 +49,7 @@ template = Template(
             # three is a dev dependencies for testing & needed to generate documentation.
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
+            "@youwol/http-primitives": "^0.1.2",
         },
     ),
     userGuide=False,
@@ -57,6 +58,7 @@ template = Template(
             entryFile="./index.ts", loadDependencies=list(load_dependencies.keys())
         )
     ),
+    testConfig="https://github.com/youwol/integration-tests-conf",
 )
 
 generate_template(template)
