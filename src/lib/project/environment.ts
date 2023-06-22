@@ -1,5 +1,4 @@
 import {
-    asMutable,
     DocumentationTrait,
     Immutable,
     Immutables,
@@ -143,22 +142,20 @@ export class Environment {
     /**
      * Import a toolbox.
      *
-     * @param toolboxName name of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
+     * @param toolboxIds name of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
      */
-    async import(toolboxName: string): Promise<Environment> {
-        let toolbox = this.stdToolboxes.find((tb) => tb.name == toolboxName)
-        if (!toolbox) {
-            await install({ modules: [toolboxName] })
-            const name = toolboxName.split('#')[0]
-            toolbox = globalThis[name].toolbox()
-        }
-        /**
-         * for now only standard toolboxes are supported
-         */
+    async import(toolboxIds: string[]): Promise<Environment> {
+        const installed = this.toolboxes.map((tb) => tb.uid)
+        const toInstall = toolboxIds.filter((tbId) => !installed.includes(tbId))
+        await install({ modules: toInstall })
+        const toolboxes = toolboxIds
+            .filter((id) => assertModuleIsToolbox(id))
+            .map((id) => globalThis[id].toolbox())
+
         return Promise.resolve(
             new Environment({
                 ...this,
-                toolboxes: [...this.toolboxes, toolbox],
+                toolboxes: [...this.toolboxes, ...toolboxes],
             }),
         )
     }
@@ -313,4 +310,20 @@ export class Environment {
         }
         return moduleFactory
     }
+}
+
+function assertModuleIsToolbox(moduleId) {
+    if (!globalThis[moduleId]) {
+        console.error(
+            `The js module of toolbox ${moduleId} did not expose global symbol ${moduleId}`,
+        )
+        return false
+    }
+    if (!globalThis[moduleId].toolbox) {
+        console.error(
+            `The js module of toolbox ${moduleId} did not expose a function 'toolbox()'`,
+        )
+        return false
+    }
+    return true
 }

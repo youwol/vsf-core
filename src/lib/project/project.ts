@@ -191,12 +191,10 @@ export class ProjectState {
     /**
      * Import some toolboxes in the environment.
      *
-     * @param toolboxIds UIDs of the toolbox
+     * @param toolboxIds UIDs of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
      */
     async import(...toolboxIds: string[]) {
-        const newEnv = await toolboxIds.reduce(async (acc, e) => {
-            return (await acc).import(e)
-        }, Promise.resolve(this.environment))
+        const newEnv = await this.environment.import(toolboxIds)
 
         return new ProjectState({ ...this, environment: newEnv })
     }
