@@ -22,8 +22,9 @@ import {
     Schema,
     UidTrait,
 } from '..'
-import { macroInstance } from './macro'
+import { defaultMacroConfig, macroInstance } from './macro'
 import { ProjectSummaryView } from './views'
+import { WorkersPoolModel } from './workers-pool.models'
 
 export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
 
@@ -191,12 +192,10 @@ export class ProjectState {
     /**
      * Import some toolboxes in the environment.
      *
-     * @param toolboxIds UIDs of the toolbox
+     * @param toolboxIds UIDs of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
      */
     async import(...toolboxIds: string[]) {
-        const newEnv = await toolboxIds.reduce(async (acc, e) => {
-            return (await acc).import(e)
-        }, Promise.resolve(this.environment))
+        const newEnv = await this.environment.import(toolboxIds)
 
         return new ProjectState({ ...this, environment: newEnv })
     }
@@ -325,9 +324,16 @@ export class ProjectState {
         },
     ) {
         const macro = this.macros.find((m) => m.uid == macroUid)
+        const configuration = {
+            schema: {
+                ...defaultMacroConfig.schema,
+                ...definition.configuration.schema,
+            },
+        }
         const newMacro: MacroModel = {
             ...macro,
             ...definition,
+            configuration,
             typeId: macroUid,
             toolboxId: ProjectState.macrosToolbox,
             inputs: definition.inputs.map((inputStr) =>
@@ -417,6 +423,16 @@ export class ProjectState {
         return data.reduce((acc, e) => {
             return acc.addLayer(e)
         }, this)
+    }
+
+    /**
+     * Add a worker pool to the project.
+     *
+     * @param pool worker pool characteristics
+     */
+    async addWorkerPool(pool: WorkersPoolModel) {
+        const newEnv = await this.environment.addWorkersPool(pool)
+        return new ProjectState({ ...this, environment: newEnv })
     }
 
     /**

@@ -1,8 +1,10 @@
 import { mergeMessagesContext } from '../lib/modules'
 import { forkJoin, from } from 'rxjs'
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { MeshStandardMaterial } from 'three'
 import { mergeMap, take } from 'rxjs/operators'
+
+setupCdnHttpConnection()
 
 test('merge context message', () => {
     const merged = mergeMessagesContext(

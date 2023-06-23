@@ -1,14 +1,24 @@
 import { MacroModel, ModuleModel } from './workflow'
 import { ImplementationTrait, mergeMessagesContext, Module } from '../modules'
-import { extractConfigWith, Immutables, Modules } from '..'
+import { extractConfigWith, Immutables, Modules, Schema } from '..'
 import { InstancePool } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './macro-workers'
-
+import * as Attributes from '../common/configurations/attributes'
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
+}
+
+export type MacroSchema = {
+    workersPoolId: Attributes.String
+} & Schema
+
+export const defaultMacroConfig = {
+    schema: {
+        workersPoolId: new Attributes.String({ value: '' }),
+    },
 }
 
 export function createMacroInputs(macro: MacroModel) {
@@ -23,13 +33,17 @@ export function createMacroInputs(macro: MacroModel) {
     }, {})
 }
 
-export function createChart({ macro, dynamicConfig }, context = NoContext) {
+export function createChart(
+    {
+        macro,
+        dynamicConfig,
+    }: { macro: MacroModel; dynamicConfig: { [_k: string]: unknown } },
+    context = NoContext,
+) {
     return context.withChild('Create chart deployment model', (ctx) => {
         const configInstance = extractConfigWith(
             {
-                configuration: macro.configuration || {
-                    schema: {},
-                },
+                configuration: macro.configuration || defaultMacroConfig,
                 values: dynamicConfig,
             },
             ctx,
@@ -78,24 +92,36 @@ export function macroInstance(macro: MacroModel): Module<ImplementationTrait> {
                 { macro, dynamicConfig: fwdParams.configurationInstance },
                 ctx,
             )
-
-            return macro.workersPool
-                ? deployMacroInWorker(
-                      {
-                          macro,
-                          chart,
-                          fwdParams,
-                      },
-                      ctx,
-                  )
-                : deployMacroInMainThread(
-                      {
-                          macro,
-                          chart,
-                          fwdParams,
-                      },
-                      ctx,
-                  )
+            const wpId = chart.metadata.configInstance.workersPoolId
+            if (chart.metadata.configInstance.workersPoolId == '') {
+                return deployMacroInMainThread(
+                    {
+                        macro,
+                        chart,
+                        fwdParams,
+                    },
+                    ctx,
+                )
+            }
+            const workersPool = fwdParams.environment.workersPools.find(
+                (wp) => {
+                    return wp.model.id == wpId
+                },
+            )
+            if (!workersPool) {
+                throw Error(
+                    `Worker pool '${wpId}' not found to deploy macro '${macro.typeId}' with id '${macro.uid}'`,
+                )
+            }
+            return deployMacroInWorker(
+                {
+                    macro,
+                    chart,
+                    workersPool: workersPool.instance,
+                    fwdParams,
+                },
+                ctx,
+            )
         },
     })
 }

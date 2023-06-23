@@ -2,39 +2,30 @@ import { Chart, InstancePool } from './instance-pool'
 import { NoContext } from '@youwol/logging'
 import { ProjectState } from './project'
 import { MacroModel } from './workflow'
-import { Implementation, ImplementationTrait } from '../modules'
+import { ForwardArgs, Implementation, ImplementationTrait } from '../modules'
 import { filter, map, shareReplay, take, tap } from 'rxjs/operators'
 import { Subject } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { createMacroInputs } from './macro'
+import { Immutable } from '../common'
+import * as CdnClient from '@youwol/cdn-client'
 
 export async function deployMacroInWorker(
     {
         macro,
         chart,
+        workersPool,
         fwdParams,
     }: {
         macro: MacroModel
         chart: Chart
-        fwdParams
+        workersPool: Immutable<WorkersPoolTypes.WorkersPool>
+        fwdParams: ForwardArgs
     },
     context = NoContext,
 ): Promise<ImplementationTrait> {
     return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
-        const wp = await fwdParams.environment.getWorkersPool(
-            {
-                id: macro.uid,
-                config: macro.workersPool,
-                dependencies: {
-                    modules: ['@youwol/vsf-core#^0.1.0'],
-                    aliases: {
-                        vsfCore: '@youwol/vsf-core',
-                    },
-                },
-            },
-            ctx,
-        )
-        ctx.info('Workers pool initialized', wp)
+        ctx.info('Workers pool', workersPool)
         const inputs = createMacroInputs(macro)
 
         const outputs$ = macro.outputs.map(() => new Subject())
@@ -59,7 +50,7 @@ export async function deployMacroInWorker(
             fwdParams,
         )
         return await deployInstancePoolInWorker(
-            { wp, macro, chart, outputs$, implementation },
+            { workersPool, macro, chart, outputs$, implementation },
             ctx,
         )
     })
@@ -67,13 +58,13 @@ export async function deployMacroInWorker(
 
 async function deployInstancePoolInWorker(
     {
-        wp,
+        workersPool,
         macro,
         chart,
         outputs$,
         implementation,
     }: {
-        wp: WorkersPoolTypes.WorkersPool
+        workersPool: Immutable<WorkersPoolTypes.WorkersPool>
         macro: MacroModel
         chart: Chart
         outputs$: Subject<unknown>[]
@@ -84,7 +75,7 @@ async function deployInstancePoolInWorker(
     return await context.withChildAsync(
         'install workflow in worker',
         async (ctxInner) => {
-            const instancePool$ = wp.schedule({
+            const instancePool$ = workersPool.schedule({
                 title: 'deploy chart in worker',
                 entryPoint: deployInstancePoolWorker,
                 args: {
@@ -121,7 +112,7 @@ async function deployInstancePoolInWorker(
                 tap(() => {
                     ctxInner.info(
                         'Workers pool ready: instancePool listening',
-                        wp,
+                        workersPool,
                     )
                 }),
                 shareReplay({ bufferSize: 1, refCount: true }),
@@ -142,7 +133,7 @@ async function deployInstancePoolInWorker(
                     .pipe(take(1))
                     .subscribe(() => {
                         console.log('Stop signal')
-                        wp.sendData({
+                        workersPool.sendData({
                             taskId: data.taskId,
                             data: { kind: 'StopSignal' },
                         })
@@ -153,7 +144,7 @@ async function deployInstancePoolInWorker(
                         i
                     ]
                     return inputSlot.preparedMessage$.subscribe((message) => {
-                        wp.sendData({
+                        workersPool.sendData({
                             taskId: data.taskId,
                             data: {
                                 kind: 'InputMessage',
@@ -187,6 +178,7 @@ async function deployInstancePoolWorker({
      *
      */
     const vsfCore: VsfCore = workerScope.vsfCore
+    const cdn: typeof CdnClient = workerScope.CDN
     const chart = args.chart
     const uid = args.uid
     const rxjs = workerScope.rxjs
@@ -216,6 +208,13 @@ async function deployInstancePoolWorker({
     })
 
     context.info(`${workerId}: instance pool created (${uid})`)
+    const cdnMonitoring = cdn.monitoring()
+    context.sendData({
+        step: 'Runtime',
+        exportedSymbols: cdnMonitoring.exportedSymbols,
+        importedBundles: cdnMonitoring.importedBundles,
+        latestVersion: cdnMonitoring.latestVersion,
+    })
 
     globalThis[`macro_${uid}`] = {
         instancePool,

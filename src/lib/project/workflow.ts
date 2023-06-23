@@ -9,6 +9,7 @@ import {
 } from './..'
 import { uuidv4, Message, ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
+import { MacroSchema } from './macro'
 
 /**
  * Layers specifies a hierarchical organization of a workflow.
@@ -195,16 +196,12 @@ export type MacroApi = {
         slotId: number
         moduleId: string
     }[]
-    workersPool?: {
-        startAt?: number
-        stretchTo?: number
-    }
     html: (instance: ImplementationTrait, config: unknown) => VirtualDOM
 }
 /**
  * Specification of a macro for latter instantiation.
  */
 export type MacroModel = WorkflowModel &
-    Partial<ConfigurableTrait<Schema>> &
+    Partial<ConfigurableTrait<MacroSchema>> &
     Partial<MacroApi> &
     ToolboxObjectTrait

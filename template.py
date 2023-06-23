@@ -18,7 +18,7 @@ pkg_json = parse_json(folder_path / "package.json")
 
 load_dependencies = {
     "rxjs": "^6.5.5",
-    "@youwol/cdn-client": "^2.0.4",
+    "@youwol/cdn-client": "^2.0.5",
     "@youwol/logging": "^0.1.1",
 }
 
@@ -49,14 +49,16 @@ template = Template(
             # three is a dev dependencies for testing & needed to generate documentation.
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
+            "@youwol/http-primitives": "^0.1.2",
         },
     ),
-    userGuide=True,
+    userGuide=False,
     bundles=Bundles(
         mainModule=MainModule(
             entryFile="./index.ts", loadDependencies=list(load_dependencies.keys())
         )
     ),
+    testConfig="https://github.com/youwol/integration-tests-conf",
 )
 
 generate_template(template)

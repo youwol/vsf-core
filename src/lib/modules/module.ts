@@ -527,8 +527,6 @@ export class Implementation<
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- A type A should be assignable to Immutable<A>
         // @ts-ignore
         this.inputSlots = inputSlots
-        //inputSlots:                {[Property in keyof TInputs]: IOs.InputSlot<Modules.GetGenericInput<TInputs[Property]>>}
-        //this.inputSlots: Immutable<{[Property in keyof TInputs]: IOs.InputSlot<Modules.GetGenericInput<TInputs[Property]>>}>
         this.outputSlots = outputSlots
         context.end()
     }

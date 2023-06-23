@@ -1130,10 +1130,10 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@youwol/cdn-client@^2.0.4":
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/@youwol/cdn-client/-/cdn-client-2.0.4.tgz#e09318845ff38d7a83114104fadd0e3b2f83f23d"
-  integrity sha512-GlJ+TZzjvL7JNwuT2jTos2YLrP4jRFqgScV9ctOOWagSqZvbwnxAcMC6YSVprd3bZdQ2nLGZ1u9R5P9OTeFZvg==
+"@youwol/cdn-client@^2.0.5":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@youwol/cdn-client/-/cdn-client-2.0.5.tgz#36efbbac119dd6b09542d6ad024f9a6c1ea79049"
+  integrity sha512-OYNaX5kBVLR1NWtEifvR7PnDH8A+IpeFJzprLcv7u8HLBf5qTm5wLgPxLrPQH0mBYu1bWvG0Xc8VFBeUV0SWhg==
   dependencies:
     "@youwol/flux-view" "^1.1.0"
     rxjs "^6.5.5"
@@ -1175,6 +1175,13 @@
   integrity sha512-6BgLcOavufjl3VbonUW07I+gt/zEFZLaTfmMAxixFVCokK0vWb5h1skahskgPfkU4IuqEBQ6YPok6uoSaUExZQ==
   dependencies:
     "@youwol/flux-view" "^1.0.3"
+    rxjs "^6.5.5"
+
+"@youwol/http-primitives@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@youwol/http-primitives/-/http-primitives-0.1.2.tgz#0ac9e0d660508157dd777fd6c8f83fc4bca9d540"
+  integrity sha512-wtSarBFx1qf/tOvcX9eAj3PsT4LEqI9IbD+mUf2xKvH4XKkrIUaAIdcIX9rg5eFKYVeQAi3RlTyTQyQz14/X+A==
+  dependencies:
     rxjs "^6.5.5"
 
 "@youwol/jest-preset@0.1.0":

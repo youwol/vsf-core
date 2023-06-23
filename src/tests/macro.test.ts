@@ -1,8 +1,9 @@
-import { emptyProject } from './test.utils'
+import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { from, Observable, of } from 'rxjs'
 import { map, mergeMap, tap } from 'rxjs/operators'
 import { Attributes } from '../lib'
 import { ProjectState } from '../lib/project'
+setupCdnHttpConnection()
 
 test('add a macro - no instance', async () => {
     let project = emptyProject()

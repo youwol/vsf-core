@@ -1,5 +1,4 @@
 import {
-    asMutable,
     DocumentationTrait,
     Immutable,
     Immutables,
@@ -20,12 +19,11 @@ import * as vsf from '..'
 import { ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
 import { defaultViewsFactory } from './views'
-import {
-    install,
-    installWorkersPoolModule,
-    WorkersPoolTypes,
-} from '@youwol/cdn-client'
+import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 import { ProjectState } from './project'
+import { WorkersPoolInstance, WorkersPoolModel } from './workers-pool.models'
+import { setup } from '../../auto-generated'
+import { filter, map, scan, shareReplay } from 'rxjs/operators'
 
 /**
  * Gathers related modules.
@@ -98,6 +96,8 @@ export class Environment {
     public readonly vsf = vsf
     public readonly rxjs = rxjs
 
+    public readonly workersPools: Immutables<WorkersPoolInstance> = []
+
     /**
      * Factory for views displayed in journals.
      *
@@ -124,6 +124,7 @@ export class Environment {
             toolboxes?: Immutables<ToolBox>
             viewsFactory?: Immutable<Journal.DataViewsFactory>
             stdToolboxes?: Immutables<ToolBox>
+            workersPools?: Immutables<WorkersPoolInstance>
         } = {},
     ) {
         Object.assign(this, params)
@@ -143,22 +144,20 @@ export class Environment {
     /**
      * Import a toolbox.
      *
-     * @param toolboxName name of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
+     * @param toolboxIds name of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
      */
-    async import(toolboxName: string): Promise<Environment> {
-        let toolbox = this.stdToolboxes.find((tb) => tb.name == toolboxName)
-        if (!toolbox) {
-            await install({ modules: [toolboxName] })
-            const name = toolboxName.split('#')[0]
-            toolbox = globalThis[name].toolbox()
-        }
-        /**
-         * for now only standard toolboxes are supported
-         */
+    async import(toolboxIds: string[]): Promise<Environment> {
+        const installed = this.toolboxes.map((tb) => tb.uid)
+        const toInstall = toolboxIds.filter((tbId) => !installed.includes(tbId))
+        await install({ modules: toInstall })
+        const toolboxes = toolboxIds
+            .filter((id) => assertModuleIsToolbox(id))
+            .map((id) => globalThis[id].toolbox())
+
         return Promise.resolve(
             new Environment({
                 ...this,
-                toolboxes: [...this.toolboxes, toolbox],
+                toolboxes: [...this.toolboxes, ...toolboxes],
             }),
         )
     }
@@ -250,43 +249,91 @@ export class Environment {
                         const deps = factory.declaration.dependencies
                         return deps && Object.keys(deps).length > 0
                     })
+                    .reduce(
+                        (acc, [factory]) => {
+                            const dependencies =
+                                factory.declaration.dependencies
+                            return {
+                                modules: [
+                                    ...acc.modules,
+                                    ...(dependencies.modules || []),
+                                ],
+                                scripts: [
+                                    ...acc.scripts,
+                                    ...(dependencies.scripts || []),
+                                ],
+                                css: [...acc.css, ...(dependencies.css || [])],
+                            }
+                        },
+                        { modules: [], scripts: [], css: [] },
+                    )
 
                 ctx.info('Dependencies installation', {
                     modules,
                     withDependencies,
                 })
-                await Promise.all(
-                    withDependencies.map(([factory]) =>
-                        install(asMutable(factory.declaration.dependencies)),
-                    ),
-                )
+                await install({
+                    modules: [...new Set(withDependencies.modules)],
+                    scripts: [...new Set(withDependencies.scripts)],
+                    css: [...new Set(withDependencies.css)],
+                })
             },
         )
     }
 
-    private workersPools: { [k: string]: WorkersPoolTypes.WorkersPool } = {}
-
-    async getWorkersPool({ id, config, dependencies }, context = NoContext) {
+    async addWorkersPool(pool: WorkersPoolModel, context = NoContext) {
         return await context.withChildAsync(
-            'Environment.getWorkersPool',
+            'Environment.setupWorkersPool',
             async (ctx) => {
-                if (this.workersPools[id]) {
-                    ctx.info(`WorkerPool ${id} already available`)
-                    return this.workersPools[id]
+                if (this.workersPools[pool.id]) {
+                    ctx.info(`WorkerPool ${pool.id} already available`)
+                    return this
                 }
                 const workersModule = await installWorkersPoolModule()
                 ctx.info(
-                    `Start workerPool creation & wait for readiness of ${config.startAt} worker(s)`,
-                    { id, dependencies, config },
+                    `Start workerPool creation & wait for readiness of ${pool.startAt} worker(s)`,
+                    pool,
                 )
-                const wp = new workersModule.WorkersPool({
-                    install: dependencies,
-                    pool: config,
+                const wpInstance = new workersModule.WorkersPool({
+                    install: {
+                        modules: [`@youwol/vsf-core#${setup.version}`],
+                        aliases: {
+                            vsfCore: '@youwol/vsf-core',
+                            CDN: '@youwol/cdn-client',
+                        },
+                    },
+                    pool,
                 })
-                await wp.ready()
-                ctx.info(`workerPool ${id} ready`)
-                this.workersPools[id] = wp
-                return wp
+                const runtimes$ = wpInstance.mergedChannel$.pipe(
+                    filter(
+                        (m) => m.type == 'Data' && m.data['step'] == 'Runtime',
+                    ),
+                    map(({ data }) => ({
+                        workerId: data.workerId,
+                        importedBundles: data['importedBundles'],
+                    })),
+                    scan(
+                        (acc, { workerId, importedBundles }) => ({
+                            ...acc,
+                            [workerId]: {
+                                importedBundles,
+                            },
+                        }),
+                        {},
+                    ),
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                )
+
+                runtimes$.subscribe((r) => console.log('Runtimes', r))
+                await wpInstance.ready()
+                ctx.info(`workerPool ${pool.id} ready`)
+                return new Environment({
+                    ...this,
+                    workersPools: [
+                        ...this.workersPools,
+                        { model: pool, instance: wpInstance, runtimes$ },
+                    ],
+                })
             },
         )
     }
@@ -313,4 +360,20 @@ export class Environment {
         }
         return moduleFactory
     }
+}
+
+function assertModuleIsToolbox(moduleId) {
+    if (!globalThis[moduleId]) {
+        console.error(
+            `The js module of toolbox ${moduleId} did not expose global symbol ${moduleId}`,
+        )
+        return false
+    }
+    if (!globalThis[moduleId].toolbox) {
+        console.error(
+            `The js module of toolbox ${moduleId} did not expose a function 'toolbox()'`,
+        )
+        return false
+    }
+    return true
 }
