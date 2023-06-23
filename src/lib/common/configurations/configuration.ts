@@ -1,4 +1,4 @@
-import { AttributeTrait } from './attributes'
+import * as Attributes from './attributes'
 import { NoContext } from '@youwol/logging'
 import { Immutable } from '../types'
 export * as Attributes from './attributes'
@@ -10,7 +10,7 @@ export * as Attributes from './attributes'
  * see {@link Attributes} for the list of available attributes.
  */
 export type Schema = {
-    [k: string]: Schema | Schema[] | AttributeTrait<unknown>
+    [k: string]: Schema | Schema[] | Attributes.AttributeTrait<unknown>
 }
 
 /** Helper to define the type of instantiated configuration from the schema type.
@@ -18,7 +18,7 @@ export type Schema = {
  * @typeParam TSchema The type of the schema associated to the configuration of the module.
  */
 export type ConfigInstance<TSchema> = {
-    [Property in keyof TSchema]: TSchema[Property] extends AttributeTrait<unknown>
+    [Property in keyof TSchema]: TSchema[Property] extends Attributes.AttributeTrait<unknown>
         ? ReturnType<TSchema[Property]['getValue']>
         : ConfigInstance<TSchema[Property]>
 }
@@ -59,7 +59,7 @@ export function extractConfigWith<T extends Schema>(
 
 function parseObject<TSchema extends Schema>(model: TSchema, values) {
     return Object.entries(model).reduce((acc, [k, v]) => {
-        const asAttribute = v as AttributeTrait<unknown>
+        const asAttribute = v as Attributes.AttributeTrait<unknown>
         if ('getValue' in asAttribute) {
             return {
                 ...acc,
