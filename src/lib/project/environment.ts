@@ -19,12 +19,11 @@ import * as vsf from '..'
 import { ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
 import { defaultViewsFactory } from './views'
-import {
-    install,
-    installWorkersPoolModule,
-    WorkersPoolTypes,
-} from '@youwol/cdn-client'
+import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 import { ProjectState } from './project'
+import { WorkersPoolInstance, WorkersPoolModel } from './workers-pool.models'
+import { setup } from '../../auto-generated'
+import { filter, map, scan, shareReplay } from 'rxjs/operators'
 
 /**
  * Gathers related modules.
@@ -97,6 +96,8 @@ export class Environment {
     public readonly vsf = vsf
     public readonly rxjs = rxjs
 
+    public readonly workersPools: Immutables<WorkersPoolInstance> = []
+
     /**
      * Factory for views displayed in journals.
      *
@@ -123,6 +124,7 @@ export class Environment {
             toolboxes?: Immutables<ToolBox>
             viewsFactory?: Immutable<Journal.DataViewsFactory>
             stdToolboxes?: Immutables<ToolBox>
+            workersPools?: Immutables<WorkersPoolInstance>
         } = {},
     ) {
         Object.assign(this, params)
@@ -279,29 +281,59 @@ export class Environment {
         )
     }
 
-    private workersPools: { [k: string]: WorkersPoolTypes.WorkersPool } = {}
-
-    async getWorkersPool({ id, config, dependencies }, context = NoContext) {
+    async addWorkersPool(pool: WorkersPoolModel, context = NoContext) {
         return await context.withChildAsync(
-            'Environment.getWorkersPool',
+            'Environment.setupWorkersPool',
             async (ctx) => {
-                if (this.workersPools[id]) {
-                    ctx.info(`WorkerPool ${id} already available`)
-                    return this.workersPools[id]
+                if (this.workersPools[pool.id]) {
+                    ctx.info(`WorkerPool ${pool.id} already available`)
+                    return this
                 }
                 const workersModule = await installWorkersPoolModule()
                 ctx.info(
-                    `Start workerPool creation & wait for readiness of ${config.startAt} worker(s)`,
-                    { id, dependencies, config },
+                    `Start workerPool creation & wait for readiness of ${pool.startAt} worker(s)`,
+                    pool,
                 )
-                const wp = new workersModule.WorkersPool({
-                    install: dependencies,
-                    pool: config,
+                const wpInstance = new workersModule.WorkersPool({
+                    install: {
+                        modules: [`@youwol/vsf-core#${setup.version}`],
+                        aliases: {
+                            vsfCore: '@youwol/vsf-core',
+                            CDN: '@youwol/cdn-client',
+                        },
+                    },
+                    pool,
                 })
-                await wp.ready()
-                ctx.info(`workerPool ${id} ready`)
-                this.workersPools[id] = wp
-                return wp
+                const runtimes$ = wpInstance.mergedChannel$.pipe(
+                    filter(
+                        (m) => m.type == 'Data' && m.data['step'] == 'Runtime',
+                    ),
+                    map(({ data }) => ({
+                        workerId: data.workerId,
+                        importedBundles: data['importedBundles'],
+                    })),
+                    scan(
+                        (acc, { workerId, importedBundles }) => ({
+                            ...acc,
+                            [workerId]: {
+                                importedBundles,
+                            },
+                        }),
+                        {},
+                    ),
+                    shareReplay({ bufferSize: 1, refCount: true }),
+                )
+
+                runtimes$.subscribe((r) => console.log('Runtimes', r))
+                await wpInstance.ready()
+                ctx.info(`workerPool ${pool.id} ready`)
+                return new Environment({
+                    ...this,
+                    workersPools: [
+                        ...this.workersPools,
+                        { model: pool, instance: wpInstance, runtimes$ },
+                    ],
+                })
             },
         )
     }

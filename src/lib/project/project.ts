@@ -24,6 +24,7 @@ import {
 } from '..'
 import { defaultMacroConfig, macroInstance } from './macro'
 import { ProjectSummaryView } from './views'
+import { WorkersPoolModel } from './workers-pool.models'
 
 export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
 
@@ -422,6 +423,16 @@ export class ProjectState {
         return data.reduce((acc, e) => {
             return acc.addLayer(e)
         }, this)
+    }
+
+    /**
+     * Add a worker pool to the project.
+     *
+     * @param pool worker pool characteristics
+     */
+    async addWorkerPool(pool: WorkersPoolModel) {
+        const newEnv = await this.environment.addWorkersPool(pool)
+        return new ProjectState({ ...this, environment: newEnv })
     }
 
     /**
