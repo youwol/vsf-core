@@ -196,10 +196,6 @@ export type MacroApi = {
         slotId: number
         moduleId: string
     }[]
-    workersPool?: {
-        startAt?: number
-        stretchTo?: number
-    }
     html: (instance: ImplementationTrait, config: unknown) => VirtualDOM
 }
 /**

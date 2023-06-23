@@ -33,7 +33,13 @@ export function createMacroInputs(macro: MacroModel) {
     }, {})
 }
 
-export function createChart({ macro, dynamicConfig }, context = NoContext) {
+export function createChart(
+    {
+        macro,
+        dynamicConfig,
+    }: { macro: MacroModel; dynamicConfig: { [_k: string]: unknown } },
+    context = NoContext,
+) {
     return context.withChild('Create chart deployment model', (ctx) => {
         const configInstance = extractConfigWith(
             {
@@ -86,24 +92,36 @@ export function macroInstance(macro: MacroModel): Module<ImplementationTrait> {
                 { macro, dynamicConfig: fwdParams.configurationInstance },
                 ctx,
             )
-
-            return macro.workersPool
-                ? deployMacroInWorker(
-                      {
-                          macro,
-                          chart,
-                          fwdParams,
-                      },
-                      ctx,
-                  )
-                : deployMacroInMainThread(
-                      {
-                          macro,
-                          chart,
-                          fwdParams,
-                      },
-                      ctx,
-                  )
+            const wpId = chart.metadata.configInstance.workersPoolId
+            if (chart.metadata.configInstance.workersPoolId == '') {
+                return deployMacroInMainThread(
+                    {
+                        macro,
+                        chart,
+                        fwdParams,
+                    },
+                    ctx,
+                )
+            }
+            const workersPool = fwdParams.environment.workersPools.find(
+                (wp) => {
+                    return wp.model.id == wpId
+                },
+            )
+            if (!workersPool) {
+                throw Error(
+                    `Worker pool '${wpId}' not found to deploy macro '${macro.typeId}' with id '${macro.uid}'`,
+                )
+            }
+            return deployMacroInWorker(
+                {
+                    macro,
+                    chart,
+                    workersPool: workersPool.instance,
+                    fwdParams,
+                },
+                ctx,
+            )
         },
     })
 }
