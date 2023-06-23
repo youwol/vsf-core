@@ -1,14 +1,24 @@
 import { MacroModel, ModuleModel } from './workflow'
 import { ImplementationTrait, mergeMessagesContext, Module } from '../modules'
-import { extractConfigWith, Immutables, Modules } from '..'
+import { extractConfigWith, Immutables, Modules, Schema } from '..'
 import { InstancePool } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './macro-workers'
-
+import * as Attributes from '../common/configurations/attributes'
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
+}
+
+export type MacroSchema = {
+    workersPoolId: Attributes.String
+} & Schema
+
+export const defaultMacroConfig = {
+    schema: {
+        workersPoolId: new Attributes.String({ value: '' }),
+    },
 }
 
 export function createMacroInputs(macro: MacroModel) {
@@ -27,9 +37,7 @@ export function createChart({ macro, dynamicConfig }, context = NoContext) {
     return context.withChild('Create chart deployment model', (ctx) => {
         const configInstance = extractConfigWith(
             {
-                configuration: macro.configuration || {
-                    schema: {},
-                },
+                configuration: macro.configuration || defaultMacroConfig,
                 values: dynamicConfig,
             },
             ctx,

@@ -22,7 +22,7 @@ import {
     Schema,
     UidTrait,
 } from '..'
-import { macroInstance } from './macro'
+import { defaultMacroConfig, macroInstance } from './macro'
 import { ProjectSummaryView } from './views'
 
 export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
@@ -323,9 +323,16 @@ export class ProjectState {
         },
     ) {
         const macro = this.macros.find((m) => m.uid == macroUid)
+        const configuration = {
+            schema: {
+                ...defaultMacroConfig.schema,
+                ...definition.configuration.schema,
+            },
+        }
         const newMacro: MacroModel = {
             ...macro,
             ...definition,
+            configuration,
             typeId: macroUid,
             toolboxId: ProjectState.macrosToolbox,
             inputs: definition.inputs.map((inputStr) =>
