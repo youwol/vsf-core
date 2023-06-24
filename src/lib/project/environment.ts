@@ -24,6 +24,7 @@ import { ProjectState } from './project'
 import { WorkersPoolInstance, WorkersPoolModel } from './workers-pool.models'
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
+import { transmitIO, transmitOutput } from './workers/in-worker'
 
 /**
  * Gathers related modules.
@@ -301,6 +302,10 @@ export class Environment {
                             vsfCore: '@youwol/vsf-core',
                             CDN: '@youwol/cdn-client',
                         },
+                    },
+                    globals: {
+                        transmitIO,
+                        transmitOutput,
                     },
                     pool,
                 })

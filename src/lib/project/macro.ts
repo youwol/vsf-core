@@ -5,7 +5,7 @@ import { InstancePool } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { deployMacroInWorker } from './macro-workers'
+import { deployMacroInWorker } from './workers/macro-workers'
 import * as Attributes from '../common/configurations/attributes'
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
