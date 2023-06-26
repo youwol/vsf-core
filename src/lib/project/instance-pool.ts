@@ -1,6 +1,6 @@
 import { extractConfigWith, Immutable, Immutables } from '../common'
 import { Modules, Projects } from '..'
-import { Connection, ImplementationTrait } from '../modules'
+import { Connection, ConnectionTrait, ImplementationTrait } from '../modules'
 import { Environment } from './environment'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
@@ -53,12 +53,12 @@ export class InstancePool {
      *
      * @group Immutable Properties
      */
-    public readonly connections: Immutables<Modules.Connection> = []
+    public readonly connections: Immutables<Modules.ConnectionTrait> = []
 
     constructor(
         params: {
             modules?: Immutables<Modules.ImplementationTrait>
-            connections?: Immutables<Modules.Connection>
+            connections?: Immutables<Modules.ConnectionTrait>
         } = {},
     ) {
         Object.assign(this, params)
@@ -77,7 +77,7 @@ export class InstancePool {
      * Get a connection running instance.
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<Connection> {
+    getConnection(connectionId: string): Immutable<ConnectionTrait> {
         return this.connections.find((c) => c.uid == connectionId)
     }
 
@@ -85,7 +85,7 @@ export class InstancePool {
      * Get a running instance, either module or connection
      * @param id id of the instance
      */
-    get(id: string): Immutable<Connection | ImplementationTrait> {
+    get(id: string): Immutable<ConnectionTrait | ImplementationTrait> {
         return this.getModule(id) || this.getConnection(id)
     }
 
@@ -193,7 +193,7 @@ export class InstancePool {
      */
     flat(): {
         modules: Immutables<Modules.ImplementationTrait>
-        connections: Immutables<Modules.Connection>
+        connections: Immutables<Modules.ConnectionTrait>
     } {
         return this.modules
             .filter((module) => module.instancePool$ != undefined)

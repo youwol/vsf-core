@@ -10,7 +10,7 @@ import {
     parseMacroOutput,
     ToolBox,
 } from '../project'
-import { Connection, ImplementationTrait } from '../modules'
+import { ConnectionTrait, ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'
 import {
@@ -231,7 +231,7 @@ export class ProjectState {
      *
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<Connection> {
+    getConnection(connectionId: string): Immutable<ConnectionTrait> {
         return this.instancePool.connections.find((c) => c.uid == connectionId)
     }
 
