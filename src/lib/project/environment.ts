@@ -189,11 +189,11 @@ export class Environment {
         return context.withChildAsync(
             `instantiateModule '${typeId}'`,
             async (ctx) => {
-                const [moduleFactory, toolbox] = this.getFactory(typeId)
+                const { factory, toolbox } = this.getFactory({ typeId })
                 ctx.info(`Found module's factory`, module)
-                const instance = (await moduleFactory.getInstance({
+                const instance = (await factory.getInstance({
                     fwdParams: {
-                        factory: moduleFactory,
+                        factory,
                         toolbox,
                         uid: moduleId,
                         configurationInstance: configuration,
@@ -245,13 +245,13 @@ export class Environment {
             async (ctx) => {
                 const withDependencies = modules
                     .filter(({ typeId }) => typeId != '')
-                    .map((module) => this.getFactory(module.typeId))
-                    .filter(([factory]) => {
+                    .map((module) => this.getFactory({ typeId: module.typeId }))
+                    .filter(({ factory }) => {
                         const deps = factory.declaration.dependencies
                         return deps && Object.keys(deps).length > 0
                     })
                     .reduce(
-                        (acc, [factory]) => {
+                        (acc, { factory }) => {
                             const dependencies =
                                 factory.declaration.dependencies
                             return {
@@ -343,9 +343,18 @@ export class Environment {
         )
     }
 
-    private getFactory(typeId) {
+    /**
+     * Retrieve a target module factory & associated toolbox.
+     * @param toolboxId Parent toolbox id of the module. If omitted does lookup of `typeId` in all toolboxes.
+     * @param typeId Type id of the module
+     * @return `{factory, toolbox}`
+     */
+    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }) {
         type Factory = Modules.Module<Modules.ImplementationTrait>
         const moduleFactory: [Factory, ToolBox] = this.allToolboxes
+            .filter((tb) =>
+                toolboxId == undefined ? true : tb.uid == toolboxId,
+            )
             .reduce(
                 (acc, toolbox) => [
                     ...acc,
@@ -363,7 +372,7 @@ export class Environment {
             })
             throw Error(`Can not find factory of module ${typeId}`)
         }
-        return moduleFactory
+        return { factory: moduleFactory[0], toolbox: moduleFactory[1] }
     }
 }
 
