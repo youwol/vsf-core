@@ -239,7 +239,7 @@ export class InstancePool {
             uid: '',
             modules: flattened.modules.map((m) => ({
                 uid: m.uid,
-                typeId: m.factory.declaration.typeId,
+                typeId: m.typeId,
                 toolboxId: m.toolboxId,
                 toolboxVersion: m.toolboxVersion,
             })),
