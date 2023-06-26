@@ -4,11 +4,11 @@
 import type * as CdnClient from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
+import type { Chart, InstancePool } from '../instance-pool'
+import type { ImplementationTrait } from '../../modules'
 import type { ProjectState } from '../project'
-import type { InstancePool } from '../instance-pool'
-import type { ImplementationTrait, InputSlot, OutputSlot } from '../../modules'
-import type { ConnectionStatusWtoMain } from './utils'
-import type { Immutable } from '../../common'
+import type { Probe } from './macro-workers'
+import type { ProbeMessageId, ProbeMessageIdKeys } from './models'
 
 type VsfCore = typeof import('../../index')
 
@@ -24,41 +24,38 @@ type InputClosed = {
     slotId: string
     moduleId: string
 }
-export function transmitIO(
-    slot: Immutable<InputSlot | OutputSlot>,
-    context: CdnClient.WorkersPoolTypes.WorkerContext,
-) {
-    const kind = slot['rawMessage$'] ? 'InputSlot' : 'OutputSlot'
-    const base = {
-        step: kind == 'InputSlot' ? 'InputSlotRaw' : 'OutputSlotRaw',
-        slotId: slot.slotId,
-        moduleId: slot.moduleId,
-    }
-    const obs$: RxJS.Observable<unknown> =
-        kind == 'InputSlot'
-            ? (slot as InputSlot).rawMessage$
-            : (slot as OutputSlot).observable$
+
+export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
+    obs$,
+    kind,
+    id,
+    message,
+    context,
+}: {
+    obs$: RxJS.Observable<unknown>
+    kind: ProbeMessageIdKeys
+    id: ProbeMessageId[T]
+    message: (m: unknown) => unknown
+    context: CdnClient.WorkersPoolTypes.WorkerContext
+}) {
     obs$.subscribe(
-        () => context.sendData({ ...base, message: 'data' }),
+        (d) =>
+            context.sendData({
+                kind,
+                event: 'message',
+                id,
+                message: message(d),
+            }),
         () => {
             /* no op*/
         },
-        () => context.sendData({ ...base, message: 'closed' }),
+        () =>
+            context.sendData({
+                kind,
+                event: 'closed',
+                id,
+            }),
     )
-}
-
-export function transmitOutput(
-    slot: Immutable<OutputSlot>,
-    index: number,
-    context: CdnClient.WorkersPoolTypes.WorkerContext,
-) {
-    slot.observable$.subscribe((message) => {
-        context.sendData({
-            step: 'Output',
-            macroOutputSlot: index,
-            message,
-        })
-    })
 }
 
 export async function deployInstancePoolWorker({
@@ -67,18 +64,32 @@ export async function deployInstancePoolWorker({
     workerId,
     taskId,
     context,
+}: {
+    args: {
+        uid: string
+        chart: Chart
+        customArgs
+        probes: string
+    }
+    workerScope
+    workerId: string
+    taskId: string
+    context: CdnClient.WorkersPoolTypes.WorkerContext
 }) {
     const vsfCore: VsfCore = workerScope.vsfCore
     const cdn: typeof CdnClient = workerScope.CDN
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
-    const transmitIO_: typeof transmitIO = workerScope.transmitIO
-    const transmitOutput_: typeof transmitOutput = workerScope.transmitOutput
+    const transmitProbeToMainThread_: typeof transmitProbeToMainThread =
+        workerScope.transmitProbeToMainThread
+
+    const probesFct = new Function(args.probes)()
     const chart = args.chart
     const uid = args.uid
     // TODO handle version
     const toolboxes: Set<string> = new Set(
         chart.modules.map((m) => m.toolboxId),
     )
+
     context.info(`👋 I'm ${workerId}, starting task ${taskId}`)
     console.log(`👋 I'm ${workerId}, starting task ${taskId}`, {
         vsfCore,
@@ -99,6 +110,10 @@ export async function deployInstancePoolWorker({
         environment: project.environment,
         scope: {},
     })
+    const probes = probesFct(
+        instancePool,
+        args.customArgs,
+    ) as Probe<ProbeMessageIdKeys>[]
 
     context.info(`${workerId}: instance pool created (${uid})`)
     const cdnMonitoring = cdn.monitoring()
@@ -109,35 +124,44 @@ export async function deployInstancePoolWorker({
         latestVersion: cdnMonitoring.latestVersion,
     })
 
-    globalThis[`macro_${uid}`] = {
-        instancePool,
-        inputs: args.inputs,
-        outputs: args.outputs,
+    globalThis[`macro_${uid}`] = { instancePool }
+    const probesFactory = {
+        'module.outputSlot.observable$': (id) => {
+            const slot = instancePool.getModule(id['moduleId']).outputSlots[
+                id['slotId']
+            ]
+            return slot.observable$
+        },
+        'module.inputSlot.rawMessage$': (id) => {
+            const slot = instancePool.getModule(id['moduleId']).inputSlots[
+                id['slotId']
+            ]
+            return slot.rawMessage$
+        },
+        'connection.status$': (id) => {
+            const c = instancePool.getConnection(id['connectionId'])
+            return c.status$
+        },
     }
-    // Connections
-    instancePool.connections.forEach((c) => {
-        c.status$.subscribe((status) => {
-            context.sendData({
-                step: 'ConnectionStatus',
-                uid: c.uid,
-                status,
-            } as ConnectionStatusWtoMain)
+    function transmit<T extends ProbeMessageIdKeys>({
+        kind,
+        id,
+        message,
+    }: {
+        kind: ProbeMessageIdKeys
+        id: ProbeMessageId[T]
+        message
+    }) {
+        transmitProbeToMainThread_({
+            obs$: probesFactory[kind](id),
+            kind,
+            id,
+            message,
+            context,
         })
-    })
-    // IO slots
-    instancePool.modules
-        .flatMap((m) => [
-            ...Object.values(m.inputSlots),
-            ...Object.values(m.outputSlots),
-        ])
-        .forEach((slot) => transmitIO_(slot, context))
+    }
+    probes.forEach(transmit)
 
-    // Plug outputs to forward messages from worker's instance pool to main
-    args.outputs.forEach(({ moduleId, slotId }, index) => {
-        const instance = instancePool.getModule(moduleId)
-        const slot = Object.values(instance.outputSlots)[slotId]
-        transmitOutput_(slot, index, context)
-    })
     const input$ = new rxjs.Subject()
     const stop$ = new rxjs.Subject()
     // Plug input to forward message from main to worker's instance pool
@@ -168,7 +192,7 @@ export async function deployInstancePoolWorker({
         })
     })
     context.info(`${workerId}: Ready to operate ✅`)
-    console.log(`${workerId} Ready`, globalThis[`macro_${uid}`])
+    console.log(`${workerId}: Ready to operate ✅`, globalThis[`macro_${uid}`])
 
     const poolDescriber = {
         modules: instancePool.modules.map((m: ImplementationTrait) => ({

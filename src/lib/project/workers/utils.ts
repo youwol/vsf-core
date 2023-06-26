@@ -1,16 +1,22 @@
 import { Chart, InstancePool } from '../instance-pool'
-import { filter, map, shareReplay, take, takeWhile, tap } from 'rxjs/operators'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { filter, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import { Context } from '@youwol/logging'
 import {
     ConnectionStatus,
     ConnectionTrait,
     ImplementationTrait,
-    SlotTrait,
 } from '../../modules'
 import { Environment } from '../environment'
 import { Immutable } from '../../common'
+import {
+    ConnectionDescriberFromWorker,
+    InstancePoolDescriberFromWorker,
+    isConnectionMessageProbe,
+    isInputRawMessageProbe,
+    isOutputObservableProbe,
+    ModuleDescriberFromWorker,
+    ProbeMessageFromWorker,
+} from './models'
 
 export const NotAvailableMessage = {
     data: 'Not available',
@@ -56,139 +62,13 @@ export function serializeChart(chart: Chart) {
     }
 }
 
-export type ReadyMessage = {
-    data: {
-        step: 'Ready'
-        taskId: string
-        poolDescriber: InstancePoolDescriberFromWorker
-    }
-}
-export function getObservables(
-    instancePool$: Observable<WorkersPoolTypes.Message>,
-    contextMain: Context,
-    contextWorker: Context,
-) {
-    const output$ = instancePool$.pipe(
-        filter((m) => m.type == 'Data' && m.data['step'] == 'Output'),
-        map(
-            ({ data }) =>
-                data as unknown as {
-                    macroOutputSlot: number
-                    message: unknown
-                },
-        ),
-    )
-
-    const ready$ = instancePool$.pipe(
-        filter((m) => m.type == 'Data' && m.data['step'] == 'Ready'),
-        take(1),
-        tap(() => {
-            contextMain.info('Workers pool ready: instancePool listening')
-        }),
-        map((m) => m as unknown as ReadyMessage),
-        shareReplay({ bufferSize: 1, refCount: true }),
-    )
-    const logs$ = instancePool$.pipe(
-        filter((m) => m.type == 'Log'),
-        map((m) => m.data as WorkersPoolTypes.MessageLog),
-    )
-    logs$.subscribe((m) => {
-        contextWorker.info(m.text, m.json)
-    })
-    const connectionStatus$ = instancePool$.pipe(
-        filter((m) => m.type == 'Data' && m.data['step'] == 'ConnectionStatus'),
-        map((m) => m.data as unknown as ConnectionStatusWtoMain),
-    )
-    const inputSlotsRaw$ = instancePool$.pipe(
-        filter((m) => m.type == 'Data' && m.data['step'] == 'InputSlotRaw'),
-        map(
-            (m) =>
-                m.data as unknown as {
-                    slotId: string
-                    moduleId: string
-                    message: 'data' | 'closed'
-                },
-        ),
-    )
-    const outputSlotsRaw$ = instancePool$.pipe(
-        filter((m) => m.type == 'Data' && m.data['step'] == 'OutputSlotRaw'),
-        map(
-            (m) =>
-                m.data as unknown as {
-                    slotId: string
-                    moduleId: string
-                    message: 'data' | 'closed'
-                },
-        ),
-    )
-
-    return {
-        ready$,
-        output$,
-        connectionStatus$,
-        inputSlotsRaw$,
-        outputSlotsRaw$,
-    }
-}
-
-export type ConnectionStatusWtoMain = {
-    step: 'ConnectionStatus'
-    uid: string
-    status: ConnectionStatus
-}
-type SlotStatusWtoMain = {
-    moduleId: string
-    slotId: string
-    message: 'data' | 'closed'
-}
-
-type InputSlotStatusWtoMain = SlotStatusWtoMain
-type OutputSlotStatusWtoMain = SlotStatusWtoMain
-
-export function filterConnectionStatus$(
-    connectionStatus$: Observable<ConnectionStatusWtoMain>,
-    uid: string,
-): BehaviorSubject<ConnectionStatus> {
-    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
-    connectionStatus$
-        .pipe(
-            filter((c) => c.uid == uid),
-            map(({ status }) => status),
-        )
-        .subscribe((status) => status$.next(status))
-    return status$
-}
-
-type ModuleDescriberFromWorker = {
-    uid: string
-    typeId: string
-    toolboxId: string
-    inputSlots: string[]
-    outputSlots: string[]
-}
-
-type ConnectionDescriberFromWorker = {
-    uid: string
-    start: SlotTrait
-    end: SlotTrait
-}
-
-type InstancePoolDescriberFromWorker = {
-    modules: ModuleDescriberFromWorker[]
-    connections: ConnectionDescriberFromWorker[]
-}
-
 export function createGhostInstancePool({
     instancePool,
-    connectionStatus$,
-    inputSlotsRaw$,
-    outputSlotsRaw$,
+    probe$,
     environment,
 }: {
     instancePool: InstancePoolDescriberFromWorker
-    connectionStatus$: Observable<ConnectionStatusWtoMain>
-    inputSlotsRaw$: Observable<InputSlotStatusWtoMain>
-    outputSlotsRaw$: Observable<OutputSlotStatusWtoMain>
+    probe$: Observable<ProbeMessageFromWorker>
     environment: Immutable<Environment>
 }) {
     return new InstancePool({
@@ -196,42 +76,45 @@ export function createGhostInstancePool({
             toGhostModule({
                 description,
                 environment,
-                inputSlotsRaw$,
-                outputSlotsRaw$,
+                probe$,
             }),
         ),
         connections: instancePool.connections.map((description) =>
-            toGhostConnection({ description, connectionStatus$ }),
+            toGhostConnection({ description, probe$ }),
         ),
     })
 }
 
 function toGhostModule({
-    inputSlotsRaw$,
-    outputSlotsRaw$,
     description,
     environment,
+    probe$,
 }: {
     description: Immutable<ModuleDescriberFromWorker>
     environment: Immutable<Environment>
-    inputSlotsRaw$: Observable<InputSlotStatusWtoMain>
-    outputSlotsRaw$: Observable<OutputSlotStatusWtoMain>
+    probe$: Observable<ProbeMessageFromWorker>
 }): ImplementationTrait {
-    const toSlotObservable = (
-        source$: Observable<SlotStatusWtoMain>,
-        { slotId, moduleId },
-    ) => {
+    const guards = {
+        in: isInputRawMessageProbe,
+        out: isOutputObservableProbe,
+    }
+    const toSlotObservable = (guard: 'in' | 'out', { slotId, moduleId }) => {
         const message$ = new ReplaySubject(1)
-        source$
+        probe$
             .pipe(
-                filter((m) => m.moduleId == moduleId && m.slotId == slotId),
+                filter(
+                    (m) =>
+                        guards[guard](m) &&
+                        m.id.moduleId == moduleId &&
+                        m.id.slotId == slotId,
+                ),
                 takeWhile((m) => {
-                    return m.message != 'closed'
+                    return m.event != 'closed'
                 }),
             )
             .subscribe(
                 (m) => {
-                    message$.next(m)
+                    message$.next(m.message)
                 },
                 () => {
                     /*no op*/
@@ -248,7 +131,7 @@ function toGhostModule({
             return {
                 slotId,
                 moduleId: description.uid,
-                rawMessage$: toSlotObservable(inputSlotsRaw$, {
+                rawMessage$: toSlotObservable('in', {
                     moduleId: description.uid,
                     slotId,
                 }),
@@ -261,7 +144,7 @@ function toGhostModule({
             return {
                 slotId,
                 moduleId: description.uid,
-                observable$: toSlotObservable(outputSlotsRaw$, {
+                observable$: toSlotObservable('out', {
                     moduleId: description.uid,
                     slotId,
                 }),
@@ -290,16 +173,27 @@ function toGhostModule({
 
 function toGhostConnection({
     description,
-    connectionStatus$,
+    probe$,
 }: {
     description: ConnectionDescriberFromWorker
-    connectionStatus$: Observable<ConnectionStatusWtoMain>
+    probe$: Observable<ProbeMessageFromWorker>
 }): ConnectionTrait {
+    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
+    probe$
+        .pipe(
+            filter(
+                (m) =>
+                    isConnectionMessageProbe(m) &&
+                    m.id.connectionId == description.uid,
+            ),
+        )
+        .subscribe((m) => status$.next(m.message as ConnectionStatus))
+
     return {
         ...description,
         configuration: { schema: {} },
         configurationInstance: {},
-        status$: filterConnectionStatus$(connectionStatus$, description.uid),
+        status$,
         connect: () => {
             /*no op*/
         },
