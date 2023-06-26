@@ -217,6 +217,8 @@ export class Connection implements ConnectionTrait {
 
         const adaptor = this.configurationInstance.adaptor
         const transmissionDelay = this.configurationInstance.transmissionDelay
+        this.status$.next('connected')
+
         const adapted$ = startSlot.observable$.pipe(
             map((message: Message<unknown>) => {
                 this.status$.next('started')
@@ -261,7 +263,6 @@ export class Connection implements ConnectionTrait {
                 this.status$.next('completed')
             },
         )
-        this.status$.next('connected')
     }
 
     /**
