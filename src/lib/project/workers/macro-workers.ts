@@ -105,7 +105,7 @@ async function deployInstancePoolInWorker(
         outputs$: Subject<unknown>[]
         inputs
         outputs
-        fwdParams
+        fwdParams: ForwardArgs
     },
     context = NoContext,
 ): Promise<ImplementationTrait> {
@@ -146,6 +146,7 @@ async function deployInstancePoolInWorker(
                         connectionStatus$,
                         inputSlotsRaw$,
                         outputSlotsRaw$,
+                        environment: fwdParams.environment,
                     })
 
                     const implementation = new Implementation(

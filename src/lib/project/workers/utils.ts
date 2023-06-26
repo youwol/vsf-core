@@ -3,7 +3,19 @@ import { filter, map, shareReplay, take, takeWhile, tap } from 'rxjs/operators'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
 import { Context } from '@youwol/logging'
-import { ConnectionStatus } from '../../modules'
+import {
+    ConnectionStatus,
+    ConnectionTrait,
+    ImplementationTrait,
+} from '../../modules'
+import { Environment } from '../environment'
+import { Immutable } from '../../common'
+
+export const NotAvailableMessage = {
+    data: 'Not available',
+    context: {},
+}
+export const NotAvailableMessage$ = new BehaviorSubject(NotAvailableMessage)
 
 function toClonable(obj) {
     // Base case: If the object is not an object or is null, return the original value
@@ -152,7 +164,7 @@ type InstancePoolDescriberFromWorker = {
         inputSlots: string[]
         outputSlots: string[]
     }[]
-    connections: any[]
+    connections: ConnectionTrait[]
 }
 
 export function createGhostInstancePool({
@@ -160,11 +172,13 @@ export function createGhostInstancePool({
     connectionStatus$,
     inputSlotsRaw$,
     outputSlotsRaw$,
+    environment,
 }: {
     instancePool: InstancePoolDescriberFromWorker
     connectionStatus$: Observable<ConnectionStatusWtoMain>
     inputSlotsRaw$: Observable<InputSlotStatusWtoMain>
     outputSlotsRaw$: Observable<OutputSlotStatusWtoMain>
+    environment: Immutable<Environment>
 }) {
     const connections = instancePool.connections.map(({ uid, start, end }) => {
         return {
@@ -172,10 +186,21 @@ export function createGhostInstancePool({
             start,
             end,
             configuration: { schema: {} },
+            configurationInstance: {},
             status$: filterConnectionStatus$(connectionStatus$, uid),
-        }
-    }) as any[]
-
+            connect: () => {
+                /*no op*/
+            },
+            disconnect: () => {
+                /*no op*/
+            },
+            start$: NotAvailableMessage$,
+            end$: NotAvailableMessage$,
+            // Remaining fields are TODO
+            // They need to be recovered from the worker
+            journal: undefined,
+        } as ConnectionTrait
+    })
     const modules = instancePool.modules.map((ghostModule) => {
         const inputSlots = ghostModule.inputSlots
             .map((slotId) => {
@@ -191,18 +216,10 @@ export function createGhostInstancePool({
                     .subscribe((m) => {
                         rawMessage$.next(m)
                     })
-                return [
-                    slotId,
-                    { moduleId: ghostModule.uid, slotId, rawMessage$ },
-                ]
+                return { slotId, moduleId: ghostModule.uid, rawMessage$ }
             })
-            .reduce(
-                (acc, [k, v]: [k: string, v: any]) => ({
-                    ...acc,
-                    [k]: v,
-                }),
-                {},
-            )
+            .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
         const outputSlots = ghostModule.outputSlots
             .map((slotId) => {
                 const observable$ = new ReplaySubject(1)
@@ -228,30 +245,31 @@ export function createGhostInstancePool({
                             observable$.complete()
                         },
                     )
-                return [
-                    slotId,
-                    { moduleId: ghostModule.uid, slotId, observable$ },
-                ]
+                return { slotId, moduleId: ghostModule.uid, observable$ }
             })
-            .reduce(
-                (acc, [k, v]: [k: string, v: any]) => ({
-                    ...acc,
-                    [k]: v,
-                }),
-                {},
-            )
-        const module = {
+            .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
+        const module: ImplementationTrait = {
             uid: ghostModule.uid,
             typeId: ghostModule.typeId,
-            factory: { declaration: { typeId: ghostModule.typeId } },
+            environment,
+            factory: environment.getFactory({
+                toolboxId: ghostModule.toolboxId,
+                typeId: ghostModule.typeId,
+            }).factory,
             toolboxId: ghostModule.toolboxId,
             inputSlots,
             outputSlots,
+            // Remaining fields are TODO
+            // They need to be recovered from the worker
+            configuration: undefined,
+            configurationInstance: undefined,
+            journal: undefined,
         }
         return module
-    }) as any[]
+    })
     return new InstancePool({
         modules,
-        connections,
+        connections: connections,
     })
 }
