@@ -7,6 +7,7 @@ import {
     ConnectionStatus,
     ConnectionTrait,
     ImplementationTrait,
+    SlotTrait,
 } from '../../modules'
 import { Environment } from '../environment'
 import { Immutable } from '../../common'
@@ -135,18 +136,20 @@ export type ConnectionStatusWtoMain = {
     uid: string
     status: ConnectionStatus
 }
-type InputSlotStatusWtoMain = { moduleId: string; slotId: string }
-type OutputSlotStatusWtoMain = {
+type SlotStatusWtoMain = {
     moduleId: string
     slotId: string
     message: 'data' | 'closed'
 }
 
+type InputSlotStatusWtoMain = SlotStatusWtoMain
+type OutputSlotStatusWtoMain = SlotStatusWtoMain
+
 export function filterConnectionStatus$(
     connectionStatus$: Observable<ConnectionStatusWtoMain>,
     uid: string,
-) {
-    const status$ = new BehaviorSubject('connected')
+): BehaviorSubject<ConnectionStatus> {
+    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
     connectionStatus$
         .pipe(
             filter((c) => c.uid == uid),
@@ -156,15 +159,23 @@ export function filterConnectionStatus$(
     return status$
 }
 
+type ModuleDescriberFromWorker = {
+    uid: string
+    typeId: string
+    toolboxId: string
+    inputSlots: string[]
+    outputSlots: string[]
+}
+
+type ConnectionDescriberFromWorker = {
+    uid: string
+    start: SlotTrait
+    end: SlotTrait
+}
+
 type InstancePoolDescriberFromWorker = {
-    modules: {
-        uid: string
-        typeId: string
-        toolboxId: string
-        inputSlots: string[]
-        outputSlots: string[]
-    }[]
-    connections: ConnectionTrait[]
+    modules: ModuleDescriberFromWorker[]
+    connections: ConnectionDescriberFromWorker[]
 }
 
 export function createGhostInstancePool({
@@ -180,96 +191,125 @@ export function createGhostInstancePool({
     outputSlotsRaw$: Observable<OutputSlotStatusWtoMain>
     environment: Immutable<Environment>
 }) {
-    const connections = instancePool.connections.map(({ uid, start, end }) => {
-        return {
-            uid,
-            start,
-            end,
-            configuration: { schema: {} },
-            configurationInstance: {},
-            status$: filterConnectionStatus$(connectionStatus$, uid),
-            connect: () => {
-                /*no op*/
-            },
-            disconnect: () => {
-                /*no op*/
-            },
-            start$: NotAvailableMessage$,
-            end$: NotAvailableMessage$,
-            // Remaining fields are TODO
-            // They need to be recovered from the worker
-            journal: undefined,
-        } as ConnectionTrait
-    })
-    const modules = instancePool.modules.map((ghostModule) => {
-        const inputSlots = ghostModule.inputSlots
-            .map((slotId) => {
-                const rawMessage$ = new ReplaySubject(1)
-                inputSlotsRaw$
-                    .pipe(
-                        filter(
-                            (m) =>
-                                m.moduleId == ghostModule.uid &&
-                                m.slotId == slotId,
-                        ),
-                    )
-                    .subscribe((m) => {
-                        rawMessage$.next(m)
-                    })
-                return { slotId, moduleId: ghostModule.uid, rawMessage$ }
-            })
-            .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
-
-        const outputSlots = ghostModule.outputSlots
-            .map((slotId) => {
-                const observable$ = new ReplaySubject(1)
-                outputSlotsRaw$
-                    .pipe(
-                        filter(
-                            (m) =>
-                                m.moduleId == ghostModule.uid &&
-                                m.slotId == slotId,
-                        ),
-                        takeWhile((m) => {
-                            return m.message != 'closed'
-                        }),
-                    )
-                    .subscribe(
-                        (m) => {
-                            observable$.next(m)
-                        },
-                        () => {
-                            /*no op*/
-                        },
-                        () => {
-                            observable$.complete()
-                        },
-                    )
-                return { slotId, moduleId: ghostModule.uid, observable$ }
-            })
-            .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
-
-        const module: ImplementationTrait = {
-            uid: ghostModule.uid,
-            typeId: ghostModule.typeId,
-            environment,
-            factory: environment.getFactory({
-                toolboxId: ghostModule.toolboxId,
-                typeId: ghostModule.typeId,
-            }).factory,
-            toolboxId: ghostModule.toolboxId,
-            inputSlots,
-            outputSlots,
-            // Remaining fields are TODO
-            // They need to be recovered from the worker
-            configuration: undefined,
-            configurationInstance: undefined,
-            journal: undefined,
-        }
-        return module
-    })
     return new InstancePool({
-        modules,
-        connections: connections,
+        modules: instancePool.modules.map((description) =>
+            toGhostModule({
+                description,
+                environment,
+                inputSlotsRaw$,
+                outputSlotsRaw$,
+            }),
+        ),
+        connections: instancePool.connections.map((description) =>
+            toGhostConnection({ description, connectionStatus$ }),
+        ),
     })
+}
+
+function toGhostModule({
+    inputSlotsRaw$,
+    outputSlotsRaw$,
+    description,
+    environment,
+}: {
+    description: Immutable<ModuleDescriberFromWorker>
+    environment: Immutable<Environment>
+    inputSlotsRaw$: Observable<InputSlotStatusWtoMain>
+    outputSlotsRaw$: Observable<OutputSlotStatusWtoMain>
+}): ImplementationTrait {
+    const toSlotObservable = (
+        source$: Observable<SlotStatusWtoMain>,
+        { slotId, moduleId },
+    ) => {
+        const message$ = new ReplaySubject(1)
+        source$
+            .pipe(
+                filter((m) => m.moduleId == moduleId && m.slotId == slotId),
+                takeWhile((m) => {
+                    return m.message != 'closed'
+                }),
+            )
+            .subscribe(
+                (m) => {
+                    message$.next(m)
+                },
+                () => {
+                    /*no op*/
+                },
+                () => {
+                    message$.complete()
+                },
+            )
+        return message$
+    }
+
+    const inputSlots = description.inputSlots
+        .map((slotId) => {
+            return {
+                slotId,
+                moduleId: description.uid,
+                rawMessage$: toSlotObservable(inputSlotsRaw$, {
+                    moduleId: description.uid,
+                    slotId,
+                }),
+            }
+        })
+        .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
+    const outputSlots = description.outputSlots
+        .map((slotId) => {
+            return {
+                slotId,
+                moduleId: description.uid,
+                observable$: toSlotObservable(outputSlotsRaw$, {
+                    moduleId: description.uid,
+                    slotId,
+                }),
+            }
+        })
+        .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
+    return {
+        uid: description.uid,
+        typeId: description.typeId,
+        environment,
+        factory: environment.getFactory({
+            toolboxId: description.toolboxId,
+            typeId: description.typeId,
+        }).factory,
+        toolboxId: description.toolboxId,
+        inputSlots,
+        outputSlots,
+        // Remaining fields are TODO
+        // They need to be recovered from the worker
+        configuration: undefined,
+        configurationInstance: undefined,
+        journal: undefined,
+    }
+}
+
+function toGhostConnection({
+    description,
+    connectionStatus$,
+}: {
+    description: ConnectionDescriberFromWorker
+    connectionStatus$: Observable<ConnectionStatusWtoMain>
+}): ConnectionTrait {
+    return {
+        ...description,
+        configuration: { schema: {} },
+        configurationInstance: {},
+        status$: filterConnectionStatus$(connectionStatus$, description.uid),
+        connect: () => {
+            /*no op*/
+        },
+        disconnect: () => {
+            /*no op*/
+        },
+        start$: NotAvailableMessage$,
+        end$: NotAvailableMessage$,
+        // Remaining fields are TODO
+        // They need to be recovered from the worker
+        journal: undefined,
+    }
 }
