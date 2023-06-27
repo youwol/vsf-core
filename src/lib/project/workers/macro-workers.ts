@@ -5,7 +5,7 @@ import { ForwardArgs, Implementation, ImplementationTrait } from '../../modules'
 import { takeUntil } from 'rxjs/operators'
 import { Observable } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { createMacroInputs } from '../macro'
+import { createMacroInputs, createMacroOutputs } from '../macro'
 import { Immutable } from '../../common'
 
 import { InstancePoolWorker } from './instance-pool-worker'
@@ -118,17 +118,7 @@ export async function deployMacroInWorker(
             ctx,
         )
         const inputs = createMacroInputs(macro)
-        const outputs = () =>
-            macro.outputs.reduce((acc, e, i) => {
-                const module = instancePoolWorker.modules.find(
-                    (m) => m.uid == e.moduleId,
-                )
-                const slot = Object.values(module.outputSlots)[e.slotId]
-                return {
-                    ...acc,
-                    [`output_${i}$`]: slot.observable$,
-                }
-            }, {})
+        const outputs = createMacroOutputs(macro, instancePoolWorker)
 
         const implementation = new Implementation(
             {

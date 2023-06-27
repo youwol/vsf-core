@@ -1,7 +1,7 @@
 import { MacroModel, ModuleModel } from './workflow'
 import { ImplementationTrait, mergeMessagesContext, Module } from '../modules'
 import { extractConfigWith, Immutables, Modules, Schema } from '..'
-import { InstancePool } from './instance-pool'
+import { InstancePool, InstancePoolTrait } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
@@ -31,6 +31,20 @@ export function createMacroInputs(macro: MacroModel) {
             },
         }
     }, {})
+}
+export function createMacroOutputs(
+    macro: MacroModel,
+    instancePool: InstancePoolTrait,
+) {
+    return () =>
+        macro.outputs.reduce((acc, e, i) => {
+            const module = instancePool.inspector().getModule(e.moduleId)
+            const slot = Object.values(module.outputSlots)[e.slotId]
+            return {
+                ...acc,
+                [`output_${i}$`]: slot.observable$,
+            }
+        }, {})
 }
 
 export function createChart(
@@ -151,20 +165,7 @@ async function deployMacroInMainThread(
 
                     ctxInner.info("macro's instancePool", instancePool)
                     const inputs = createMacroInputs(macro)
-
-                    const outputs = () =>
-                        macro.outputs.reduce((acc, e, i) => {
-                            const module = instancePool
-                                .inspector()
-                                .getModule(e.moduleId)
-                            const slot = Object.values(module.outputSlots)[
-                                e.slotId
-                            ]
-                            return {
-                                ...acc,
-                                [`output_${i}$`]: slot.observable$,
-                            }
-                        }, {})
+                    const outputs = createMacroOutputs(macro, instancePool)
                     return { inputs, outputs, instancePool, chart }
                 },
             )
