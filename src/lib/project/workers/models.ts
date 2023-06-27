@@ -55,6 +55,12 @@ export function isProbe(d: unknown): d is ProbeMessageFromWorker {
     )
 }
 
+export type Probe<T extends keyof ProbeMessageId = ProbeMessageIdKeys> = {
+    kind: keyof ProbeMessageId
+    id: ProbeMessageId[T]
+    message: (m: unknown) => unknown
+}
+
 export type ReadyMessage = {
     data: {
         step: 'Ready'

@@ -62,7 +62,7 @@ export function serializeChart(chart: Chart) {
     }
 }
 
-export function createGhostInstancePool({
+export function createInstancePoolProxy({
     instancePool,
     probe$,
     environment,
@@ -73,19 +73,19 @@ export function createGhostInstancePool({
 }) {
     return new InstancePool({
         modules: instancePool.modules.map((description) =>
-            toGhostModule({
+            toModuleProxy({
                 description,
                 environment,
                 probe$,
             }),
         ),
         connections: instancePool.connections.map((description) =>
-            toGhostConnection({ description, probe$ }),
+            toConnectionProxy({ description, probe$ }),
         ),
     })
 }
 
-function toGhostModule({
+function toModuleProxy({
     description,
     environment,
     probe$,
@@ -171,7 +171,7 @@ function toGhostModule({
     }
 }
 
-function toGhostConnection({
+function toConnectionProxy({
     description,
     probe$,
 }: {

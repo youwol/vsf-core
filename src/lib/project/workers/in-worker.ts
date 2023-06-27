@@ -5,10 +5,9 @@ import type * as CdnClient from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
 import type { Chart, InstancePool } from '../instance-pool'
-import type { ImplementationTrait } from '../../modules'
+import type { ImplementationTrait, ProcessingMessage } from '../../modules'
 import type { ProjectState } from '../project'
-import type { Probe } from './macro-workers'
-import type { ProbeMessageId, ProbeMessageIdKeys } from './models'
+import type { Probe, ProbeMessageId, ProbeMessageIdKeys } from './models'
 
 type VsfCore = typeof import('../../index')
 
@@ -23,6 +22,14 @@ type InputClosed = {
     kind: 'InputClosed'
     slotId: string
     moduleId: string
+}
+type DeployChart = {
+    kind: 'DeployChart'
+    chart: Chart
+    uidDeployment: number
+    probes: string
+    customArgs: unknown
+    scope: { [k: string]: unknown }
 }
 
 export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
@@ -58,92 +65,52 @@ export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
     )
 }
 
-export async function deployInstancePoolWorker({
-    args,
+export async function startWorkerShadowPool({
     workerScope,
     workerId,
     taskId,
     context,
 }: {
-    args: {
-        uid: string
-        chart: Chart
-        customArgs
-        probes: string
-    }
     workerScope
     workerId: string
     taskId: string
     context: CdnClient.WorkersPoolTypes.WorkerContext
 }) {
     const vsfCore: VsfCore = workerScope.vsfCore
-    const cdn: typeof CdnClient = workerScope.CDN
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
     const transmitProbeToMainThread_: typeof transmitProbeToMainThread =
         workerScope.transmitProbeToMainThread
-
-    const probesFct = new Function(args.probes)()
-    const chart = args.chart
-    const uid = args.uid
-    // TODO handle version
-    const toolboxes: Set<string> = new Set(
-        chart.modules.map((m) => m.toolboxId),
+    context.info(`👋 I'm ${workerId}, starting shadow pool with task ${taskId}`)
+    console.log(
+        `👋 I'm ${workerId}, starting shadow pool with task ${taskId}`,
+        {
+            vsfCore,
+        },
     )
 
-    context.info(`👋 I'm ${workerId}, starting task ${taskId}`)
-    console.log(`👋 I'm ${workerId}, starting task ${taskId}`, {
-        vsfCore,
-        chart,
-        args,
-        toolboxes,
-    })
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-
-    context.info(`${workerId}: importing ${toolboxes.size} toolbox`, [
-        ...toolboxes,
-    ])
-    project = await project.import(...toolboxes)
-
     let instancePool: InstancePool = new vsfCore.Projects.InstancePool()
-    instancePool = await instancePool.deploy({
-        chart,
-        environment: project.environment,
-        scope: {},
-    })
-    const probes = probesFct(
-        instancePool,
-        args.customArgs,
-    ) as Probe<ProbeMessageIdKeys>[]
 
-    context.info(`${workerId}: instance pool created (${uid})`)
-    const cdnMonitoring = cdn.monitoring()
-    context.sendData({
-        step: 'Runtime',
-        exportedSymbols: cdnMonitoring.exportedSymbols,
-        importedBundles: cdnMonitoring.importedBundles,
-        latestVersion: cdnMonitoring.latestVersion,
-    })
+    const stop$ = new rxjs.Subject()
 
-    globalThis[`macro_${uid}`] = { instancePool }
     const probesFactory = {
         'module.outputSlot.observable$': (id) => {
-            const slot = instancePool.getModule(id['moduleId']).outputSlots[
-                id['slotId']
-            ]
+            const slot = instancePool.inspector().getModule(id['moduleId'])
+                .outputSlots[id['slotId']]
             return slot.observable$
         },
         'module.inputSlot.rawMessage$': (id) => {
-            const slot = instancePool.getModule(id['moduleId']).inputSlots[
-                id['slotId']
-            ]
+            const slot = instancePool.inspector().getModule(id['moduleId'])
+                .inputSlots[id['slotId']]
             return slot.rawMessage$
         },
         'connection.status$': (id) => {
-            const c = instancePool.getConnection(id['connectionId'])
+            const c = instancePool.inspector().getConnection(id['connectionId'])
             return c.status$
         },
     }
-    function transmit<T extends ProbeMessageIdKeys>({
+
+    function plugProb<T extends ProbeMessageIdKeys>({
         kind,
         id,
         message,
@@ -160,55 +127,85 @@ export async function deployInstancePoolWorker({
             context,
         })
     }
-    probes.forEach(transmit)
 
-    const input$ = new rxjs.Subject()
-    const stop$ = new rxjs.Subject()
     // Plug input to forward message from main to worker's instance pool
-    context.onData = (data: InputMessage | StopSignal | InputClosed) => {
+    context.onData = async (
+        data: InputMessage | StopSignal | InputClosed | DeployChart,
+    ) => {
         if (data.kind == 'InputMessage') {
-            input$.next(data)
+            const { moduleId, slotId, message } = data as unknown as {
+                moduleId: string
+                slotId: string
+                message: ProcessingMessage
+            }
+            const instance = instancePool.inspector().getModule(moduleId)
+            const targetSlot = Object.values(instance.inputSlots)[slotId]
+            targetSlot.rawMessage$.next({
+                data: message.data,
+                configuration: {},
+                context: vsfCore.Modules.mergeMessagesContext(message.context, {
+                    macroConfig: message.configuration,
+                }),
+            })
         }
         if (data.kind == 'StopSignal') {
             stop$.next()
         }
         if (data.kind == 'InputClosed') {
             const { moduleId, slotId } = data
-            const instance = instancePool.getModule(moduleId)
+            const instance = instancePool.inspector().getModule(moduleId)
             const targetSlot = Object.values(instance.inputSlots)[slotId]
             targetSlot.rawMessage$.complete()
         }
-    }
-    input$.subscribe(({ moduleId, slotId, message }) => {
-        const { data, configuration, context } = message
-        const instance = instancePool.getModule(moduleId)
-        const targetSlot = Object.values(instance.inputSlots)[slotId]
-        targetSlot.rawMessage$.next({
-            data,
-            configuration: {},
-            context: vsfCore.Modules.mergeMessagesContext(context, {
-                macroConfig: configuration,
-            }),
-        })
-    })
-    context.info(`${workerId}: Ready to operate ✅`)
-    console.log(`${workerId}: Ready to operate ✅`, globalThis[`macro_${uid}`])
+        if (data.kind == 'DeployChart') {
+            const { chart, uidDeployment, customArgs, scope } = data
+            const probesFct = new Function(data.probes)()
+            const toolboxes: Set<string> = new Set(
+                chart.modules.map((m) => m.toolboxId),
+            )
+            context.info(`${workerId}: importing ${toolboxes.size} toolbox`, [
+                ...toolboxes,
+            ])
+            project = await project.import(...toolboxes)
 
-    const poolDescriber = {
-        modules: instancePool.modules.map((m: ImplementationTrait) => ({
-            uid: m.uid,
-            typeId: m.typeId,
-            toolboxId: m.toolboxId,
-            inputSlots: Object.keys(m.inputSlots),
-            outputSlots: Object.keys(m.outputSlots),
-        })),
-        connections: instancePool.connections.map(({ uid, start, end }) => ({
-            uid,
-            start,
-            end,
-        })),
+            instancePool = await instancePool.deploy({
+                chart: data.chart,
+                environment: project.environment,
+                scope,
+            })
+            const probes = probesFct(
+                instancePool,
+                customArgs,
+            ) as Probe<ProbeMessageIdKeys>[]
+            probes.forEach(plugProb)
+
+            const poolDescriber = {
+                modules: instancePool.modules.map((m: ImplementationTrait) => ({
+                    uid: m.uid,
+                    typeId: m.typeId,
+                    toolboxId: m.toolboxId,
+                    inputSlots: Object.keys(m.inputSlots),
+                    outputSlots: Object.keys(m.outputSlots),
+                })),
+                connections: instancePool.connections.map(
+                    ({ uid, start, end }) => ({
+                        uid,
+                        start,
+                        end,
+                    }),
+                ),
+            }
+            context.sendData({
+                step: 'ChartDeployed',
+                poolDescriber,
+                uidDeployment,
+            })
+        }
     }
-    context.sendData({ step: 'Ready', poolDescriber })
+
+    context.info(`${workerId}: Ready to operate ✅`)
+    console.log(`${workerId}: Ready to operate ✅`)
+    context.sendData({ step: 'Ready' })
     return new Promise<void>((resolve) => {
         stop$.pipe(rxjs.operators.take(1)).subscribe(() => {
             console.log(`${workerId}: Release`)
