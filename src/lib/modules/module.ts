@@ -12,7 +12,13 @@ import {
     DocumentationTrait,
 } from '..'
 import { ImplementationTrait } from './traits'
-import { Environment, InstancePool, ToolBox } from '../project'
+import {
+    Environment,
+    implementsDeployableTrait,
+    InstancePool,
+    InstancePoolTrait,
+    ToolBox,
+} from '../project'
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { moduleConnectors } from './connector'
@@ -449,7 +455,9 @@ export class Implementation<
      * A runtime associated to the module, if any provided by the developer.
      *
      */
-    public readonly instancePool$?: BehaviorSubject<Immutable<InstancePool>>
+    public readonly instancePool$?: BehaviorSubject<
+        Immutable<InstancePoolTrait>
+    >
 
     public readonly canvas?: (config?) => VirtualDOM
     public readonly html?: (config?) => VirtualDOM
@@ -466,12 +474,9 @@ export class Implementation<
         Object.assign(this, params, fwdParameters)
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
-        if (
-            params.instancePool &&
-            params.instancePool instanceof InstancePool
-        ) {
+        if (implementsDeployableTrait(params.instancePool)) {
             this.instancePool$ = new BehaviorSubject<Immutable<InstancePool>>(
-                params.instancePool as Immutable<InstancePool>,
+                params.instancePool,
             )
         }
         if (

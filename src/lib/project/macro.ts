@@ -154,7 +154,9 @@ async function deployMacroInMainThread(
 
                     const outputs = () =>
                         macro.outputs.reduce((acc, e, i) => {
-                            const module = instancePool.getModule(e.moduleId)
+                            const module = instancePool
+                                .inspector()
+                                .getModule(e.moduleId)
                             const slot = Object.values(module.outputSlots)[
                                 e.slotId
                             ]
@@ -184,7 +186,9 @@ async function deployMacroInMainThread(
                     const inputSlot = Object.values(implementation.inputSlots)[
                         i
                     ]
-                    const instance = instancePool.getModule(input.moduleId)
+                    const instance = instancePool
+                        .inspector()
+                        .getModule(input.moduleId)
                     const targetSlot = Object.values(instance.inputSlots)[
                         input.slotId
                     ]

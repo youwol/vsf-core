@@ -27,10 +27,12 @@ test('only modules, canvas & html', async () => {
     expect(connections[0].end.slotId).toBe('input$')
     expect(project.getConnection('c0')).toBeTruthy()
     const html = project.instancePool
+        .inspector()
         .getModule('sphere')
         .html({ prefix: 'A test' })
     expect(html.innerText).toBe('A test: sphere html view')
     const canvas = project.instancePool
+        .inspector()
         .getModule('sphere')
         .canvas({ prefix: 'A test' })
     expect(canvas.innerText).toBe('A test: sphere canvas view')
@@ -55,7 +57,7 @@ test('repl modules with IO & adaptor', async () => {
     expect(modules).toHaveLength(2)
 
     expect(connections).toHaveLength(1)
-    const instance = project.instancePool.getConnection('c0')
+    const instance = project.instancePool.inspector().getConnection('c0')
     expect(instance.configurationInstance.adaptor).toBeTruthy()
     const r = instance.adapt({ data: 5 })
     expect(r).toEqual({ data: 5, configuration: {} })
@@ -84,7 +86,7 @@ test('repl modules with config', async () => {
     })
     const { modules } = project.instancePool
     expect(modules).toHaveLength(1)
-    const instance = project.instancePool.getModule('s0')
+    const instance = project.instancePool.inspector().getModule('s0')
     expect(instance.configurationInstance).toEqual({
         name: 'Sphere',
         radius: 0,
@@ -117,7 +119,7 @@ test('repl with view & canvas', async () => {
         },
     })
     project = project.addHtml('Test', (project) => {
-        const obs = project.getObservable({
+        const obs = project.inspector().getObservable({
             moduleId: 'm0',
             slotId: 'output$',
         })
@@ -163,6 +165,7 @@ test('multiple steps', async () => {
     expect(project.main.rootLayer.moduleIds).toHaveLength(5)
     project.instancePool.stop({ keepAlive: project0.instancePool })
     const disconnected = project.instancePool
+        .inspector()
         .flat()
         .connections.filter((c) => !c.isConnected())
     expect(disconnected).toHaveLength(1)
@@ -178,7 +181,7 @@ test('repl misc 1', async () => {
     const { connections } = project.instancePool
     expect(connections).toHaveLength(1)
 
-    const instance = project.instancePool.getConnection('c0')
+    const instance = project.instancePool.inspector().getConnection('c0')
 
     expect(instance.configurationInstance.adaptor).toBeTruthy()
     const r = instance.adapt({ data: 5 })
