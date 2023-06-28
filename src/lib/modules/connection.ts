@@ -57,20 +57,23 @@ export type ConnectionStatus =
     | 'completed'
     | 'disconnected'
 
+export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
+    start: Immutable<SlotTrait>
+    end: Immutable<SlotTrait>
+    start$: Immutable$<Message>
+    end$: Immutable$<Message>
+    connect: ({ apiFinder }) => void
+    disconnect: () => void
+}
+
 export type ConnectionTrait = UidTrait &
     ConfigurableTrait<{
         adaptor?: Attributes.JsCode<(Message) => Message>
         transmissionDelay?: Attributes.Integer
     }> &
     JournalTrait &
-    StatusTrait<ConnectionStatus> & {
-        start: Immutable<SlotTrait>
-        end: Immutable<SlotTrait>
-        start$: Immutable$<Message>
-        end$: Immutable$<Message>
-        connect: ({ apiFinder }) => void
-        disconnect: () => void
-    }
+    ConnectableTrait
+
 /**
  * Connection conveys {@link Message} between {@link InputSlot} & {@link OutputSlot} of 2 modules.
  */
