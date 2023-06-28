@@ -85,10 +85,10 @@ test('add a macro + API (index) + instance', async () => {
     expect(vDOM.innerText).toBe('test-config: map0>c0>map1')
     project.dispose()
     project.instancePool.connections.forEach((c) => {
-        expect(c.isConnected()).toBeFalsy()
+        expect(c.status$.value).toBe('disconnected')
     })
     modules[0].instancePool$.value.connections.forEach((c) => {
-        expect(c.isConnected()).toBeFalsy()
+        expect(c.status$.value).toBe('disconnected')
     })
 })
 

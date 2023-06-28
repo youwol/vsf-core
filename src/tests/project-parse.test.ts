@@ -1,5 +1,6 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
+import { Connection } from '../lib/modules'
 setupCdnHttpConnection()
 
 test('one module', async () => {
@@ -57,7 +58,9 @@ test('repl modules with IO & adaptor', async () => {
     expect(modules).toHaveLength(2)
 
     expect(connections).toHaveLength(1)
-    const instance = project.instancePool.inspector().getConnection('c0')
+    const instance = project.instancePool
+        .inspector()
+        .getConnection('c0') as Connection
     expect(instance.configurationInstance.adaptor).toBeTruthy()
     const r = instance.adapt({ data: 5 })
     expect(r).toEqual({ data: 5, configuration: {} })
@@ -167,7 +170,7 @@ test('multiple steps', async () => {
     const disconnected = project.instancePool
         .inspector()
         .flat()
-        .connections.filter((c) => !c.isConnected())
+        .connections.filter((c) => c.status$.value == 'disconnected')
     expect(disconnected).toHaveLength(1)
 })
 
@@ -181,7 +184,9 @@ test('repl misc 1', async () => {
     const { connections } = project.instancePool
     expect(connections).toHaveLength(1)
 
-    const instance = project.instancePool.inspector().getConnection('c0')
+    const instance = project.instancePool
+        .inspector()
+        .getConnection('c0') as Connection
 
     expect(instance.configurationInstance.adaptor).toBeTruthy()
     const r = instance.adapt({ data: 5 })
