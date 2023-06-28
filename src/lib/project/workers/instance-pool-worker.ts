@@ -12,7 +12,7 @@ import { Modules } from '../..'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { startWorkerShadowPool } from './in-worker'
 import { createInstancePoolProxy, serializeChart } from './utils'
-import { filter, map, mergeMap, shareReplay, take, tap } from 'rxjs/operators'
+import { filter, map, shareReplay, take } from 'rxjs/operators'
 import {
     isProbe,
     ProbeMessageFromWorker,
@@ -24,20 +24,56 @@ import {
 export type ImplementationProxy = Modules.ImplementationTrait
 export type ConnectionProxy = Modules.ConnectionTrait
 
-type LocalisationInWorkerPool = {
+/**
+ * A trait for object related to a worker within a workers pool
+ */
+export type WorkerEnvironmentTrait = {
+    workersPool: Immutable<WorkersPoolTypes.WorkersPool>
     workerId: string
-    taskId: string
 }
 
-export class InstancePoolWorker implements InstancePoolTrait {
-    public readonly name: string
+/**
+ * Return whether the argument match {@link WorkerEnvironmentTrait}
+ * @param d
+ */
+export function implementWorkerEnvironmentTrait(
+    d: unknown,
+): d is WorkerEnvironmentTrait {
+    const env = d as WorkerEnvironmentTrait
+    return env.workersPool != undefined && env.workerId != undefined
+}
+/**
+ * A trait for object related to a process executing in a worker within a workers pool
+ */
+export type WorkerProcessTrait = WorkerEnvironmentTrait & {
+    processId: string
+    processName: string
+}
+/**
+ * Return whether the argument match {@link WorkerProcessTrait}
+ * @param d
+ */
+export function implementWorkerProcessTrait(
+    d: unknown,
+): d is WorkerProcessTrait {
+    const process = d as WorkerProcessTrait
+    return (
+        implementWorkerEnvironmentTrait(d) &&
+        process.processId != undefined &&
+        process.processName != undefined
+    )
+}
+
+export class InstancePoolWorker
+    implements InstancePoolTrait, WorkerProcessTrait
+{
     public readonly modules: Immutables<ImplementationProxy>
     public readonly connections: Immutables<ConnectionProxy>
     public readonly workersPool: Immutable<WorkersPoolTypes.WorkersPool>
-
-    private readonly ready$: Observable<unknown>
-    private readonly channel$: Observable<WorkersPoolTypes.Message>
-    public localisation: Immutable<LocalisationInWorkerPool>
+    public readonly workerId: string
+    public readonly processId: string
+    public readonly processName: string
+    public readonly channel$: Observable<WorkersPoolTypes.Message>
 
     /**
      * Emit when the pool is {@link stop}.
@@ -46,44 +82,51 @@ export class InstancePoolWorker implements InstancePoolTrait {
      */
     public readonly terminated$ = new ReplaySubject<undefined>()
 
-    constructor(params: {
-        name: string
+    private constructor(params: {
+        processName: string
         modules?: Immutables<ImplementationProxy>
         connections?: Immutables<ConnectionProxy>
-        localisation?: Immutable<LocalisationInWorkerPool>
+        processId: string
+        workerId: string
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
-        channel$?: Observable<WorkersPoolTypes.Message>
-        ready$?: Observable<unknown>
+        channel$: Observable<WorkersPoolTypes.Message>
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
         this.terminated$ = new ReplaySubject(1)
-        if (this.channel$) {
-            return
-        }
-        this.channel$ = this.workersPool.schedule({
-            title: this.name,
+    }
+
+    static empty({
+        processName,
+        workersPool,
+    }: {
+        processName: string
+        workersPool: Immutable<WorkersPoolTypes.WorkersPool>
+    }): Promise<InstancePoolWorker> {
+        const channel$ = workersPool.schedule({
+            title: processName,
             entryPoint: startWorkerShadowPool,
             args: {},
         })
-        this.ready$ = this.channel$.pipe(
+        const ready$ = channel$.pipe(
             filter((m) => m.type == 'Data' && m.data['step'] == 'Ready'),
             take(1),
-            tap(({ data }) => {
-                this.localisation = {
-                    taskId: data['taskId'],
-                    workerId: data['workerId'],
-                }
-            }),
             map((m) => m as unknown as ReadyMessage),
             shareReplay({ bufferSize: 1, refCount: true }),
         )
-    }
 
-    static empty(params: {
-        name: string
-        workersPool: Immutable<WorkersPoolTypes.WorkersPool>
-    }) {
-        return new InstancePoolWorker(params)
+        return new Promise((resolve) => {
+            ready$.subscribe(({ data }) => {
+                resolve(
+                    new InstancePoolWorker({
+                        processName,
+                        workerId: data.workerId,
+                        processId: data.taskId,
+                        channel$,
+                        workersPool,
+                    }),
+                )
+            })
+        })
     }
 
     inspector() {
@@ -110,32 +153,28 @@ export class InstancePoolWorker implements InstancePoolTrait {
         context: ContextLoggerTrait,
     ): Promise<InstancePoolWorker> {
         const ctx = context.startChild('InstancePoolWorker.deploy')
-        const newPool$ = this.ready$.pipe(
+        ctx.info('Start deployment in worker')
+        const uidDeployment = Math.floor(Math.random() * 1e6)
+        this.workersPool.sendData({
+            taskId: this.processId,
+            data: {
+                kind: 'DeployChart',
+                chart: serializeChart(chart),
+                uidDeployment,
+                customArgs,
+                scope,
+                probes: 'return ' + probes.toString(),
+            },
+        })
+
+        const newPool$ = this.channel$.pipe(
+            filter(
+                (m) =>
+                    m.type == 'Data' &&
+                    m.data['step'] == 'ChartDeployed' &&
+                    m.data['uidDeployment'] == uidDeployment,
+            ),
             take(1),
-            mergeMap(() => {
-                ctx.info('Start deployment in worker')
-                const uidDeployment = Math.floor(Math.random() * 1e6)
-                this.workersPool.sendData({
-                    taskId: this.localisation.taskId,
-                    data: {
-                        kind: 'DeployChart',
-                        chart: serializeChart(chart),
-                        uidDeployment,
-                        customArgs,
-                        scope,
-                        probes: 'return ' + probes.toString(),
-                    },
-                })
-                return this.channel$.pipe(
-                    filter(
-                        (m) =>
-                            m.type == 'Data' &&
-                            m.data['step'] == 'ChartDeployed' &&
-                            m.data['uidDeployment'] == uidDeployment,
-                    ),
-                    take(1),
-                )
-            }),
             map((message) => {
                 ctx.info('Start main thread instance pool proxy creation')
                 const probe$ = this.channel$.pipe(
@@ -148,13 +187,9 @@ export class InstancePoolWorker implements InstancePoolTrait {
                     environment,
                 })
                 return new InstancePoolWorker({
-                    name: this.name,
+                    ...this,
                     modules: [...this.modules, ...modules],
                     connections: [...this.connections, ...connections],
-                    localisation: this.localisation,
-                    workersPool: this.workersPool,
-                    channel$: this.channel$,
-                    ready$: this.ready$,
                 })
             }),
         )
@@ -173,7 +208,7 @@ export class InstancePoolWorker implements InstancePoolTrait {
             )
         }
         this.workersPool.sendData({
-            taskId: this.localisation.taskId,
+            taskId: this.processId,
             data: { kind: 'StopSignal' },
         })
         this.terminated$.next()

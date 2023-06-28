@@ -57,10 +57,11 @@ export async function deployMacroInWorker(
     return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
         ctx.info('Workers pool', workersPool)
 
-        const instancePoolWorker = await InstancePoolWorker.empty({
-            name: fwdParams.uid,
+        let instancePoolWorker = await InstancePoolWorker.empty({
+            processName: fwdParams.uid,
             workersPool,
-        }).deploy(
+        })
+        instancePoolWorker = await instancePoolWorker.deploy(
             {
                 chart,
                 environment: fwdParams.environment,
@@ -139,7 +140,7 @@ export async function deployMacroInWorker(
 
             transmitInputMessage(
                 macro.uid,
-                instancePoolWorker.localisation.taskId,
+                instancePoolWorker.processId,
                 input,
                 inputSlot.preparedMessage$.pipe(
                     takeUntil(instancePoolWorker.terminated$),
