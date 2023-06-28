@@ -327,7 +327,7 @@ export class ProjectState {
         const configuration = {
             schema: {
                 ...defaultMacroConfig.schema,
-                ...definition.configuration.schema,
+                ...(definition.configuration?.schema || {}),
             },
         }
         const newMacro: MacroModel = {
