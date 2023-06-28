@@ -3,7 +3,7 @@ import { concatMap, delay, map } from 'rxjs/operators'
 import { InputMessage } from './module'
 import { BehaviorSubject, of, ReplaySubject, Subscription } from 'rxjs'
 import { Environment } from '../project'
-import { extractConfigWith, Attributes, Immutable } from '..'
+import { extractConfigWith, Attributes, Immutable, Immutable$ } from '..'
 import {
     UidTrait,
     JournalTrait,
@@ -50,20 +50,34 @@ export type Adaptor = (Message) => InputMessage
 /**
  * Type of connection status as emitted by {@link Connection.status$}
  */
-export type ConnectionStatus = 'connected' | 'started' | 'completed'
+export type ConnectionStatus =
+    | 'created'
+    | 'connected'
+    | 'started'
+    | 'completed'
+    | 'disconnected'
+
+export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
+    start: Immutable<SlotTrait>
+    end: Immutable<SlotTrait>
+    start$: Immutable$<Message>
+    end$: Immutable$<Message>
+    connect: ({ apiFinder }) => void
+    disconnect: () => void
+}
+
+export type ConnectionTrait = UidTrait &
+    ConfigurableTrait<{
+        adaptor?: Attributes.JsCode<(Message) => Message>
+        transmissionDelay?: Attributes.Integer
+    }> &
+    JournalTrait &
+    ConnectableTrait
+
 /**
  * Connection conveys {@link Message} between {@link InputSlot} & {@link OutputSlot} of 2 modules.
  */
-export class Connection
-    implements
-        UidTrait,
-        ConfigurableTrait<{
-            adaptor?: Attributes.JsCode<(Message) => Message>
-            transmissionDelay: Attributes.Integer
-        }>,
-        JournalTrait,
-        StatusTrait<ConnectionStatus>
-{
+export class Connection implements ConnectionTrait {
     /**
      * Runtime environment.
      *
@@ -129,7 +143,7 @@ export class Connection
      *
      * @group Immutable Properties
      */
-    public readonly status$ = new BehaviorSubject<ConnectionStatus>('connected')
+    public readonly status$ = new BehaviorSubject<ConnectionStatus>('created')
 
     private _start$: ReplaySubject<Message>
     private _end$: ReplaySubject<Message>
@@ -206,6 +220,8 @@ export class Connection
 
         const adaptor = this.configurationInstance.adaptor
         const transmissionDelay = this.configurationInstance.transmissionDelay
+        this.status$.next('connected')
+
         const adapted$ = startSlot.observable$.pipe(
             map((message: Message<unknown>) => {
                 this.status$.next('started')
@@ -253,19 +269,13 @@ export class Connection
     }
 
     /**
-     * Returns whether the connection is active.
-     */
-    isConnected() {
-        return this.subscription != undefined
-    }
-
-    /**
      * Disconnect the connection (unsubscribe associated subscriptions).
      */
     disconnect() {
-        if (this.isConnected()) {
+        if (this.subscription) {
             this.subscription.unsubscribe()
             this.subscription = undefined
+            this.status$.next('disconnected')
         }
     }
 

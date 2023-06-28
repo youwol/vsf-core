@@ -1,6 +1,6 @@
 import { ConfigurableTrait, Immutable, Schema, ToolboxObjectTrait } from '..'
 import { OutputSlot } from './IOs'
-import { Environment, InstancePool } from '../project'
+import { Environment, InstancePoolTrait } from '../project'
 import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
 import { GetGenericInput, Module } from './module'
 import * as IOs from './IOs'
@@ -55,7 +55,7 @@ export type ImplementationTrait<
         factory: Module
         environment: Immutable<Environment>
         state?: Immutable<TState>
-        instancePool$?: BehaviorSubject<Immutable<InstancePool>>
+        instancePool$?: BehaviorSubject<Immutable<InstancePoolTrait>>
     }
 
 /**

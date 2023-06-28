@@ -16,14 +16,20 @@ import {
 } from '@youwol/logging'
 
 import * as vsf from '..'
-import { ReplaySubject } from 'rxjs'
+import { Observable, ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
 import { defaultViewsFactory } from './views'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 import { ProjectState } from './project'
-import { WorkersPoolInstance, WorkersPoolModel } from './workers-pool.models'
+import {
+    WorkersPoolInstance,
+    WorkersPoolModel,
+    WorkersPoolRunTime,
+} from './workers-pool.models'
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
+import { transmitProbeToMainThread } from './workers/in-worker'
+import { emitRuntime } from './workers/utils'
 
 /**
  * Gathers related modules.
@@ -188,11 +194,11 @@ export class Environment {
         return context.withChildAsync(
             `instantiateModule '${typeId}'`,
             async (ctx) => {
-                const [moduleFactory, toolbox] = this.getFactory(typeId)
+                const { factory, toolbox } = this.getFactory({ typeId })
                 ctx.info(`Found module's factory`, module)
-                const instance = (await moduleFactory.getInstance({
+                const instance = (await factory.getInstance({
                     fwdParams: {
-                        factory: moduleFactory,
+                        factory,
                         toolbox,
                         uid: moduleId,
                         configurationInstance: configuration,
@@ -244,13 +250,13 @@ export class Environment {
             async (ctx) => {
                 const withDependencies = modules
                     .filter(({ typeId }) => typeId != '')
-                    .map((module) => this.getFactory(module.typeId))
-                    .filter(([factory]) => {
+                    .map((module) => this.getFactory({ typeId: module.typeId }))
+                    .filter(({ factory }) => {
                         const deps = factory.declaration.dependencies
                         return deps && Object.keys(deps).length > 0
                     })
                     .reduce(
-                        (acc, [factory]) => {
+                        (acc, { factory }) => {
                             const dependencies =
                                 factory.declaration.dependencies
                             return {
@@ -302,27 +308,34 @@ export class Environment {
                             CDN: '@youwol/cdn-client',
                         },
                     },
+                    globals: {
+                        transmitProbeToMainThread,
+                        emitRuntime,
+                    },
                     pool,
                 })
-                const runtimes$ = wpInstance.mergedChannel$.pipe(
-                    filter(
-                        (m) => m.type == 'Data' && m.data['step'] == 'Runtime',
-                    ),
-                    map(({ data }) => ({
-                        workerId: data.workerId,
-                        importedBundles: data['importedBundles'],
-                    })),
-                    scan(
-                        (acc, { workerId, importedBundles }) => ({
-                            ...acc,
-                            [workerId]: {
-                                importedBundles,
-                            },
-                        }),
-                        {},
-                    ),
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                )
+                const runtimes$: Observable<WorkersPoolRunTime> =
+                    wpInstance.mergedChannel$.pipe(
+                        filter(
+                            (m) =>
+                                m.type == 'Data' && m.data['step'] == 'Runtime',
+                        ),
+                        map(({ data }) => ({
+                            workerId: data.workerId,
+                            importedBundles: data['importedBundles'],
+                        })),
+                        scan(
+                            (acc, { workerId, importedBundles }) => ({
+                                ...acc,
+                                [workerId]: {
+                                    importedBundles,
+                                    workerId,
+                                },
+                            }),
+                            {},
+                        ),
+                        shareReplay({ bufferSize: 1, refCount: true }),
+                    )
 
                 runtimes$.subscribe((r) => console.log('Runtimes', r))
                 await wpInstance.ready()
@@ -338,9 +351,18 @@ export class Environment {
         )
     }
 
-    private getFactory(typeId) {
+    /**
+     * Retrieve a target module factory & associated toolbox.
+     * @param toolboxId Parent toolbox id of the module. If omitted does lookup of `typeId` in all toolboxes.
+     * @param typeId Type id of the module
+     * @return `{factory, toolbox}`
+     */
+    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }) {
         type Factory = Modules.Module<Modules.ImplementationTrait>
         const moduleFactory: [Factory, ToolBox] = this.allToolboxes
+            .filter((tb) =>
+                toolboxId == undefined ? true : tb.uid == toolboxId,
+            )
             .reduce(
                 (acc, toolbox) => [
                     ...acc,
@@ -358,7 +380,7 @@ export class Environment {
             })
             throw Error(`Can not find factory of module ${typeId}`)
         }
-        return moduleFactory
+        return { factory: moduleFactory[0], toolbox: moduleFactory[1] }
     }
 }
 

@@ -69,3 +69,8 @@ export type Immutable$<T> = Observable<Immutable<T>>
  * Shorthand utility type for `readonly Immutable<T>[]`
  */
 export type Immutables<T> = readonly Immutable<T>[]
+
+/**
+ * Convert keys' type of object as union of them
+ */
+export type KeysAsUnion<T> = T extends T ? keyof T : never

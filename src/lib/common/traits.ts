@@ -6,7 +6,7 @@ import {
     Schema,
 } from '..'
 import { VirtualDOM } from '@youwol/flux-view'
-import { Observable } from 'rxjs'
+import { BehaviorSubject } from 'rxjs'
 
 /**
  * Trait for object with unique ID
@@ -62,7 +62,7 @@ export interface CanvasTrait {
  * Trait for object that can emit status.
  */
 export interface StatusTrait<TStatus> {
-    status$: Observable<TStatus>
+    status$: BehaviorSubject<TStatus>
 }
 
 /**

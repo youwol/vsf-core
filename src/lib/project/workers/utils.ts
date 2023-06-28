@@ -1,0 +1,220 @@
+import { Chart, InstancePool } from '../instance-pool'
+import { filter, takeWhile } from 'rxjs/operators'
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
+import {
+    ConnectionStatus,
+    ConnectionTrait,
+    ImplementationTrait,
+} from '../../modules'
+import { Environment } from '../environment'
+import { Immutable } from '../../common'
+import {
+    ConnectionDescriberFromWorker,
+    InstancePoolDescriberFromWorker,
+    isConnectionMessageProbe,
+    isInputRawMessageProbe,
+    isOutputObservableProbe,
+    ModuleDescriberFromWorker,
+    ProbeMessageFromWorker,
+    RuntimeNotification,
+} from './models'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+import * as CdnClient from '@youwol/cdn-client'
+
+export const NotAvailableMessage = {
+    data: 'Not available',
+    context: {},
+}
+export const NotAvailableMessage$ = new BehaviorSubject(NotAvailableMessage)
+
+function toClonable(obj) {
+    // Base case: If the object is not an object or is null, return the original value
+    if (typeof obj !== 'object' || obj === null) {
+        return obj
+    }
+
+    // Create a new object to store the converted values
+    const convertedObj = Array.isArray(obj) ? [] : {}
+
+    // Traverse the object properties
+    Object.keys(obj).forEach((key) => {
+        const value = obj[key]
+
+        if (typeof value === 'function') {
+            convertedObj[key] = value.toString()
+        } else if (typeof value === 'object') {
+            convertedObj[key] = toClonable(value)
+        } else {
+            convertedObj[key] = value
+        }
+    })
+
+    return convertedObj
+}
+
+export function serializeChart(chart: Chart) {
+    return {
+        connections: chart.connections.map((c) => ({
+            ...c,
+            configuration: toClonable(c.configuration),
+        })),
+        modules: chart.modules.map((m) => ({
+            ...m,
+            configuration: toClonable(m.configuration),
+        })),
+    }
+}
+
+export function createInstancePoolProxy({
+    instancePool,
+    probe$,
+    environment,
+}: {
+    instancePool: InstancePoolDescriberFromWorker
+    probe$: Observable<ProbeMessageFromWorker>
+    environment: Immutable<Environment>
+}) {
+    return new InstancePool({
+        modules: instancePool.modules.map((description) =>
+            toModuleProxy({
+                description,
+                environment,
+                probe$,
+            }),
+        ),
+        connections: instancePool.connections.map((description) =>
+            toConnectionProxy({ description, probe$ }),
+        ),
+    })
+}
+
+function toModuleProxy({
+    description,
+    environment,
+    probe$,
+}: {
+    description: Immutable<ModuleDescriberFromWorker>
+    environment: Immutable<Environment>
+    probe$: Observable<ProbeMessageFromWorker>
+}): ImplementationTrait {
+    const guards = {
+        in: isInputRawMessageProbe,
+        out: isOutputObservableProbe,
+    }
+    const toSlotObservable = (guard: 'in' | 'out', { slotId, moduleId }) => {
+        const message$ = new ReplaySubject(1)
+        probe$
+            .pipe(
+                filter(
+                    (m) =>
+                        guards[guard](m) &&
+                        m.id.moduleId == moduleId &&
+                        m.id.slotId == slotId,
+                ),
+                takeWhile((m) => {
+                    return m.event != 'closed'
+                }),
+            )
+            .subscribe(
+                (m) => {
+                    message$.next(m.message)
+                },
+                () => {
+                    /*no op*/
+                },
+                () => {
+                    message$.complete()
+                },
+            )
+        return message$
+    }
+
+    const inputSlots = description.inputSlots
+        .map((slotId) => {
+            return {
+                slotId,
+                moduleId: description.uid,
+                rawMessage$: toSlotObservable('in', {
+                    moduleId: description.uid,
+                    slotId,
+                }),
+            }
+        })
+        .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
+    const outputSlots = description.outputSlots
+        .map((slotId) => {
+            return {
+                slotId,
+                moduleId: description.uid,
+                observable$: toSlotObservable('out', {
+                    moduleId: description.uid,
+                    slotId,
+                }),
+            }
+        })
+        .reduce((acc, d) => ({ ...acc, [d.slotId]: d }), {})
+
+    return {
+        uid: description.uid,
+        typeId: description.typeId,
+        environment,
+        factory: environment.getFactory({
+            toolboxId: description.toolboxId,
+            typeId: description.typeId,
+        }).factory,
+        toolboxId: description.toolboxId,
+        inputSlots,
+        outputSlots,
+        // Remaining fields are TODO
+        // They need to be recovered from the worker
+        configuration: undefined,
+        configurationInstance: undefined,
+        journal: undefined,
+    }
+}
+
+function toConnectionProxy({
+    description,
+    probe$,
+}: {
+    description: ConnectionDescriberFromWorker
+    probe$: Observable<ProbeMessageFromWorker>
+}): ConnectionTrait {
+    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
+    probe$
+        .pipe(
+            filter(
+                (m) =>
+                    isConnectionMessageProbe(m) &&
+                    m.id.connectionId == description.uid,
+            ),
+        )
+        .subscribe((m) => status$.next(m.message as ConnectionStatus))
+
+    return {
+        ...description,
+        configuration: { schema: {} },
+        configurationInstance: {},
+        status$,
+        connect: () => {
+            /*no op*/
+        },
+        disconnect: () => {
+            /*no op*/
+        },
+        start$: NotAvailableMessage$,
+        end$: NotAvailableMessage$,
+        // Remaining fields are TODO
+        // They need to be recovered from the worker
+        journal: undefined,
+    }
+}
+
+export function emitRuntime(context: WorkersPoolTypes.WorkerContext) {
+    const cdnClient: typeof CdnClient = globalThis.CDN
+    context.sendData({
+        step: 'Runtime',
+        importedBundles: cdnClient.monitoring().importedBundles,
+    } as RuntimeNotification)
+}

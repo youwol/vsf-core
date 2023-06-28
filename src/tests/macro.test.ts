@@ -65,7 +65,9 @@ test('add a macro + API (index) + instance', async () => {
         outputs: ['(#map1)0'],
         html: (instance, config: { prefix: string }) => {
             const pool = instance.instancePool$.value
-            const [m0, c0, m1] = ['map0', 'c0', 'map1'].map((e) => pool.get(e))
+            const [m0, c0, m1] = ['map0', 'c0', 'map1'].map((e) =>
+                pool.inspector().get(e),
+            )
             return {
                 innerText: `${config.prefix}: ${m0.uid}>${c0.uid}>${m1.uid}`,
             }
@@ -78,15 +80,15 @@ test('add a macro + API (index) + instance', async () => {
     expect(modules[0].instancePool$.value.modules).toHaveLength(2)
     expect(modules[0].instancePool$.value.connections).toHaveLength(1)
     expect(project.environment.macrosToolbox.modules).toHaveLength(1)
-    const macroInstance = project.instancePool.getModule('macro')
+    const macroInstance = project.instancePool.inspector().getModule('macro')
     const vDOM = macroInstance.html({ prefix: 'test-config' })
     expect(vDOM.innerText).toBe('test-config: map0>c0>map1')
     project.dispose()
     project.instancePool.connections.forEach((c) => {
-        expect(c.isConnected()).toBeFalsy()
+        expect(c.status$.value).toBe('disconnected')
     })
     modules[0].instancePool$.value.connections.forEach((c) => {
-        expect(c.isConnected()).toBeFalsy()
+        expect(c.status$.value).toBe('disconnected')
     })
 })
 
@@ -129,12 +131,12 @@ test('add 2 macros & play', (done) => {
                 expect(project.environment.macrosToolbox.modules).toHaveLength(
                     2,
                 )
-                const flatPool = project.instancePool.flat()
+                const flatPool = project.instancePool.inspector().flat()
                 expect(flatPool.connections).toHaveLength(2)
                 expect(flatPool.modules).toHaveLength(5)
             }),
             mergeMap((project) => {
-                return project.instancePool.getObservable({
+                return project.instancePool.inspector().getObservable({
                     moduleId: 'macroMap',
                     slotId: 'output_0$',
                 })
@@ -204,7 +206,7 @@ test('add 2 macros + default config & play', (done) => {
                 return from(project.parseDag('(test-macro0#macro)', {}))
             }),
             mergeMap((project) => {
-                return project.instancePool.getObservable({
+                return project.instancePool.inspector().getObservable({
                     moduleId: 'macro',
                     slotId: 'output_0$',
                 })
@@ -233,7 +235,7 @@ test('add 2 macros + dyn. config & play', (done) => {
                 )
             }),
             mergeMap((project) => {
-                return project.instancePool.getObservable({
+                return project.instancePool.inspector().getObservable({
                     moduleId: 'macro',
                     slotId: 'output_0$',
                 })
