@@ -16,15 +16,20 @@ import {
 } from '@youwol/logging'
 
 import * as vsf from '..'
-import { ReplaySubject } from 'rxjs'
+import { Observable, ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
 import { defaultViewsFactory } from './views'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 import { ProjectState } from './project'
-import { WorkersPoolInstance, WorkersPoolModel } from './workers-pool.models'
+import {
+    WorkersPoolInstance,
+    WorkersPoolModel,
+    WorkersPoolRunTime,
+} from './workers-pool.models'
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { transmitProbeToMainThread } from './workers/in-worker'
+import { emitRuntime } from './workers/utils'
 
 /**
  * Gathers related modules.
@@ -305,28 +310,32 @@ export class Environment {
                     },
                     globals: {
                         transmitProbeToMainThread,
+                        emitRuntime,
                     },
                     pool,
                 })
-                const runtimes$ = wpInstance.mergedChannel$.pipe(
-                    filter(
-                        (m) => m.type == 'Data' && m.data['step'] == 'Runtime',
-                    ),
-                    map(({ data }) => ({
-                        workerId: data.workerId,
-                        importedBundles: data['importedBundles'],
-                    })),
-                    scan(
-                        (acc, { workerId, importedBundles }) => ({
-                            ...acc,
-                            [workerId]: {
-                                importedBundles,
-                            },
-                        }),
-                        {},
-                    ),
-                    shareReplay({ bufferSize: 1, refCount: true }),
-                )
+                const runtimes$: Observable<WorkersPoolRunTime> =
+                    wpInstance.mergedChannel$.pipe(
+                        filter(
+                            (m) =>
+                                m.type == 'Data' && m.data['step'] == 'Runtime',
+                        ),
+                        map(({ data }) => ({
+                            workerId: data.workerId,
+                            importedBundles: data['importedBundles'],
+                        })),
+                        scan(
+                            (acc, { workerId, importedBundles }) => ({
+                                ...acc,
+                                [workerId]: {
+                                    importedBundles,
+                                    workerId,
+                                },
+                            }),
+                            {},
+                        ),
+                        shareReplay({ bufferSize: 1, refCount: true }),
+                    )
 
                 runtimes$.subscribe((r) => console.log('Runtimes', r))
                 await wpInstance.ready()

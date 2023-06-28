@@ -16,7 +16,10 @@ import {
     isOutputObservableProbe,
     ModuleDescriberFromWorker,
     ProbeMessageFromWorker,
+    RuntimeNotification,
 } from './models'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+import * as CdnClient from '@youwol/cdn-client'
 
 export const NotAvailableMessage = {
     data: 'Not available',
@@ -206,4 +209,12 @@ function toConnectionProxy({
         // They need to be recovered from the worker
         journal: undefined,
     }
+}
+
+export function emitRuntime(context: WorkersPoolTypes.WorkerContext) {
+    const cdnClient: typeof CdnClient = globalThis.CDN
+    context.sendData({
+        step: 'Runtime',
+        importedBundles: cdnClient.monitoring().importedBundles,
+    } as RuntimeNotification)
 }

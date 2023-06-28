@@ -8,6 +8,7 @@ import type { Chart, InstancePool } from '../instance-pool'
 import type { ImplementationTrait, ProcessingMessage } from '../../modules'
 import type { ProjectState } from '../project'
 import type { Probe, ProbeMessageId, ProbeMessageIdKeys } from './models'
+import type { emitRuntime } from './utils'
 
 type VsfCore = typeof import('../../index')
 
@@ -80,6 +81,9 @@ export async function startWorkerShadowPool({
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
     const transmitProbeToMainThread_: typeof transmitProbeToMainThread =
         workerScope.transmitProbeToMainThread
+
+    const emitRuntime_: typeof emitRuntime = workerScope.emitRuntime
+
     context.info(`👋 I'm ${workerId}, starting shadow pool with task ${taskId}`)
     console.log(
         `👋 I'm ${workerId}, starting shadow pool with task ${taskId}`,
@@ -87,6 +91,7 @@ export async function startWorkerShadowPool({
             vsfCore,
         },
     )
+    emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
     let instancePool: InstancePool = new vsfCore.Projects.InstancePool()
@@ -167,6 +172,8 @@ export async function startWorkerShadowPool({
                 ...toolboxes,
             ])
             project = await project.import(...toolboxes)
+
+            emitRuntime_(context)
 
             instancePool = await instancePool.deploy({
                 chart: data.chart,

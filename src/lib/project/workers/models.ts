@@ -87,3 +87,10 @@ export type InstancePoolDescriberFromWorker = {
     modules: ModuleDescriberFromWorker[]
     connections: ConnectionDescriberFromWorker[]
 }
+
+export type Version = string
+
+export type RuntimeNotification = {
+    step: 'Runtime'
+    importedBundles: { [k: string]: Version[] }
+}
