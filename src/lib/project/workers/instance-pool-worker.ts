@@ -30,6 +30,7 @@ type LocalisationInWorkerPool = {
 }
 
 export class InstancePoolWorker implements InstancePoolTrait {
+    public readonly name: string
     public readonly modules: Immutables<ImplementationProxy>
     public readonly connections: Immutables<ConnectionProxy>
     public readonly workersPool: Immutable<WorkersPoolTypes.WorkersPool>
@@ -46,6 +47,7 @@ export class InstancePoolWorker implements InstancePoolTrait {
     public readonly terminated$ = new ReplaySubject<undefined>()
 
     constructor(params: {
+        name: string
         modules?: Immutables<ImplementationProxy>
         connections?: Immutables<ConnectionProxy>
         localisation?: Immutable<LocalisationInWorkerPool>
@@ -59,7 +61,7 @@ export class InstancePoolWorker implements InstancePoolTrait {
             return
         }
         this.channel$ = this.workersPool.schedule({
-            title: 'deploy chart in worker',
+            title: this.name,
             entryPoint: startWorkerShadowPool,
             args: {},
         })
@@ -78,6 +80,7 @@ export class InstancePoolWorker implements InstancePoolTrait {
     }
 
     static empty(params: {
+        name: string
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
     }) {
         return new InstancePoolWorker(params)
@@ -145,6 +148,7 @@ export class InstancePoolWorker implements InstancePoolTrait {
                     environment,
                 })
                 return new InstancePoolWorker({
+                    name: this.name,
                     modules: [...this.modules, ...modules],
                     connections: [...this.connections, ...connections],
                     localisation: this.localisation,

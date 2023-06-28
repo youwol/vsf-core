@@ -58,6 +58,7 @@ export async function deployMacroInWorker(
         ctx.info('Workers pool', workersPool)
 
         const instancePoolWorker = await InstancePoolWorker.empty({
+            name: fwdParams.uid,
             workersPool,
         }).deploy(
             {
