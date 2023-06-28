@@ -65,6 +65,7 @@ export type ReadyMessage = {
     data: {
         step: 'Ready'
         taskId: string
+        workerId: string
         poolDescriber: InstancePoolDescriberFromWorker
     }
 }
