@@ -1,7 +1,7 @@
 /**
  * Only import of types are allowed here as it is executed in a worker
  */
-import type * as CdnClient from '@youwol/cdn-client'
+import type { WorkersPoolTypes } from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
 import type { InstancePool } from '../instance-pool'
@@ -31,7 +31,7 @@ export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
     kind: ProbeMessageIdKeys
     id: ProbeMessageId[T]
     message: (m: unknown) => unknown
-    context: CdnClient.WorkersPoolTypes.WorkerContext
+    context: WorkersPoolTypes.WorkerContext
 }) {
     obs$.subscribe(
         (d) =>
@@ -66,7 +66,7 @@ export async function startWorkerShadowPool({
     workerScope
     workerId: string
     taskId: string
-    context: CdnClient.WorkersPoolTypes.WorkerContext
+    context: WorkersPoolTypes.WorkerContext
 }) {
     const vsfCore: VsfCore = workerScope.vsfCore
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
