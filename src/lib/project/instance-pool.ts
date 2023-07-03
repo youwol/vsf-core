@@ -243,7 +243,7 @@ export class InstancePool implements InstancePoolTrait {
     /**
      * Provides an inspector object to retrieve instances of the pool.
      */
-    inspector() {
+    inspector(): Inspector {
         return new Inspector({ pool: this })
     }
 }
