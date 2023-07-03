@@ -208,7 +208,6 @@ export async function startWorkerShadowPool({
     context.sendData({ step: 'Ready' })
     return new Promise<void>((resolve) => {
         stop$.pipe(rxjs.operators.take(1)).subscribe(() => {
-            console.log(`${workerId}: Release`)
             resolve()
         })
         /* need to release worker in due time */
