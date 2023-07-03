@@ -1,37 +1,24 @@
 /**
  * Only import of types are allowed here as it is executed in a worker
  */
-import type * as CdnClient from '@youwol/cdn-client'
+import type { WorkersPoolTypes } from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
-import type { Chart, InstancePool } from '../instance-pool'
+import type { InstancePool } from '../instance-pool'
 import type { ImplementationTrait, ProcessingMessage } from '../../modules'
-import type { ProjectState } from '../project'
-import type { Probe, ProbeMessageId, ProbeMessageIdKeys } from './models'
+import type { ProjectState } from '..'
+import type {
+    DeployChart,
+    InputClosed,
+    InputMessage,
+    Probe,
+    ProbeMessageId,
+    ProbeMessageIdKeys,
+    StopSignal,
+} from './models'
 import type { emitRuntime } from './utils'
 
 type VsfCore = typeof import('../../index')
-
-type InputMessage = {
-    kind: 'InputMessage'
-    [k: string]: unknown
-}
-type StopSignal = {
-    kind: 'StopSignal'
-}
-type InputClosed = {
-    kind: 'InputClosed'
-    slotId: string
-    moduleId: string
-}
-type DeployChart = {
-    kind: 'DeployChart'
-    chart: Chart
-    uidDeployment: number
-    probes: string
-    customArgs: unknown
-    scope: { [k: string]: unknown }
-}
 
 export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
     obs$,
@@ -44,7 +31,7 @@ export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
     kind: ProbeMessageIdKeys
     id: ProbeMessageId[T]
     message: (m: unknown) => unknown
-    context: CdnClient.WorkersPoolTypes.WorkerContext
+    context: WorkersPoolTypes.WorkerContext
 }) {
     obs$.subscribe(
         (d) =>
@@ -67,15 +54,19 @@ export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
 }
 
 export async function startWorkerShadowPool({
+    args,
     workerScope,
     workerId,
     taskId,
     context,
 }: {
+    args: {
+        parentUid: string
+    }
     workerScope
     workerId: string
     taskId: string
-    context: CdnClient.WorkersPoolTypes.WorkerContext
+    context: WorkersPoolTypes.WorkerContext
 }) {
     const vsfCore: VsfCore = workerScope.vsfCore
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
@@ -94,7 +85,9 @@ export async function startWorkerShadowPool({
     emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-    let instancePool: InstancePool = new vsfCore.Projects.InstancePool()
+    let instancePool: InstancePool = new vsfCore.Projects.InstancePool({
+        parentUid: args.parentUid,
+    })
 
     const stop$ = new rxjs.Subject()
 
@@ -215,7 +208,6 @@ export async function startWorkerShadowPool({
     context.sendData({ step: 'Ready' })
     return new Promise<void>((resolve) => {
         stop$.pipe(rxjs.operators.take(1)).subscribe(() => {
-            console.log(`${workerId}: Release`)
             resolve()
         })
         /* need to release worker in due time */

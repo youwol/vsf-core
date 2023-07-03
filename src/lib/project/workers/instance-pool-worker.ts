@@ -67,6 +67,7 @@ export function implementWorkerProcessTrait(
 export class InstancePoolWorker
     implements InstancePoolTrait, WorkerProcessTrait
 {
+    public readonly parentUid: string
     public readonly modules: Immutables<ImplementationProxy>
     public readonly connections: Immutables<ConnectionProxy>
     public readonly workersPool: Immutable<WorkersPoolTypes.WorkersPool>
@@ -83,6 +84,7 @@ export class InstancePoolWorker
     public readonly terminated$ = new ReplaySubject<undefined>()
 
     private constructor(params: {
+        parentUid: string
         processName: string
         modules?: Immutables<ImplementationProxy>
         connections?: Immutables<ConnectionProxy>
@@ -96,16 +98,20 @@ export class InstancePoolWorker
     }
 
     static empty({
+        parentUid,
         processName,
         workersPool,
     }: {
+        parentUid: string
         processName: string
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
     }): Promise<InstancePoolWorker> {
         const channel$ = workersPool.schedule({
             title: processName,
             entryPoint: startWorkerShadowPool,
-            args: {},
+            args: {
+                parentUid,
+            },
         })
         const ready$ = channel$.pipe(
             filter((m) => m.type == 'Data' && m.data['step'] == 'Ready'),
@@ -118,6 +124,7 @@ export class InstancePoolWorker
             ready$.subscribe(({ data }) => {
                 resolve(
                     new InstancePoolWorker({
+                        parentUid: parentUid,
                         processName,
                         workerId: data.workerId,
                         processId: data.taskId,
@@ -185,6 +192,7 @@ export class InstancePoolWorker
                     instancePool: message.data['poolDescriber'],
                     probe$,
                     environment,
+                    parentUid: this.parentUid,
                 })
                 return new InstancePoolWorker({
                     ...this,

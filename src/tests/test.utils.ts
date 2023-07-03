@@ -20,7 +20,7 @@ export function emptyProject() {
     })
     return new ProjectState({
         main: emptyWorkflowModel(),
-        instancePool: new InstancePool(),
+        instancePool: new InstancePool({parentUid:'main'}),
         macros: [],
         environment,
     })
