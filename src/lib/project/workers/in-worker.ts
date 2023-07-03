@@ -67,11 +67,15 @@ export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
 }
 
 export async function startWorkerShadowPool({
+    args,
     workerScope,
     workerId,
     taskId,
     context,
 }: {
+    args: {
+        parentUid: string
+    }
     workerScope
     workerId: string
     taskId: string
@@ -94,7 +98,9 @@ export async function startWorkerShadowPool({
     emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-    let instancePool: InstancePool = new vsfCore.Projects.InstancePool()
+    let instancePool: InstancePool = new vsfCore.Projects.InstancePool({
+        parentUid: args.parentUid,
+    })
 
     const stop$ = new rxjs.Subject()
 

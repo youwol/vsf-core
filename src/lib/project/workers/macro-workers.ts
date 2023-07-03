@@ -60,6 +60,7 @@ export async function deployMacroInWorker(
         let instancePoolWorker = await InstancePoolWorker.empty({
             processName: fwdParams.uid,
             workersPool,
+            parentUid: fwdParams.uid
         })
         instancePoolWorker = await instancePoolWorker.deploy(
             {

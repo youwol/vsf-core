@@ -150,7 +150,9 @@ async function deployMacroInMainThread(
             const { inputs, outputs, instancePool } = await ctx.withChildAsync(
                 'Preparation inner instance pool & IO',
                 async (ctxInner) => {
-                    let instancePool = new InstancePool()
+                    let instancePool = new InstancePool({
+                        parentUid: fwdParams.uid,
+                    })
                     instancePool = await instancePool.deploy(
                         {
                             chart,

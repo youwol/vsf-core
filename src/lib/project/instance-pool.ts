@@ -31,6 +31,11 @@ export type Chart = {
 
 export interface InstancePoolTrait {
     /**
+     * Uid of entity ({@link Implementation} usually) owning this instance pool.
+     */
+    parentUid: string
+
+    /**
      * Emit when the pool is {@link stop}.
      *
      * @group Observable
@@ -91,6 +96,8 @@ export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
  *
  */
 export class InstancePool implements InstancePoolTrait {
+    public readonly parentUid: string
+
     /**
      * Emit when the pool is {@link stop}.
      *
@@ -112,13 +119,12 @@ export class InstancePool implements InstancePoolTrait {
      */
     public readonly connections: Immutables<Modules.ConnectionTrait> = []
 
-    constructor(
-        params: {
-            modules?: Immutables<Modules.ImplementationTrait>
-            connections?: Immutables<Modules.ConnectionTrait>
-        } = {},
-    ) {
-        Object.assign(this, params)
+    constructor(params: {
+        modules?: Immutables<Modules.ImplementationTrait>
+        connections?: Immutables<Modules.ConnectionTrait>
+        parentUid: string
+    }) {
+        Object.assign(this, { modules: [], connections: [] }, params)
         this.terminated$ = new ReplaySubject(1)
     }
 
@@ -207,6 +213,7 @@ export class InstancePool implements InstancePoolTrait {
             return new InstancePool({
                 modules: [...modules, ...this.modules],
                 connections: [...connections, ...this.connections],
+                parentUid: this.parentUid,
             })
         })
     }
