@@ -332,17 +332,3 @@ export class Inspector {
         }
     }
 }
-
-/**
- * Merge multiple {@link InstancePool} into a new one.
- *
- * @param pools list of pools to merge
- */
-export function mergeInstancePools(...pools: Immutables<InstancePool>) {
-    const modules = pools.reduce((acc, e) => [...acc, ...e.modules], [])
-    const connections = pools.reduce((acc, e) => [...acc, ...e.connections], [])
-    return new Projects.InstancePool({
-        modules,
-        connections,
-    })
-}
