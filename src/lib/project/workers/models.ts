@@ -1,5 +1,6 @@
 import { KeysAsUnion } from '../../common'
 import { SlotTrait } from '../../modules'
+import { Chart } from '../instance-pool'
 
 export type ProbeMessageIdKeys = KeysAsUnion<ProbeMessageId>
 export type ProbeMessageId = {
@@ -94,4 +95,28 @@ export type Version = string
 export type RuntimeNotification = {
     step: 'Runtime'
     importedBundles: { [k: string]: Version[] }
+}
+
+export type InputMessage = {
+    kind: 'InputMessage'
+    [k: string]: unknown
+}
+
+export type StopSignal = {
+    kind: 'StopSignal'
+}
+
+export type InputClosed = {
+    kind: 'InputClosed'
+    slotId: string
+    moduleId: string
+}
+
+export type DeployChart = {
+    kind: 'DeployChart'
+    chart: Chart
+    uidDeployment: number
+    probes: string
+    customArgs: unknown
+    scope: { [k: string]: unknown }
 }

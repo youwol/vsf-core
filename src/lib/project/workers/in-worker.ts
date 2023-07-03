@@ -4,34 +4,21 @@
 import type * as CdnClient from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
-import type { Chart, InstancePool } from '../instance-pool'
+import type { InstancePool } from '../instance-pool'
 import type { ImplementationTrait, ProcessingMessage } from '../../modules'
-import type { ProjectState } from '../project'
-import type { Probe, ProbeMessageId, ProbeMessageIdKeys } from './models'
+import type { ProjectState } from '..'
+import type {
+    DeployChart,
+    InputClosed,
+    InputMessage,
+    Probe,
+    ProbeMessageId,
+    ProbeMessageIdKeys,
+    StopSignal,
+} from './models'
 import type { emitRuntime } from './utils'
 
 type VsfCore = typeof import('../../index')
-
-type InputMessage = {
-    kind: 'InputMessage'
-    [k: string]: unknown
-}
-type StopSignal = {
-    kind: 'StopSignal'
-}
-type InputClosed = {
-    kind: 'InputClosed'
-    slotId: string
-    moduleId: string
-}
-type DeployChart = {
-    kind: 'DeployChart'
-    chart: Chart
-    uidDeployment: number
-    probes: string
-    customArgs: unknown
-    scope: { [k: string]: unknown }
-}
 
 export function transmitProbeToMainThread<T extends keyof ProbeMessageId>({
     obs$,
