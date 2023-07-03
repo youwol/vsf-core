@@ -173,6 +173,9 @@ export function moduleConnectors<
                     return of(err)
                 }),
                 filter((maybeError) => !(maybeError instanceof Error)),
+                // The following is tempting, for now `shareReplay`is an opt-in feature
+                // the user can add using the `ShareReplay` module of `vsf-rxjs` toolbox.
+                //shareReplay({ bufferSize: 1, refCount: true }),
             ),
         })
     })
