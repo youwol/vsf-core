@@ -14,6 +14,13 @@ test('JScode attribute from string', () => {
     expect(att.__value(5)).toBe(10)
 })
 
+test('JScode attribute from string with sanitizing needed', () => {
+    const att = new Attributes.JsCode<(a: number) => number>({
+        value: ' \n\t  \n  \t  return (a) => 2 * a \n  \n  ',
+    })
+    expect(att.__value(5)).toBe(10)
+})
+
 test('bool attribute', () => {
     const att = new Attributes.Boolean({
         value: true,
