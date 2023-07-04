@@ -39,7 +39,7 @@ export class JsCode<TFct extends (...d: unknown[]) => unknown>
     }
 
     private sanitizeStr(raw: string) {
-        return raw.startsWith('return') ? raw : `return ${raw}`
+        return raw.trim().startsWith('return') ? raw : `return ${raw}`
     }
 }
 
