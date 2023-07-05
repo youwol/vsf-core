@@ -182,7 +182,10 @@ export class BatchCells implements CellTrait {
      */
     public readonly cells: CellTrait[]
     /**
-     * Observable over the associated {@link ProjectsStore}
+     * Observable over the associated {@link ProjectsStore}.
+     *
+     * ⚠️ For a particular cell ({@link CellTrait}), the project associated
+     * corresponds to the **initial state**; i.e. before execution of the cell.
      *
      * @group Observables
      */
@@ -205,7 +208,8 @@ export class BatchCells implements CellTrait {
      * the last cell that has no associated entry in the {@link projectsStore$}.
      *
      * Each time a cell is executed, the resulting {@link ProjectState} is emitted
-     * as a new entry in {@link projectsStore$}.
+     * as a new entry in {@link projectsStore$} for the next cell:
+     * it corresponds to the 'starting state', **before** its execution.
      *
      * @param defaultProject
      * @return a promise of the {@link ProjectState} resulting from the execution of the last cell.
