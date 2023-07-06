@@ -68,7 +68,8 @@ export async function startWorkerShadowPool({
     taskId: string
     context: WorkersPoolTypes.WorkerContext
 }) {
-    const vsfCore: VsfCore = workerScope.vsfCore
+    // see comment in `workers.test.ts` file for the following statement
+    const vsfCore: VsfCore = workerScope['vsfCoreTest'] || workerScope.vsfCore
     const rxjs: typeof RxJS & { operators: typeof operators } = workerScope.rxjs
     const transmitProbeToMainThread_: typeof transmitProbeToMainThread =
         workerScope.transmitProbeToMainThread
@@ -157,7 +158,12 @@ export async function startWorkerShadowPool({
         }
         if (data.kind == 'DeployChart') {
             const { chart, uidDeployment, customArgs, scope } = data
-            const probesFct = new Function(data.probes)()
+
+            const probesFct =
+                typeof data.probes == 'string'
+                    ? new Function(data.probes)()
+                    : data.probes
+
             const toolboxes: Set<string> = new Set(
                 chart.modules.map((m) => m.toolboxId),
             )
