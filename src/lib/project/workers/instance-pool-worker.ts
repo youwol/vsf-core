@@ -170,7 +170,9 @@ export class InstancePoolWorker
                 uidDeployment,
                 customArgs,
                 scope,
-                probes: 'return ' + probes.toString(),
+                probes: this.workersPool
+                    .getWebWorkersProxy()
+                    .serializeFunction(probes),
             },
         })
 
