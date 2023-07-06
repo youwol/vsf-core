@@ -135,9 +135,7 @@ export async function deployMacroInWorker(
 
         const implementation = new Implementation(
             {
-                configuration: macro.configuration || {
-                    schema: {},
-                },
+                configuration: macro.configuration,
                 inputs,
                 outputs,
                 instancePool: instancePoolWorker,
