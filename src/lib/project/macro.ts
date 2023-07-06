@@ -1,6 +1,13 @@
 import { MacroModel, ModuleModel } from './workflow'
 import { ImplementationTrait, mergeMessagesContext, Module } from '../modules'
-import { extractConfigWith, Immutables, Modules, Schema } from '..'
+import {
+    ConfigInstance,
+    extractConfigWith,
+    Immutable,
+    Immutables,
+    Modules,
+    Schema,
+} from '..'
 import { InstancePool, InstancePoolTrait } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
@@ -21,7 +28,7 @@ export const defaultMacroConfig = {
     },
 }
 
-export function createMacroInputs(macro: MacroModel) {
+export function createMacroInputs(macro: Immutable<MacroModel>) {
     return macro.inputs.reduce((acc, e, i) => {
         return {
             ...acc,
@@ -33,7 +40,7 @@ export function createMacroInputs(macro: MacroModel) {
     }, {})
 }
 export function createMacroOutputs(
-    macro: MacroModel,
+    macro: Immutable<MacroModel>,
     instancePool: InstancePoolTrait,
 ) {
     return () =>
@@ -51,7 +58,10 @@ export function createChart(
     {
         macro,
         dynamicConfig,
-    }: { macro: MacroModel; dynamicConfig: { [_k: string]: unknown } },
+    }: {
+        macro: Immutable<MacroModel>
+        dynamicConfig: { [_k: string]: unknown }
+    },
     context = NoContext,
 ) {
     return context.withChild('Create chart deployment model', (ctx) => {
@@ -78,7 +88,7 @@ export function createChart(
                 configMap[c.uid] ? patchConf(c) : c,
             ),
             metadata: {
-                configInstance,
+                configInstance: configInstance as ConfigInstance<MacroSchema>,
             },
         }
         ctx.info('Chart created', chart)
@@ -86,7 +96,9 @@ export function createChart(
     })
 }
 
-export function macroInstance(macro: MacroModel): Module<ImplementationTrait> {
+export function macroInstance(
+    macro: Immutable<MacroModel>,
+): Module<ImplementationTrait> {
     return new Module({
         declaration: {
             typeId: macro.uid,
