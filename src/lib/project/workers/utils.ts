@@ -36,7 +36,9 @@ function toClonable(obj) {
     if (typeof obj !== 'object' || obj === null) {
         return obj
     }
-
+    if (obj instanceof SharedArrayBuffer) {
+        return obj
+    }
     // Create a new object to store the converted values
     const convertedObj = Array.isArray(obj) ? [] : {}
 
