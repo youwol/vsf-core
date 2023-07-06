@@ -31,7 +31,7 @@ export const NotAvailableMessage = {
 }
 export const NotAvailableMessage$ = new BehaviorSubject(NotAvailableMessage)
 
-function toClonable(obj) {
+export function toClonable(obj) {
     // Base case: If the object is not an object or is null, return the original value
     if (typeof obj !== 'object' || obj === null) {
         return obj
