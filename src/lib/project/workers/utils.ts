@@ -21,6 +21,10 @@ import {
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
+const noOp = () => {
+    /*No op*/
+}
+
 export const NotAvailableMessage = {
     data: 'Not available',
     context: {},
@@ -122,9 +126,7 @@ function toModuleProxy({
                 (m) => {
                     message$.next(m.message)
                 },
-                () => {
-                    /*no op*/
-                },
+                noOp,
                 () => {
                     message$.complete()
                 },
@@ -200,12 +202,8 @@ function toConnectionProxy({
         configuration: { schema: {} },
         configurationInstance: {},
         status$,
-        connect: () => {
-            /*no op*/
-        },
-        disconnect: () => {
-            /*no op*/
-        },
+        connect: noOp,
+        disconnect: noOp,
         start$: NotAvailableMessage$,
         end$: NotAvailableMessage$,
         // Remaining fields are TODO
