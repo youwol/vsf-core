@@ -69,7 +69,7 @@ export function createInstancePoolProxy({
     instancePool,
     probe$,
     environment,
-    parentUid
+    parentUid,
 }: {
     instancePool: InstancePoolDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
@@ -87,7 +87,7 @@ export function createInstancePoolProxy({
         connections: instancePool.connections.map((description) =>
             toConnectionProxy({ description, probe$ }),
         ),
-        parentUid
+        parentUid,
     })
 }
 

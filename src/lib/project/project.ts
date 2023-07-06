@@ -174,8 +174,9 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly instancePool: Immutable<InstancePool> =
-        new Projects.InstancePool({parentUid: 'main'})
+    public readonly instancePool: Immutable<InstancePool> = new InstancePool({
+        parentUid: 'main',
+    })
 
     constructor(
         params: {
