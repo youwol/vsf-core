@@ -431,7 +431,7 @@ export class ProjectState {
      *
      * @param pool worker pool characteristics
      */
-    async addWorkerPool(pool: WorkersPoolModel) {
+    async addWorkersPool(pool: WorkersPoolModel) {
         const newEnv = await this.environment.addWorkersPool(pool)
         return new ProjectState({ ...this, environment: newEnv })
     }
