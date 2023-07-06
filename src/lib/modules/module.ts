@@ -465,7 +465,7 @@ export class Implementation<
     /**
      *
      * @param params Arguments provided by the developer of the module
-     * @param fwdParameters Arguments provided by the system and propagated here (from {@link Module.getInstance}
+     * @param fwdParameters Arguments provided by the system and propagated here (from {@link Modules.getInstance}
      */
     constructor(
         params: UserArgs<TSchema, TInputs, TState>,
