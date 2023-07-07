@@ -21,18 +21,24 @@ import {
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
+const noOp = () => {
+    /*No op*/
+}
+
 export const NotAvailableMessage = {
     data: 'Not available',
     context: {},
 }
 export const NotAvailableMessage$ = new BehaviorSubject(NotAvailableMessage)
 
-function toClonable(obj) {
+export function toClonable(obj) {
     // Base case: If the object is not an object or is null, return the original value
     if (typeof obj !== 'object' || obj === null) {
         return obj
     }
-
+    if (obj instanceof SharedArrayBuffer) {
+        return obj
+    }
     // Create a new object to store the converted values
     const convertedObj = Array.isArray(obj) ? [] : {}
 
@@ -69,7 +75,7 @@ export function createInstancePoolProxy({
     instancePool,
     probe$,
     environment,
-    parentUid
+    parentUid,
 }: {
     instancePool: InstancePoolDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
@@ -87,7 +93,7 @@ export function createInstancePoolProxy({
         connections: instancePool.connections.map((description) =>
             toConnectionProxy({ description, probe$ }),
         ),
-        parentUid
+        parentUid,
     })
 }
 
@@ -122,9 +128,7 @@ function toModuleProxy({
                 (m) => {
                     message$.next(m.message)
                 },
-                () => {
-                    /*no op*/
-                },
+                noOp,
                 () => {
                     message$.complete()
                 },
@@ -200,12 +204,8 @@ function toConnectionProxy({
         configuration: { schema: {} },
         configurationInstance: {},
         status$,
-        connect: () => {
-            /*no op*/
-        },
-        disconnect: () => {
-            /*no op*/
-        },
+        connect: noOp,
+        disconnect: noOp,
         start$: NotAvailableMessage$,
         end$: NotAvailableMessage$,
         // Remaining fields are TODO

@@ -149,7 +149,7 @@ export function insertCell<Cell extends CellTrait>({
     const newCells = [...cells]
     newCells.splice(indexInsert, 0, newCell)
     const newStore = new Map(store) as ProjectsStore<Immutable<Cell>>
-    if (indexInsert < cells.length - 1 && newStore.has(cells[indexInsert])) {
+    if (indexInsert <= cells.length - 1 && newStore.has(cells[indexInsert])) {
         // In this path - if not inserted as last cell and state available - => set the ref. state.
         // Otherwise, ref. state is not set => will be initialized upon new cell's execution
         newStore.set(newCell, newStore.get(cells[indexInsert]))
@@ -161,8 +161,9 @@ export function insertCell<Cell extends CellTrait>({
             newCells,
         }
     }
+    const afterCells = newCells.slice(newCells.indexOf(newCell) + 1)
     // If it does not preserves => remove states of subsequent cells
-    newCells.splice(newCells.indexOf(newCell) + 1).forEach((cell) => {
+    afterCells.forEach((cell) => {
         newStore.delete(cell)
     })
     return {

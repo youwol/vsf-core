@@ -1,28 +1,14 @@
 import './mock-requests'
 import { toolbox } from './toolbox'
-import {
-    emptyWorkflowModel,
-    Environment,
-    InstancePool,
-    ProjectState,
-} from '../lib/project'
-import { setup } from '../auto-generated'
-import * as SphereModule from './modules-implementation/sphere.module'
+import { Environment, ProjectState } from '../lib/project'
 import { RootRouter } from '@youwol/http-primitives'
 import { Client, backendConfiguration } from '@youwol/cdn-client'
 
 export function emptyProject() {
-    const auxModuleSphere = 'test-sphere-module'
-    window[`${setup.name}/${auxModuleSphere}_API${setup.apiVersion}`] =
-        SphereModule
-    const environment = new Environment({
-        toolboxes: [toolbox],
-    })
     return new ProjectState({
-        main: emptyWorkflowModel(),
-        instancePool: new InstancePool({parentUid:'main'}),
-        macros: [],
-        environment,
+        environment: new Environment({
+            toolboxes: [toolbox],
+        }),
     })
 }
 

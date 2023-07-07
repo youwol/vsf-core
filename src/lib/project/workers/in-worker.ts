@@ -157,7 +157,6 @@ export async function startWorkerShadowPool({
         }
         if (data.kind == 'DeployChart') {
             const { chart, uidDeployment, customArgs, scope } = data
-            const probesFct = new Function(data.probes)()
             const toolboxes: Set<string> = new Set(
                 chart.modules.map((m) => m.toolboxId),
             )
@@ -173,7 +172,7 @@ export async function startWorkerShadowPool({
                 environment: project.environment,
                 scope,
             })
-            const probes = probesFct(
+            const probes = workerScope.deserializeFunction(data.probes)(
                 instancePool,
                 customArgs,
             ) as Probe<ProbeMessageIdKeys>[]

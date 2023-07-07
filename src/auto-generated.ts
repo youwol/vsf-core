@@ -2,7 +2,7 @@
 const runTimeDependencies = {
     "externals": {
         "rxjs": "^6.5.5",
-        "@youwol/cdn-client": "^2.0.5",
+        "@youwol/cdn-client": "^2.0.6",
         "@youwol/logging": "^0.1.1",
         "@youwol/fv-tree": "^0.2.3",
         "ts-essentials": "^9.3.1"

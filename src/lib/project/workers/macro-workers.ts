@@ -39,7 +39,61 @@ function transmitInputMessage(
         },
     )
 }
-
+export function getProbes(instancePool: InstancePool, customArgs) {
+    const notForwarded = () => {
+        return {
+            data: 'Data not forwarded',
+        }
+    }
+    return [
+        ...instancePool.modules
+            .flatMap((m) => Object.values(m.inputSlots))
+            .map((inputSlot) => {
+                return {
+                    kind: 'module.inputSlot.rawMessage$',
+                    id: {
+                        moduleId: inputSlot.moduleId,
+                        slotId: inputSlot.slotId,
+                    },
+                    message: notForwarded,
+                } as Probe<'module.inputSlot.rawMessage$'>
+            }),
+        ...instancePool.modules
+            .flatMap((m) =>
+                Object.values(m.outputSlots).map((slot, index) => ({
+                    slot,
+                    index,
+                })),
+            )
+            .map(({ slot, index }) => {
+                // If the following expression is inlined in the ternary operator where it is used below
+                // => consuming project will have an EsLint error at `import '@youwol/vsf-core'`:
+                //  'Parse errors in imported module '@youwol/vsf-core': Identifier expected.'
+                const isMacroOutputs =
+                    customArgs.outputs.find(
+                        (o) =>
+                            o.slotId === index && o.moduleId === slot.moduleId,
+                    ) !== undefined
+                return {
+                    kind: 'module.outputSlot.observable$',
+                    id: {
+                        moduleId: slot.moduleId,
+                        slotId: slot.slotId,
+                    },
+                    message: isMacroOutputs
+                        ? (inWorkerMessage) => inWorkerMessage
+                        : notForwarded,
+                } as Probe<'module.outputSlot.observable$'>
+            }),
+        ...instancePool.connections.map((connection) => {
+            return {
+                kind: 'connection.status$',
+                id: { connectionId: connection.uid },
+                message: (inWorkerMessage) => inWorkerMessage,
+            } as Probe<'connection.status$'>
+        }),
+    ]
+}
 export async function deployMacroInWorker(
     {
         macro,
@@ -47,7 +101,7 @@ export async function deployMacroInWorker(
         workersPool,
         fwdParams,
     }: {
-        macro: MacroModel
+        macro: Immutable<MacroModel>
         chart: Chart
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
         fwdParams: ForwardArgs
@@ -60,7 +114,7 @@ export async function deployMacroInWorker(
         let instancePoolWorker = await InstancePoolWorker.empty({
             processName: fwdParams.uid,
             workersPool,
-            parentUid: fwdParams.uid
+            parentUid: fwdParams.uid,
         })
         instancePoolWorker = await instancePoolWorker.deploy(
             {
@@ -68,65 +122,7 @@ export async function deployMacroInWorker(
                 environment: fwdParams.environment,
                 scope: {},
                 customArgs: { outputs: macro.outputs },
-                probes: (instancePool: InstancePool, customArgs) => {
-                    // Be careful: this function is executed in a worker: no outside references allowed
-                    const notForwarded = () => {
-                        return {
-                            data: 'Data not forwarded',
-                        }
-                    }
-                    return [
-                        ...instancePool.modules
-                            .flatMap((m) => Object.values(m.inputSlots))
-                            .map((inputSlot) => {
-                                return {
-                                    kind: 'module.inputSlot.rawMessage$',
-                                    id: {
-                                        moduleId: inputSlot.moduleId,
-                                        slotId: inputSlot.slotId,
-                                    },
-                                    message: notForwarded,
-                                } as Probe<'module.inputSlot.rawMessage$'>
-                            }),
-                        ...instancePool.modules
-                            .flatMap((m) =>
-                                Object.values(m.outputSlots).map(
-                                    (slot, index) => ({
-                                        slot,
-                                        index,
-                                    }),
-                                ),
-                            )
-                            .map(({ slot, index }) => {
-                                // If the following expression is inlined in the ternary operator where it is used below
-                                // => consuming project will have an EsLint error at `import '@youwol/vsf-core'`:
-                                //  'Parse errors in imported module '@youwol/vsf-core': Identifier expected.'
-                                const isMacroOutputs =
-                                    customArgs.outputs.find(
-                                        (o) =>
-                                            o.slotId === index &&
-                                            o.moduleId === slot.moduleId,
-                                    ) !== undefined
-                                return {
-                                    kind: 'module.outputSlot.observable$',
-                                    id: {
-                                        moduleId: slot.moduleId,
-                                        slotId: slot.slotId,
-                                    },
-                                    message: isMacroOutputs
-                                        ? (inWorkerMessage) => inWorkerMessage
-                                        : notForwarded,
-                                } as Probe<'module.outputSlot.observable$'>
-                            }),
-                        ...instancePool.connections.map((connection) => {
-                            return {
-                                kind: 'connection.status$',
-                                id: { connectionId: connection.uid },
-                                message: (inWorkerMessage) => inWorkerMessage,
-                            } as Probe<'connection.status$'>
-                        }),
-                    ]
-                },
+                probes: getProbes,
             },
             ctx,
         )
@@ -135,9 +131,7 @@ export async function deployMacroInWorker(
 
         const implementation = new Implementation(
             {
-                configuration: macro.configuration || {
-                    schema: {},
-                },
+                configuration: macro.configuration,
                 inputs,
                 outputs,
                 instancePool: instancePoolWorker,

@@ -174,8 +174,9 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly instancePool: Immutable<InstancePool> =
-        new Projects.InstancePool({parentUid: 'main'})
+    public readonly instancePool: Immutable<InstancePool> = new InstancePool({
+        parentUid: 'main',
+    })
 
     constructor(
         params: {
@@ -430,7 +431,7 @@ export class ProjectState {
      *
      * @param pool worker pool characteristics
      */
-    async addWorkerPool(pool: WorkersPoolModel) {
+    async addWorkersPool(pool: WorkersPoolModel) {
         const newEnv = await this.environment.addWorkersPool(pool)
         return new ProjectState({ ...this, environment: newEnv })
     }
@@ -439,7 +440,7 @@ export class ProjectState {
      * Add an HTML view to the project.
      *
      * @param viewId UID of the view
-     * @param vDOM Virtual DOM generator, takes the {@link Project.instancePool} as argument.
+     * @param vDOM Virtual DOM generator, takes the {@link Projects.instancePool} as argument.
      */
     addHtml(
         viewId: string,
