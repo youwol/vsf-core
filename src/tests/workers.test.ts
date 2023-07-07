@@ -1,5 +1,8 @@
-import { installTestWorkersPoolModule } from '@youwol/cdn-client'
-import * as vsfCore from '..'
+import {
+    InstallInputs,
+    installTestWorkersPoolModule,
+    WorkersPoolTypes,
+} from '@youwol/cdn-client'
 import { createChart, macroInstance, ProjectState } from '../lib/project'
 import { from, Observable } from 'rxjs'
 import { map, mergeMap, reduce, tap } from 'rxjs/operators'
@@ -11,14 +14,31 @@ import { deployMacroInWorker } from '../lib/project/workers/macro-workers'
 import { toClonable } from '../lib/project/workers/utils'
 import { Integer } from '../lib/common/configurations/attributes'
 import { setupCdnHttpConnection } from './test.utils'
+import { setup } from '../auto-generated'
 
+console.log = () => {
+    /*no op*/
+}
 beforeAll(async () => {
     setupCdnHttpConnection({ localOnly: false })
-    await installTestWorkersPoolModule()
-    // Replacing module normally fetched by the CDN with actual source should be possible in the above call, e.g.:
-    //  await installTestWorkersPoolModule({inlinedModules:{'@youwol/vsf-core': vsfCore}})
-    // For now we use the following hack, the other extremity of the hack is in the file `in-worker.ts`
-    globalThis['vsfCoreTest'] = vsfCore
+    await installTestWorkersPoolModule({
+        onBeforeWorkerInstall: ({
+            message,
+        }: {
+            message: WorkersPoolTypes.MessageInstall
+        }) => {
+            const install = message.cdnInstallation as InstallInputs
+            const vsfCore = `@youwol/vsf-core#${setup.version}`
+            install.modules = install.modules.filter(
+                (item) => item !== `@youwol/vsf-core#${setup.version}`,
+            )
+            const alias = Object.entries(install.aliases).find(
+                ([_, v]) =>
+                    typeof v === 'string' && v.includes('@youwol/vsf-core'),
+            )[0]
+            globalThis[alias] = vsfCore
+        },
+    })
 })
 
 function addMapTakeMacro() {
