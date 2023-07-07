@@ -3,6 +3,7 @@ import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import {
     BatchCells,
     CellTrait,
+    insertCell,
     JsCell,
     ProjectsStore,
     ProjectState,
@@ -172,4 +173,81 @@ test('BatchCells when no cells', async () => {
     })
     const project1 = await batch.execute(project)
     expect(project1).toBe(project)
+})
+
+test('insert cell', async () => {
+    const project = emptyProject()
+    const projectsStore$ = new BehaviorSubject<ProjectsStore<CellTrait>>(
+        new Map(),
+    )
+    const source0 = new Attributes.JsCode({
+        value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
+            project = await project.parseDag('(map#map)')
+            return project
+        },
+    })
+    const source1 = new Attributes.JsCode({
+        value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
+            project = await project.parseDag('(#map)>>(filter#filter)')
+            return project
+        },
+    })
+    const cell0 = new JsCell({ source: source0 })
+    const cell1 = new JsCell({ source: source1 })
+
+    const batch = new BatchCells({
+        cells: [cell0, cell1],
+        projectsStore$,
+    })
+    await batch.execute(project)
+    const source2 = new Attributes.JsCode({
+        value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
+            project = await project.parseDag('(of#of)>>(#map)')
+            return project
+        },
+    })
+    const cell2 = new JsCell({ source: source2 })
+    let { newStore, newCells } = insertCell({
+        cells: [cell0, cell1],
+        cellRef: cell1,
+        newCell: cell2,
+        where: 'before',
+        store: projectsStore$.value,
+        statePreserved: false,
+    })
+    expect(newStore.size).toBe(1)
+    expect(newStore.has(cell2)).toBeTruthy()
+    expect(newCells).toHaveLength(3)
+    projectsStore$.next(newStore)
+    // we have [cell0, cell2, cell1] and cell2 has its 'starting' state in projectsStore$
+    // upon execution of the next batch, we expect cell1 to have its 'starting' state in projectsStore$
+    await new BatchCells({
+        cells: newCells,
+        projectsStore$,
+    }).execute(project)
+    newStore = projectsStore$.value
+    expect(newStore.size).toBe(2)
+    expect(newStore.has(cell2)).toBeTruthy()
+    expect(newStore.has(cell1)).toBeTruthy()
+    expect(newCells).toHaveLength(3)
+    const source3 = new Attributes.JsCode({
+        value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
+            // No effect
+            return project
+        },
+    })
+    const cell3 = new JsCell({ source: source3 })
+    ;({ newStore, newCells } = insertCell({
+        cells: newCells,
+        cellRef: newCells[2],
+        newCell: cell3,
+        where: 'after',
+        store: projectsStore$.value,
+        statePreserved: true,
+    }))
+    // we have now [cell0, cell2, cell1, cell3], cell2 & cell1 still in projectStore
+    expect(newStore.size).toBe(2)
+    expect(newStore.has(cell2)).toBeTruthy()
+    expect(newStore.has(cell1)).toBeTruthy()
+    expect(newCells).toHaveLength(4)
 })
