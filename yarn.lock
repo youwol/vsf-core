@@ -1130,10 +1130,10 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@youwol/cdn-client@^2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@youwol/cdn-client/-/cdn-client-2.0.5.tgz#36efbbac119dd6b09542d6ad024f9a6c1ea79049"
-  integrity sha512-OYNaX5kBVLR1NWtEifvR7PnDH8A+IpeFJzprLcv7u8HLBf5qTm5wLgPxLrPQH0mBYu1bWvG0Xc8VFBeUV0SWhg==
+"@youwol/cdn-client@^2.0.6":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@youwol/cdn-client/-/cdn-client-2.0.6.tgz#9703e0ac6a4bb7adbc780c259ce70bc4e34f6ba0"
+  integrity sha512-RYhm/1wUiyZ+IQLh7DuN2dxZ6Yu10AZQMuYpgDOU+Lkfj17fWrmXZdluzJGFFYoeMqjCQuTmTYES+Zc03hu4PQ==
   dependencies:
     "@youwol/flux-view" "^1.1.0"
     rxjs "^6.5.5"
