@@ -529,13 +529,14 @@ export class Implementation<
  */
 export class Module<
     TImplementation extends Modules.ImplementationTrait = Modules.ImplementationTrait,
+    TDeclaration extends Declaration = Declaration,
 > {
     /**
      * Module's declaration.
      *
      * @group Immutable Properties
      */
-    public readonly declaration: Immutable<Declaration>
+    public readonly declaration: Immutable<TDeclaration>
 
     /**
      * Module's implementation.
@@ -554,7 +555,7 @@ export class Module<
      * @param params.implementation Module implementation
      */
     constructor(params: {
-        declaration: Declaration
+        declaration: TDeclaration
         implementation: ({
             fwdParams,
         }: {
