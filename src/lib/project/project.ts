@@ -24,7 +24,7 @@ import {
 } from '..'
 import { defaultMacroConfig, macroInstance } from './macro'
 import { ProjectSummaryView } from './views'
-import { WorkersPoolModel } from './workers-pool.models'
+import { WorkersPoolModel } from './workflow'
 
 export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
 
