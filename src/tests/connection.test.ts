@@ -2,7 +2,7 @@ import { mergeMessagesContext } from '../lib/modules'
 import { forkJoin, from } from 'rxjs'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { MeshStandardMaterial } from 'three'
-import { mergeMap, take } from 'rxjs/operators'
+import { map, mergeMap, reduce, take } from 'rxjs/operators'
 
 setupCdnHttpConnection()
 
@@ -47,6 +47,38 @@ test('start$ & end$', (done) => {
         .subscribe(([start, end]) => {
             expect(start.data).toEqual({})
             expect(end.data).toBeInstanceOf(MeshStandardMaterial)
+            done()
+        })
+})
+
+// eslint-disable-next-line jest/no-done-callback -- more readable that way
+test('transmission delay', (done) => {
+    from(
+        emptyProject().parseDag(['(of#of)>#a0>(map#map)'], {
+            a0: {
+                transmissionDelay: 50,
+            },
+            of: {
+                args: [10, 20, 30],
+                spread: true,
+            },
+        }),
+    )
+        .pipe(
+            mergeMap((project) => {
+                return project
+                    .getConnection('a0')
+                    .end$.pipe(map(() => Date.now()))
+            }),
+            reduce((acc, e) => [...acc, e], []),
+        )
+        .subscribe((ends) => {
+            const stamps = ends.map((e) => e - ends[0])
+            expect(stamps[0]).toBe(0)
+            expect(stamps[1]).toBeGreaterThanOrEqual(50)
+            expect(stamps[1]).toBeLessThanOrEqual(55)
+            expect(stamps[2]).toBeGreaterThanOrEqual(100)
+            expect(stamps[2]).toBeLessThanOrEqual(105)
             done()
         })
 })

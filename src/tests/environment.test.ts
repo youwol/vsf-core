@@ -4,6 +4,9 @@ import { from } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
 import { setupCdnHttpConnection } from './test.utils'
 
+console.log = () => {
+    /*no op*/
+}
 beforeAll(async () => {
     setupCdnHttpConnection({ localOnly: false })
 })

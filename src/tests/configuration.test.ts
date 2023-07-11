@@ -1,5 +1,6 @@
 import { Attributes, extractConfigWith } from '../lib'
 import { Context } from '@youwol/logging'
+import { ObservableInput } from 'rxjs'
 
 test('configuration', async () => {
     const context = new Context('conf-test', {})
@@ -14,17 +15,33 @@ test('configuration', async () => {
                     z: new Attributes.Float({ value: 0 }),
                 },
             },
+            object: new Attributes.AnyObject({
+                value: { name: 'foo', id: 'bar' },
+            }),
+            custom: new Attributes.CustomAttribute<ObservableInput<unknown>>({
+                value: [{}],
+            }),
         },
     }
+
     expect(conf).toBeTruthy()
     const values = extractConfigWith(
         {
             configuration: conf,
-            values: { radius: 1, transform: { translation: { x: 1 } } },
+            values: {
+                radius: 1,
+                transform: { translation: { x: 1 } },
+                object: { name: 'baz' },
+                custom: new Promise<void>((resolve) => {
+                    resolve()
+                }),
+            },
         },
         context,
     )
-    expect(values).toEqual({
+    const base = { ...values }
+    delete base.custom
+    expect(base).toEqual({
         name: 'test-conf',
         radius: 1,
         transform: {
@@ -34,5 +51,39 @@ test('configuration', async () => {
                 z: 0,
             },
         },
+        object: {
+            name: 'baz',
+        },
     })
+    expect(values.custom).toBeInstanceOf(Promise)
+})
+
+test('jsCode', async () => {
+    const context = new Context('conf-test', {})
+    const conf = {
+        schema: {
+            fct1: new Attributes.JsCode({ value: () => 42 }),
+            fct2: new Attributes.JsCode({ value: '() => 42' }),
+            fct3: new Attributes.JsCode({ value: 'return () => 42' }),
+            fct4: new Attributes.JsCode({ value: ' \n \t return () => 42' }),
+            fct5: new Attributes.JsCode({ value: () => 42 }),
+            fct6: new Attributes.JsCode({ value: () => 42 }),
+        },
+    }
+    const values = extractConfigWith(
+        {
+            configuration: conf,
+            values: {
+                fct5: () => 43,
+                fct6: '() => 43',
+            },
+        },
+        context,
+    )
+    expect(values.fct1()).toBe(42)
+    expect(values.fct2()).toBe(42)
+    expect(values.fct3()).toBe(42)
+    expect(values.fct4()).toBe(42)
+    expect(values.fct5()).toBe(43)
+    expect(values.fct6()).toBe(43)
 })

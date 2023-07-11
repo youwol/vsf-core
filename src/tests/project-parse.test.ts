@@ -1,6 +1,7 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
 import { Connection } from '../lib/modules'
+import { implementsConfigurableTrait } from '../lib'
 setupCdnHttpConnection()
 
 test('one module', async () => {
@@ -24,6 +25,11 @@ test('only modules, canvas & html', async () => {
     expect(modules).toHaveLength(2)
 
     expect(connections).toHaveLength(1)
+    expect(
+        [...modules, ...connections].filter((e) =>
+            implementsConfigurableTrait(e),
+        ),
+    ).toHaveLength(3)
     expect(connections[0].start.slotId).toBe('output$')
     expect(connections[0].end.slotId).toBe('input$')
     expect(project.getConnection('c0')).toBeTruthy()
