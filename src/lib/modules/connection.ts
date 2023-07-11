@@ -175,7 +175,7 @@ export class Connection implements ConnectionTrait {
         configuration,
         environment,
     }: {
-        uid?: string
+        uid: string
         start: Immutable<SlotTrait>
         end: Immutable<SlotTrait>
         configuration: { adaptor?: Adaptor }
@@ -197,9 +197,7 @@ export class Connection implements ConnectionTrait {
             }),
         )
 
-        this.uid =
-            uid ||
-            `${this.start.slotId}@${this.start.moduleId}-${this.end.slotId}@${this.end.moduleId}`
+        this.uid = uid
     }
 
     /**
