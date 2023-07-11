@@ -25,6 +25,18 @@ async function installFvTree(): Promise<typeof fvTree> {
             return window['fvTree']
         })
 }
+export async function installFluxView(): Promise<typeof fvTree> {
+    return await cdnClient
+        .install({
+            modules: [`@youwol/flux-view#1.x`],
+            aliases: {
+                fv: '@youwol/flux-view',
+            },
+        })
+        .then((window) => {
+            return window['fv']
+        })
+}
 
 /**
  * Default elements for {@link Environment.viewsFactory}.
@@ -77,6 +89,16 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
                 width: '100%',
                 style: { minHeight: '50vh' },
             }
+        },
+    },
+    {
+        name: 'Project',
+        description: 'Summarize project',
+        isCompatible: (d: unknown) => d instanceof ProjectState,
+        view: (project: Immutable<ProjectState>) => {
+            return installFluxView().then(() => {
+                return new ProjectSummaryView({ project })
+            })
         },
     },
 ]
