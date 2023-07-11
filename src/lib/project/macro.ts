@@ -197,9 +197,7 @@ async function deployMacroInMainThread(
 
             const implementation = new Modules.Implementation(
                 {
-                    configuration: macro.configuration || {
-                        schema: {},
-                    },
+                    configuration: macro.configuration,
                     inputs,
                     outputs,
                     instancePool,
