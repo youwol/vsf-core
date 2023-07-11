@@ -23,6 +23,7 @@ import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { moduleConnectors } from './connector'
 import { JsonMap } from './connection'
+import { mergeWith } from '../common'
 export * from './connection'
 
 /**
@@ -59,24 +60,6 @@ export type Declaration = Partial<DocumentationTrait> & {
  */
 export type MessageContext = {
     [k: string]: unknown
-}
-
-function mergeWith(destination, ...sources) {
-    sources.forEach((source) => {
-        Object.keys(source).forEach((key) => {
-            if (
-                source[key] instanceof Object &&
-                destination[key] instanceof Object
-            ) {
-                // If both values are objects, recursively merge them
-                destination[key] = mergeWith(destination[key], source[key])
-            } else {
-                // Otherwise, assign the value directly
-                destination[key] = source[key]
-            }
-        })
-    })
-    return destination
 }
 
 /**
@@ -546,13 +529,14 @@ export class Implementation<
  */
 export class Module<
     TImplementation extends Modules.ImplementationTrait = Modules.ImplementationTrait,
+    TDeclaration extends Declaration = Declaration,
 > {
     /**
      * Module's declaration.
      *
      * @group Immutable Properties
      */
-    public readonly declaration: Immutable<Declaration>
+    public readonly declaration: Immutable<TDeclaration>
 
     /**
      * Module's implementation.
@@ -571,7 +555,7 @@ export class Module<
      * @param params.implementation Module implementation
      */
     constructor(params: {
-        declaration: Declaration
+        declaration: TDeclaration
         implementation: ({
             fwdParams,
         }: {

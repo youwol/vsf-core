@@ -9,6 +9,10 @@ import {
 } from './..'
 import { uuidv4, Message, ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
+
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { Observable } from 'rxjs'
+import { Version } from './workers/models'
 import { MacroSchema } from './macro'
 
 /**
@@ -198,6 +202,7 @@ export type MacroApi = {
     }[]
     html: (instance: ImplementationTrait, config: unknown) => VirtualDOM
 }
+
 /**
  * Specification of a macro for latter instantiation.
  */
@@ -205,3 +210,27 @@ export type MacroModel = WorkflowModel &
     Partial<ConfigurableTrait<MacroSchema>> &
     Partial<MacroApi> &
     ToolboxObjectTrait
+
+/**
+ * Provides information on a workers pool run-time
+ */
+export type WorkersPoolRunTime = {
+    /**
+     * Keys are workers' id
+     */
+    [k: string]: {
+        importedBundles: { [k: string]: Version[] }
+        executingTaskName?: string
+    }
+}
+export type WorkersPoolModel = {
+    id: string
+    startAt?: number
+    stretchTo?: number
+}
+
+export type WorkersPoolInstance = {
+    model: WorkersPoolModel
+    instance: WorkersPoolTypes.WorkersPool
+    runtimes$: Observable<WorkersPoolRunTime>
+}

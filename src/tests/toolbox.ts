@@ -2,12 +2,14 @@ import { module as plotModule } from './modules-implementation/plot.module'
 import { Modules } from '..'
 import { module as ofModule } from './modules-implementation/of.module'
 import { module as delayModule } from './modules-implementation/delay.module'
+import { module as delayWhenModule } from './modules-implementation/delay-when.module'
 import { module as mapModule } from './modules-implementation/map.module'
 import { module as filterModule } from './modules-implementation/filter.module'
 import { module as mergeMapModule } from './modules-implementation/merge-map.module'
 import { module as consoleModule } from './modules-implementation/console.module'
 import { module as timerModule } from './modules-implementation/timer.module'
 import { module as sphereModule } from './modules-implementation/sphere.module'
+import { module as switchMapMacroModule } from './modules-implementation/switch-map-macro.module'
 
 export const toolbox = {
     name: 'test-toolbox',
@@ -31,6 +33,14 @@ export const toolbox = {
             },
             implementation: ({ fwdParams }) => {
                 return delayModule(fwdParams)
+            },
+        }),
+        new Modules.Module({
+            declaration: {
+                typeId: 'delayWhen',
+            },
+            implementation: ({ fwdParams }) => {
+                return delayWhenModule(fwdParams)
             },
         }),
         new Modules.Module({
@@ -88,6 +98,22 @@ export const toolbox = {
             },
             implementation: ({ fwdParams }) => {
                 return plotModule(fwdParams)
+            },
+        }),
+        new Modules.Module({
+            declaration: {
+                typeId: 'plot',
+            },
+            implementation: ({ fwdParams }) => {
+                return plotModule(fwdParams)
+            },
+        }),
+        new Modules.Module({
+            declaration: {
+                typeId: 'switchMapMacroTest',
+            },
+            implementation: ({ fwdParams }) => {
+                return switchMapMacroModule(fwdParams)
             },
         }),
     ],

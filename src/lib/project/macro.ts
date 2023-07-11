@@ -1,5 +1,10 @@
 import { MacroModel, ModuleModel } from './workflow'
-import { ImplementationTrait, mergeMessagesContext, Module } from '../modules'
+import {
+    Declaration,
+    ImplementationTrait,
+    mergeMessagesContext,
+    Module,
+} from '../modules'
 import {
     ConfigInstance,
     extractConfigWith,
@@ -14,8 +19,13 @@ import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './workers/macro-workers'
 import * as Attributes from '../common/configurations/attributes'
+
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
+}
+
+export type MacroDeclaration = Declaration & {
+    macroModel: Immutable<MacroModel>
 }
 
 export type MacroSchema = {
@@ -99,10 +109,11 @@ export function createChart(
 export function macroInstance(
     macro: Immutable<MacroModel>,
 ): Module<ImplementationTrait> {
-    return new Module({
+    return new Module<Modules.ImplementationTrait, MacroDeclaration>({
         declaration: {
             typeId: macro.uid,
             dependencies: gatherDependencies(macro.modules),
+            macroModel: macro,
         },
         implementation: async (
             {
@@ -186,9 +197,7 @@ async function deployMacroInMainThread(
 
             const implementation = new Modules.Implementation(
                 {
-                    configuration: macro.configuration || {
-                        schema: {},
-                    },
+                    configuration: macro.configuration,
                     inputs,
                     outputs,
                     instancePool,

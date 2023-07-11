@@ -6,6 +6,7 @@ import {
     extractConfigWith,
     Schema,
     Immutable,
+    mergeWith,
 } from '..'
 import { Context } from '@youwol/logging'
 import { Observable, of, ReplaySubject } from 'rxjs'
@@ -55,10 +56,11 @@ function prepareMessage(
         configuration: extractConfigWith(
             {
                 configuration: defaultConfiguration,
-                values: {
-                    ...staticConfiguration,
-                    ...step1.configuration,
-                },
+                values: mergeWith(
+                    {},
+                    staticConfiguration || {},
+                    step1.configuration || {},
+                ),
             },
             step1.context,
         ),

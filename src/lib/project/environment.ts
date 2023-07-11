@@ -25,7 +25,7 @@ import {
     WorkersPoolInstance,
     WorkersPoolModel,
     WorkersPoolRunTime,
-} from './workers-pool.models'
+} from './workflow'
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { transmitProbeToMainThread } from './workers/in-worker'
