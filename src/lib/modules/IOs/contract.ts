@@ -476,17 +476,12 @@ export class ExpectAttribute<T> implements ExpectationTrait<T> {
 }
 
 /**
- * Apply an {@link expectation} on a target attribute {@link attName}.
+ * The expectation get fulfilled if both: (i) the attribute of provided name exists in the inputData,
+ * and (ii) the `when` expectation resolve to {@link Fulfilled} when applied on *inputData[attName]*.
  *
- * The expectation get fulfilled if both: (i) the attribute {@link attName} exists in the inputData,
- * and (ii) {@link expectation} resolve to {@link Fulfilled} when applied on *inputData[attName]*.
+ * If the attribute does not exist in the inputData, the expectation is not evaluated.
  *
- * If {@link attName} does not exist in the inputData, {@link expectation} is not evaluated.
- *
- * The normalized data is the result of the provided *normalizeTo* function
- * evaluated from *this.expectation.resolve(inputData[attName])*.
- *
- * @typeParam T The type normalized value when the expectation is fulfilled.
+ * @typeParam T The type of the attribute when the expectation is fulfilled.
  */
 export function attribute<T>({
     name,
@@ -675,10 +670,10 @@ export class Contract<_T> implements ExpectationTrait<unknown> {
 
 /**
  * The objects Contract are an expectation that gather required and optional expectations.
- * The expectation get fulfilled if all the {@link requirements} expectations are.
+ * The expectation get fulfilled if all the provided requirements {@link ExpectationTrait} are.
  *
  * The normalized data is provided as dictionary `{[key:string]: normalizedData(key)}` where
- * *key* reference the keys in {@link requirements} + {@link optionals} and *normalizedData(key)* the normalized data
+ * *key* reference the keys in `requirements' &  `optionals` and *normalizedData(key)* the normalized data
  * of the associated expectation.
  */
 export function contract<T = unknown>({

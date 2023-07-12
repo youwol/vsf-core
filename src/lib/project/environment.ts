@@ -99,9 +99,20 @@ export class Environment {
      */
     public readonly allToolboxes: Immutables<ToolBox>
 
+    /**
+     * This is a temporary workaround.
+     * @hidden
+     */
     public readonly vsf = vsf
+    /**
+     * This is a temporary workaround.
+     * @hidden
+     */
     public readonly rxjs = rxjs
 
+    /**
+     * Available workers pools, see {@link addWorkersPool}.
+     */
     public readonly workersPools: Immutables<WorkersPoolInstance> = []
 
     /**
@@ -357,7 +368,10 @@ export class Environment {
      * @param typeId Type id of the module
      * @return `{factory, toolbox}`
      */
-    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }) {
+    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }): {
+        factory: Modules.Module<Modules.ImplementationTrait>
+        toolbox: ToolBox
+    } {
         type Factory = Modules.Module<Modules.ImplementationTrait>
         const moduleFactory: [Factory, ToolBox] = this.allToolboxes
             .filter((tb) =>

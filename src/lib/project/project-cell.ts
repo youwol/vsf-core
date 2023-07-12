@@ -74,7 +74,7 @@ export class JsCell implements CellTrait {
     }
 
     /**
-     * Display elements - string or virtual DOM - in cell's {@link output$}.
+     * Display elements - string or virtual DOM - in cell's {@link outputs$}.
      * @param args list of elements
      */
     display(...args: (VirtualDOM | string)[]) {
@@ -91,7 +91,7 @@ export class JsCell implements CellTrait {
     }
 
     /**
-     * Log elements - string or unknown - in cell's {@link output$}.
+     * Log elements - string or unknown - in cell's {@link outputs$}.
      * Use {@link Environment.viewsFactory}.
      * @param args list of elements
      */

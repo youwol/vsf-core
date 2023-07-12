@@ -142,7 +142,7 @@ function merge({
 }
 
 /**
- * Specification of a module for latter instantiation in {@link ImplementationTrait}.
+ * Specification of a module for latter instantiation in {@link Modules.ImplementationTrait}.
  */
 export type ModuleModel = UidTrait &
     ToolboxObjectTrait & {
@@ -150,7 +150,7 @@ export type ModuleModel = UidTrait &
     }
 
 /**
- * Specification of a connection for latter instantiation in {@link Connection}.
+ * Specification of a connection for latter instantiation in {@link Modules.Connection}.
  */
 export type ConnectionModel = UidTrait & {
     start: Immutable<{

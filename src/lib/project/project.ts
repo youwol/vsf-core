@@ -365,7 +365,7 @@ export class ProjectState {
      * Add an HTML view to the project.
      *
      * @param viewId UID of the view
-     * @param vDOM Virtual DOM generator, takes the {@link Projects.instancePool} as argument.
+     * @param vDOM Virtual DOM generator, takes the {@link InstancePool} as argument.
      */
     addHtml(
         viewId: string,

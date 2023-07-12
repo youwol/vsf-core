@@ -31,7 +31,7 @@ export type Chart = {
 
 export interface InstancePoolTrait {
     /**
-     * Uid of entity ({@link Implementation} usually) owning this instance pool.
+     * Uid of entity ({@link Modules.Implementation} usually) owning this instance pool.
      */
     parentUid: string
 
@@ -53,25 +53,23 @@ export interface InstancePoolTrait {
     connections: Immutables<Modules.ConnectionTrait>
 
     /**
-     * Provides an inspector object to retrieve instances of the pool.
+     * Return an inspector object to retrieve/search objects from the pool.
      */
     inspector(): Inspector
 
     /**
      * Deploy a {@link Chart}.
      * Environment is kept unchanged: eventual dependencies should have been installed first (e.g. using
-     * {@link deploy} instead}.
-     * @param chart chart to instantiate
-     * @param environment forwarded environment in instantiation
-     * @param scope Scope associated to the modules deployed
+     * {@link Environment.installDependencies}).
+     *
+     * @param params
+     * @param params.chart chart to instantiate
+     * @param params.environment running environment
+     * @param params.scope Scope bounded to the modules deployed
      * @param context context for logging purposes
      */
     deploy(
-        {
-            chart,
-            environment,
-            scope,
-        }: {
+        params: {
             chart: Immutable<Chart>
             environment: Immutable<Environment>
             scope: Immutable<{ [k: string]: unknown }>
@@ -79,6 +77,10 @@ export interface InstancePoolTrait {
         context: ContextLoggerTrait,
     ): Promise<InstancePoolTrait>
 
+    /**
+     * Stop the pool, eventually keeping alive elements from another {@link InstancePool}.
+     * @param keepAlive if provided, keep the elements of this pool alive.
+     */
     stop({ keepAlive }: { keepAlive?: Immutable<InstancePoolTrait> })
 }
 
@@ -98,25 +100,10 @@ export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
 export class InstancePool implements InstancePoolTrait {
     public readonly parentUid: string
 
-    /**
-     * Emit when the pool is {@link stop}.
-     *
-     * @group Observable
-     */
     terminated$: ReplaySubject<undefined>
 
-    /**
-     * Included modules
-     *
-     * @group Immutable Properties
-     */
     public readonly modules: Immutables<Modules.ImplementationTrait> = []
 
-    /**
-     * Included connections
-     *
-     * @group Immutable Properties
-     */
     public readonly connections: Immutables<Modules.ConnectionTrait> = []
 
     constructor(params: {
@@ -128,15 +115,6 @@ export class InstancePool implements InstancePoolTrait {
         this.terminated$ = new ReplaySubject(1)
     }
 
-    /**
-     * Deploy a {@link Chart}.
-     * Environment is kept unchanged: eventual dependencies should have been installed first (e.g. using
-     * {@link deploy} instead}.
-     * @param chart chart to instantiate
-     * @param environment forwarded environment in instantiation
-     * @param scope Scope associated to the modules deployed
-     * @param context context for logging purposes
-     */
     async deploy(
         {
             chart,
@@ -218,10 +196,6 @@ export class InstancePool implements InstancePoolTrait {
         })
     }
 
-    /**
-     * Stop the pool, eventually keeping alive elements from another {@link InstancePool}.
-     * @param keepAlive if provided, keep the elements of this pool alive.
-     */
     stop({ keepAlive }: { keepAlive?: Immutable<InstancePool> } = {}) {
         const toKeep = keepAlive
             ? keepAlive.inspector().flat()
@@ -240,9 +214,6 @@ export class InstancePool implements InstancePoolTrait {
         this.terminated$.next()
     }
 
-    /**
-     * Provides an inspector object to retrieve instances of the pool.
-     */
     inspector(): Inspector {
         return new Inspector({ pool: this })
     }

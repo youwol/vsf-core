@@ -33,7 +33,7 @@ export type Message<TData = unknown> = {
     /**
      * context part of the message.
      * Context are set up using {@link Adaptor} and propagated along the branches of the
-     * {@link WorkflowModel}.
+     * {@link Projects.WorkflowModel}.
      */
     context?: UserContext
 }

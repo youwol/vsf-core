@@ -87,16 +87,37 @@ export type InnerMacroSpecTrait = {
 /**
  * Type of message from the outer observable that gets forwarded in the inner macro.
  *
- * There is no constraints on the {@link ProcessingMessage.data} part, but {@link ProcessingMessage.configuration}
- * is contrained by {@link InnerMacroSpecTrait}.
+ * There is no constraints on the ̀data` attribute of {@link Modules.ProcessingMessage},
+ * but its `configuration` attribute is constrained by {@link InnerMacroSpecTrait}.
  */
 export type TriggerMessage = Immutable<
     ProcessingMessage<unknown, InnerMacroSpecTrait>
 >
 
-type OnInnerFlowCbArgs = {
+/**
+ * Type factorization for arguments of callbacks related to inner macro lifecycle events, gathered in
+ * {@link InnerMacrosOrchestrationTrait}.
+ */
+export type OnInnerMacroEventArgs = {
+    /**
+     * The {@link InnerMacrosPool} managing the state of the pool.
+     */
     state: Immutable<InnerMacrosPool>
+    /**
+     * The {@link TriggerMessage} that initiated the macro creation.
+     */
     fromOuterMessage: TriggerMessage
+}
+
+/**
+ * Type factorization for arguments of callbacks related to inner macro lifecycle end events, gathered in
+ * {@link InnerMacrosOrchestrationTrait}.
+ */
+export type OnInnerMacroEventEndArgs = OnInnerMacroEventArgs & {
+    /**
+     * Instance of the macro.
+     */
+    macroModule: Immutable<ImplementationTrait>
 }
 
 /**
@@ -110,26 +131,18 @@ export interface InnerMacrosOrchestrationTrait {
     /**
      * Callback called when an inner macro has been created.
      */
-    onInnerMacroStarted?: (OnInnerFlowCbArgs) => void
+    onInnerMacroStarted?: (args: OnInnerMacroEventArgs) => void
     /**
      * Callback called when the observable of an inner macro has been completed.
-     * If the observable complete, the macro is also consider `terminated`.
+     * Note: if the observable complete, the macro is also consider `terminated`.
      */
-    onInnerMacroCompleted?: (
-        args: OnInnerFlowCbArgs & {
-            macroModule: Immutable<ImplementationTrait>
-        },
-    ) => void
+    onInnerMacroCompleted?: (args: OnInnerMacroEventEndArgs) => void
     /**
      * Callback called when the observable of an inner macro has been terminated.
      * If can be either: (i) the observable as completed, or (ii) the observable has been terminated
      * (e.g. because of a switch from a `switchMap`).
      */
-    onInnerMacroTerminated?: (
-        args: OnInnerFlowCbArgs & {
-            macroModule: Immutable<ImplementationTrait>
-        },
-    ) => void
+    onInnerMacroTerminated?: (args: OnInnerMacroEventEndArgs) => void
 
     /**
      *

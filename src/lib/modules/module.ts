@@ -40,13 +40,12 @@ export function uuidv4() {
     )
 }
 
-// noinspection JSValidateJSDoc
 /**
  * Module's declaration.
  */
 export type Declaration = Partial<DocumentationTrait> & {
     /**
-     * Unique id of the type of module (within the {@link Projects.Toolbox} associated).
+     * Unique id of the type of module (within the toolbox associated).
      */
     typeId: string
     /**
@@ -77,7 +76,7 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
 }
 
 /**
- * Message emitted from {@link IOs.InputSlot.rawMessage$}.
+ * Message emitted from {@link InputSlot.rawMessage$}.
  *
  * @typeParam TData the type of the data part of the message.
  */
@@ -86,7 +85,7 @@ export type InputMessage<TData = unknown> = Modules.Message<TData> & {
 }
 
 /**
- * Message emitted from {@link IOs.OutputSlot.observable$}
+ * Message emitted from {@link OutputSlot.observable$}
  *
  * @typeParam TData the type of the data part of the message.
  */
@@ -96,8 +95,7 @@ export type OutputMessage<TData = unknown> = {
 }
 
 /**
- * Messages emitted from {@link IOs.InputSlot.preparedMessage$},
- * i.e. the message actually exposed in {@link OutputsMapper.inputs} observables.
+ * Messages emitted from {@link InputSlot.preparedMessage$}.
  *
  * @typeParam TData the type of the data part of the message.
  * @typeParam TConfigInstance the type of the module's instantiated configuration part of the message.
@@ -112,7 +110,7 @@ export type ProcessingMessage<TData = unknown, TConfigInstance = unknown> = {
 /**
  * Type alias for modules' inputs as provided by the developer ({@link UserArgs}).
  * It is a mapping where the keys are the input's id, and the values the
- * {@link IOs.Input} specification.
+ * {@link Input} specification.
  */
 export type InputsMap<TInputs> = {
     [Property in keyof TInputs]: TInputs[Property] extends IOs.Input
@@ -172,7 +170,7 @@ export type UserArgs<
     state?: TState
 
     /**
-     * Eventual {@link InstancePool} associated to the module.
+     * Eventual {@link Projects.InstancePool} associated to the module.
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
@@ -181,7 +179,7 @@ export type UserArgs<
 }
 
 /**
- * Generic type of {@link IOs.Input}, or never if not possible.
+ * Generic type of {@link Input}, or never if not possible.
  * @typeParam Type IOs.Input type
  */
 export type GetGenericInput<Type> = Type extends IOs.Input<infer X> ? X : never
@@ -271,7 +269,7 @@ export type OutputsReturn<
 
 /**
  * A scope gathers immutable data related to the parent instance of modules.
- * It is used for instance when deploying using {@link InstancePool}.
+ * It is used for instance when deploying using {@link Projects.InstancePool}.
  */
 export type Scope = Immutable<{ [k: string]: unknown }>
 
@@ -334,9 +332,8 @@ export class Implementation<
      */
     public readonly factory: Modules.Module
 
-    // noinspection JSValidateJSDoc
     /**
-     * `typeId` of the module within its {@link Projects.Toolbox}.
+     * `typeId` of the module within its toolbox.
      */
     public readonly typeId: string
 
@@ -369,8 +366,8 @@ export class Implementation<
      */
     public readonly configuration: Immutable<Configuration<TSchema>>
     /**
-     * The static configuration instance. This is the model extracted from [configuration] and merged
-     * with eventual properties from {@link ForwardArgs.configurationInstance} at module's creation time.
+     * The static configuration instance. This is the model extracted from the declared module's configuration
+     * and merged with eventual properties of `configurationInstance` of {@link ForwardArgs} at module's creation time.
      *
      * @group Immutable Properties
      */
@@ -421,8 +418,8 @@ export class Implementation<
 
     /**
      * Execution journal, see {@link ExecutionJournal}
-     * Providing {@link UserArgs.journal} allow the module to continue logging in a user defined journal,
-     * otherwise the {@link Implementation.constructor} creates one.
+     * Providing the `journal` attribute in {@link UserArgs} allows the module to continue logging
+     * in the consumer defined journal, otherwise the {@link Implementation.constructor} creates one.
      * @group Immutable Properties
      */
     public readonly journal: ExecutionJournal
@@ -448,7 +445,7 @@ export class Implementation<
     /**
      *
      * @param params Arguments provided by the developer of the module
-     * @param fwdParameters Arguments provided by the system and propagated here (from {@link Modules.getInstance}
+     * @param fwdParameters Arguments provided by the system and propagated here (from {@link Module.getInstance})
      */
     constructor(
         params: UserArgs<TSchema, TInputs, TState>,
@@ -566,7 +563,7 @@ export class Module<
     }
 
     /**
-     * Instantiate the module, usually called by {@link Environment} classes.
+     * Instantiate the module, usually called by {@link Projects.Environment} classes.
      * @param params.fwdParams 'System' argument
      */
     async getInstance(params: { fwdParams: ForwardArgs }) {
