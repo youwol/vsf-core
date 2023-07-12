@@ -4,3 +4,4 @@
  * @module
  */
 export * from './instance-pool-worker'
+export * from './models'
