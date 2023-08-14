@@ -1,9 +1,9 @@
-import { Modules, Attributes } from '../../lib'
+import { Modules, Configurations } from '../../lib'
 import { filter } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        predicate: new Attributes.JsCode({
+        predicate: new Configurations.JsCode({
             value: (
                 message: Modules.ProcessingMessage,
                 // eslint-disable-next-line unused-imports/no-unused-vars -- for documentation purpose

@@ -1,16 +1,16 @@
-import { Modules, Attributes } from '../..'
+import { Modules, Configurations } from '../..'
 import { Material, SphereGeometry, Mesh } from 'three'
 import { map } from 'rxjs/operators'
 
 const configuration = {
     schema: {
-        name: new Attributes.String({ value: 'Sphere' }),
-        radius: new Attributes.Float({ value: 0, min: 0 }),
+        name: new Configurations.String({ value: 'Sphere' }),
+        radius: new Configurations.Float({ value: 0, min: 0 }),
         transform: {
             translation: {
-                x: new Attributes.Integer({ value: 0 }),
-                y: new Attributes.Float({ value: 0 }),
-                z: new Attributes.Float({ value: 0 }),
+                x: new Configurations.Integer({ value: 0 }),
+                y: new Configurations.Float({ value: 0 }),
+                z: new Configurations.Float({ value: 0 }),
             },
         },
     },

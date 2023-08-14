@@ -1,10 +1,10 @@
-import { Modules, Attributes } from '../../lib'
+import { Modules, Configurations } from '../../lib'
 import { mergeMap } from 'rxjs/operators'
 import { Observable, of } from 'rxjs'
 
 export const configuration = {
     schema: {
-        project: new Attributes.JsCode({
+        project: new Configurations.JsCode({
             value: (
                 message: Modules.ProcessingMessage,
             ): Observable<Modules.OutputMessage> => of(message),

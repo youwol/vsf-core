@@ -5,4 +5,5 @@
  */
 export * as Modules from './modules'
 export * as Projects from './project'
+export * as Configurations from './configurations'
 export * from './common'

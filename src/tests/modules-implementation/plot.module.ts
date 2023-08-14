@@ -1,4 +1,4 @@
-import { Modules, Attributes } from '../../index'
+import { Modules, Configurations } from '../../index'
 
 import { ofUnknown } from '../../lib/modules/IOs/contract'
 
@@ -10,13 +10,13 @@ const inputs = {
 }
 const configuration = {
     schema: {
-        name: new Attributes.String({
+        name: new Configurations.String({
             value: 'Plot',
         }),
         circles: [
             {
-                x: new Attributes.Float({ value: 50 }),
-                y: new Attributes.Float({ value: 50 }),
+                x: new Configurations.Float({ value: 50 }),
+                y: new Configurations.Float({ value: 50 }),
             },
         ],
     },

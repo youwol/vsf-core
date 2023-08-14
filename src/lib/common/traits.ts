@@ -1,10 +1,4 @@
-import {
-    ConfigInstance,
-    Configuration,
-    ExecutionJournal,
-    Immutable,
-    Schema,
-} from '..'
+import { ExecutionJournal } from '..'
 import { VirtualDOM } from '@youwol/flux-view'
 import { BehaviorSubject } from 'rxjs'
 
@@ -63,31 +57,6 @@ export interface CanvasTrait {
  */
 export interface StatusTrait<TStatus> {
     status$: BehaviorSubject<TStatus>
-}
-
-/**
- * Trait for object that can be configured.
- *
- * @typeParam TSchema The type of the schema associated to the configuration of the module.
- */
-export interface ConfigurableTrait<TSchema extends Schema> {
-    configuration: Immutable<Configuration<TSchema>>
-    configurationInstance: Immutable<ConfigInstance<TSchema>>
-}
-
-/**
- * Type guard on {@link ConfigurableTrait}.
- * @param object object to test
- */
-export function implementsConfigurableTrait(
-    object: unknown,
-): object is ConfigurableTrait<Schema> {
-    const maybeConf = object as ConfigurableTrait<Schema>
-    return (
-        maybeConf.configuration != undefined &&
-        maybeConf.configurationInstance != undefined &&
-        maybeConf.configuration.schema != undefined
-    )
 }
 
 /**

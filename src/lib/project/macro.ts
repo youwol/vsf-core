@@ -5,20 +5,12 @@ import {
     mergeMessagesContext,
     Module,
 } from '../modules'
-import {
-    ConfigInstance,
-    extractConfigWith,
-    Immutable,
-    Immutables,
-    Modules,
-    Schema,
-} from '..'
+import { Configurations, Immutable, Immutables, Modules } from '..'
 import { InstancePool, InstancePoolTrait } from './instance-pool'
 import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './workers/macro-workers'
-import * as Attributes from '../common/configurations/attributes'
 
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
@@ -29,12 +21,12 @@ export type MacroDeclaration = Declaration & {
 }
 
 export type MacroSchema = {
-    workersPoolId: Attributes.String
-} & Schema
+    workersPoolId: Configurations.String
+} & Configurations.Schema
 
 export const defaultMacroConfig = {
     schema: {
-        workersPoolId: new Attributes.String({ value: '' }),
+        workersPoolId: new Configurations.String({ value: '' }),
     },
 }
 
@@ -75,7 +67,7 @@ export function createChart(
     context = NoContext,
 ) {
     return context.withChild('Create chart deployment model', (ctx) => {
-        const configInstance = extractConfigWith(
+        const configInstance = Configurations.extractConfigWith(
             {
                 configuration: macro.configuration || defaultMacroConfig,
                 values: dynamicConfig,
@@ -98,7 +90,8 @@ export function createChart(
                 configMap[c.uid] ? patchConf(c) : c,
             ),
             metadata: {
-                configInstance: configInstance as ConfigInstance<MacroSchema>,
+                configInstance:
+                    configInstance as Configurations.ConfigInstance<MacroSchema>,
             },
         }
         ctx.info('Chart created', chart)

@@ -3,14 +3,14 @@ import { concatMap, delay, map } from 'rxjs/operators'
 import { InputMessage } from './module'
 import { BehaviorSubject, of, ReplaySubject, Subscription } from 'rxjs'
 import { Environment } from '../project'
-import { extractConfigWith, Attributes, Immutable, Immutable$ } from '..'
+import { Configurations, Immutable, Immutable$ } from '..'
 import {
     UidTrait,
     JournalTrait,
     StatusTrait,
     ExecutionJournal,
-    ConfigurableTrait,
 } from '../common'
+import { extractConfigWith } from '../configurations'
 
 export type AnyJson = boolean | number | string | null | JsonArray | JsonMap
 export type JsonMap = {
@@ -67,9 +67,9 @@ export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
 }
 
 export type ConnectionTrait = UidTrait &
-    ConfigurableTrait<{
-        adaptor?: Attributes.JsCode<(Message) => Message>
-        transmissionDelay?: Attributes.Integer
+    Configurations.ConfigurableTrait<{
+        adaptor?: Configurations.JsCode<(Message) => Message>
+        transmissionDelay?: Configurations.Integer
     }> &
     JournalTrait &
     ConnectableTrait
@@ -113,10 +113,10 @@ export class Connection implements ConnectionTrait {
      */
     public readonly configuration = {
         schema: {
-            adaptor: new Attributes.JsCode({
+            adaptor: new Configurations.JsCode({
                 value: undefined,
             }),
-            transmissionDelay: new Attributes.Integer({ value: 0 }),
+            transmissionDelay: new Configurations.Integer({ value: 0 }),
         },
     }
     /**

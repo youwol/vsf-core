@@ -1,4 +1,4 @@
-import { Attributes } from '..'
+import { Configurations } from '..'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import {
     BatchCells,
@@ -14,7 +14,7 @@ setupCdnHttpConnection()
 
 test('JsCell no view', async () => {
     let project = emptyProject()
-    const source = new Attributes.JsCode({
+    const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState }) => {
             return await project.parseDag('(map#map)')
         },
@@ -30,7 +30,7 @@ test('JsCell no view', async () => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('JsCell with display', (done) => {
     const project = emptyProject()
-    const source = new Attributes.JsCode({
+    const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(map#map)')
             cell.display('a test', { innerText: 'test' })
@@ -64,7 +64,7 @@ test('JsCell with display', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('JsCell with log', (done) => {
     const project = emptyProject()
-    const source = new Attributes.JsCode({
+    const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(map#map)')
             cell.log('a test', { value: 42 })
@@ -134,13 +134,13 @@ test('BatchCells', async () => {
     const projectsStore$ = new BehaviorSubject<ProjectsStore<CellTrait>>(
         new Map(),
     )
-    const source0 = new Attributes.JsCode({
+    const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(map#map)')
             return project
         },
     })
-    const source1 = new Attributes.JsCode({
+    const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(#map)>>(filter#filter)')
             return project
@@ -180,13 +180,13 @@ test('insert cell', async () => {
     const projectsStore$ = new BehaviorSubject<ProjectsStore<CellTrait>>(
         new Map(),
     )
-    const source0 = new Attributes.JsCode({
+    const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(map#map)')
             return project
         },
     })
-    const source1 = new Attributes.JsCode({
+    const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(#map)>>(filter#filter)')
             return project
@@ -200,7 +200,7 @@ test('insert cell', async () => {
         projectsStore$,
     })
     await batch.execute(project)
-    const source2 = new Attributes.JsCode({
+    const source2 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.parseDag('(of#of)>>(#map)')
             return project
@@ -230,7 +230,7 @@ test('insert cell', async () => {
     expect(newStore.has(cell2)).toBeTruthy()
     expect(newStore.has(cell1)).toBeTruthy()
     expect(newCells).toHaveLength(3)
-    const source3 = new Attributes.JsCode({
+    const source3 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             // No effect
             return project

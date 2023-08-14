@@ -1,9 +1,7 @@
 import {
-    ConfigInstance,
-    ConfigurableTrait,
+    Configurations,
     Immutable,
     Immutables,
-    Schema,
     ToolboxObjectTrait,
     UidTrait,
 } from './..'
@@ -189,7 +187,9 @@ export function emptyWorkflowModel(): WorkflowModel {
  * Specification of a {@link MacroModel} API.
  */
 export type MacroApi = {
-    configMapper?: (configInstance: ConfigInstance<Schema>) => {
+    configMapper?: (
+        configInstance: Configurations.ConfigInstance<Configurations.Schema>,
+    ) => {
         [k: string]: { [k: string]: unknown }
     }
     inputs?: {
@@ -207,7 +207,7 @@ export type MacroApi = {
  * Specification of a macro for latter instantiation.
  */
 export type MacroModel = WorkflowModel &
-    Partial<ConfigurableTrait<MacroSchema>> &
+    Partial<Configurations.ConfigurableTrait<MacroSchema>> &
     Partial<MacroApi> &
     ToolboxObjectTrait
 

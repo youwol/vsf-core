@@ -1,5 +1,5 @@
-import { extractConfigWith, Immutable, Immutables } from '../common'
-import { Modules, Projects } from '..'
+import { Immutable, Immutables } from '../common'
+import { Modules, Projects, Configurations } from '..'
 import { Connection, ConnectionTrait, ImplementationTrait } from '../modules'
 import { Environment } from './environment'
 import { ReplaySubject } from 'rxjs'
@@ -298,7 +298,7 @@ export class Inspector {
             connections: flattened.connections.map((c) => {
                 return {
                     ...c,
-                    configuration: extractConfigWith({
+                    configuration: Configurations.extractConfigWith({
                         configuration: c.configuration,
                         values: {},
                     }),

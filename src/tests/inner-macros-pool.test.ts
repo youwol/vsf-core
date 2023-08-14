@@ -1,7 +1,7 @@
 import { InnerMacrosPool, ProjectState } from '../lib/project'
 import { from, interval, Observable } from 'rxjs'
 import { delay, map, mergeMap, tap } from 'rxjs/operators'
-import { Float, Integer } from '../lib/common/configurations/attributes'
+import { Configurations } from '../lib'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 
 const noOp = () => {
@@ -56,9 +56,9 @@ function addMacro() {
                     outputs: ['(#take)0'],
                     configuration: {
                         schema: {
-                            takeCount: new Integer({ value: 1 }),
-                            dueTime: new Float({ value: 0 }),
-                            interval: new Float({ value: 100 }),
+                            takeCount: new Configurations.Integer({ value: 1 }),
+                            dueTime: new Configurations.Float({ value: 0 }),
+                            interval: new Configurations.Float({ value: 100 }),
                         },
                     },
                     configMapper: (instance) => {

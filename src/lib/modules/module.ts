@@ -4,10 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs'
 import {
     Modules,
     ExecutionJournal,
-    ConfigInstance,
-    extractConfigWith,
-    Configuration,
-    Schema,
+    Configurations,
     Immutable,
     DocumentationTrait,
 } from '..'
@@ -126,14 +123,14 @@ export type InputsMap<TInputs> = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type UserArgs<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > = {
     /**
      * Module's configuration model.
      */
-    configuration: Immutable<Configuration<TSchema>>
+    configuration: Immutable<Configurations.Configuration<TSchema>>
     /**
      * Module's inputs.
      */
@@ -205,7 +202,7 @@ export type NoState = never
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type OutputMapperArg<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs,
     TState = NoState,
 > = {
@@ -217,7 +214,7 @@ export type OutputMapperArg<
         [Property in keyof TInputs]: Observable<
             ProcessingMessage<
                 GetGenericInput<TInputs[Property]>,
-                ConfigInstance<TSchema>
+                Configurations.ConfigInstance<TSchema>
             >
         >
     }
@@ -232,7 +229,7 @@ export type OutputMapperArg<
     /**
      * The static configuration: the module's configuration when loaded.
      */
-    configuration: Immutable<ConfigInstance<TSchema>>
+    configuration: Immutable<Configurations.ConfigInstance<TSchema>>
 }
 
 /**
@@ -247,7 +244,7 @@ export type OutputMapperArg<
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type OutputsMapper<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > = ({
@@ -263,7 +260,7 @@ export type OutputsMapper<
  * Shorthand notation of `ReturnType<OutputsMapper<TSchema, TInputs>>`
  */
 export type OutputsReturn<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
 > = ReturnType<OutputsMapper<TSchema, TInputs>>
 
@@ -320,7 +317,7 @@ export type ForwardArgs = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export class Implementation<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > implements ImplementationTrait<TSchema, TInputs, TState>
@@ -364,14 +361,18 @@ export class Implementation<
      *
      * @group Immutable Properties
      */
-    public readonly configuration: Immutable<Configuration<TSchema>>
+    public readonly configuration: Immutable<
+        Configurations.Configuration<TSchema>
+    >
     /**
      * The static configuration instance. This is the model extracted from the declared module's configuration
      * and merged with eventual properties of `configurationInstance` of {@link ForwardArgs} at module's creation time.
      *
      * @group Immutable Properties
      */
-    public readonly configurationInstance: Immutable<ConfigInstance<TSchema>>
+    public readonly configurationInstance: Immutable<
+        Configurations.ConfigInstance<TSchema>
+    >
     /**
      * Inputs of the module as provided by the developer
      *
@@ -396,7 +397,7 @@ export class Implementation<
     public readonly inputSlots: Immutable<{
         [Property in keyof TInputs]: IOs.InputSlot<
             GetGenericInput<TInputs[Property]>,
-            ConfigInstance<TSchema>
+            Configurations.ConfigInstance<TSchema>
         >
     }>
 

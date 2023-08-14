@@ -1,7 +1,7 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { from, Observable, of } from 'rxjs'
 import { map, mergeMap, tap } from 'rxjs/operators'
-import { Attributes } from '../lib'
+import { Configurations } from '../lib'
 import { ProjectState } from '../lib/project'
 setupCdnHttpConnection()
 
@@ -168,10 +168,10 @@ function createMacro() {
                 return project.exposeMacro('test-macro0', {
                     configuration: {
                         schema: {
-                            value: new Attributes.Float({
+                            value: new Configurations.Float({
                                 value: 42,
                             }),
-                            factor: new Attributes.Float({
+                            factor: new Configurations.Float({
                                 value: 1,
                             }),
                         },

@@ -1,13 +1,5 @@
 import { ofUnknown } from './IOs/contract'
-import {
-    ExecutionJournal,
-    ConfigInstance,
-    Configuration,
-    extractConfigWith,
-    Schema,
-    Immutable,
-    mergeWith,
-} from '..'
+import { ExecutionJournal, Configurations, Immutable, mergeWith } from '..'
 import { Context } from '@youwol/logging'
 import { Observable, of, ReplaySubject } from 'rxjs'
 import { catchError, filter, map } from 'rxjs/operators'
@@ -53,7 +45,7 @@ function prepareMessage(
     }
     const inputMessage = {
         data: resolution.value,
-        configuration: extractConfigWith(
+        configuration: Configurations.extractConfigWith(
             {
                 configuration: defaultConfiguration,
                 values: mergeWith(
@@ -76,7 +68,7 @@ function prepareMessage(
  * @ignore
  */
 export function moduleConnectors<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs,
     TState,
 >(params: {
@@ -86,7 +78,7 @@ export function moduleConnectors<
         [Property in keyof TInputs]: TInputs[Property]
     }>
     outputs?: OutputsMapper<TSchema, TInputs, TState>
-    defaultConfiguration: Immutable<Configuration<TSchema>>
+    defaultConfiguration: Immutable<Configurations.Configuration<TSchema>>
     scope: Scope
     staticConfiguration: { [_k: string]: unknown }
     executionJournal: ExecutionJournal
@@ -138,7 +130,7 @@ export function moduleConnectors<
         [Property in keyof TInputs]: Observable<
             ProcessingMessage<
                 GetGenericInput<TInputs[Property]>,
-                ConfigInstance<TSchema>
+                Configurations.ConfigInstance<TSchema>
             >
         >
     }

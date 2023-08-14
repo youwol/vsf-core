@@ -1,4 +1,4 @@
-import { ConfigurableTrait, Immutable, Schema, ToolboxObjectTrait } from '..'
+import { Configurations, Immutable, ToolboxObjectTrait } from '..'
 import { OutputSlot } from './IOs'
 import { Environment, InstancePoolTrait } from '../project'
 import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
@@ -42,11 +42,11 @@ export interface Api$Trait<TInputs> {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type ImplementationTrait<
-    TSchema extends Schema = Schema,
+    TSchema extends Configurations.Schema = Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = unknown,
 > = Api$Trait<TInputs> &
-    ConfigurableTrait<TSchema> &
+    Configurations.ConfigurableTrait<TSchema> &
     UidTrait &
     JournalTrait &
     ToolboxObjectTrait &

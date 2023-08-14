@@ -13,15 +13,7 @@ import {
 import { ConnectionTrait, ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'
-import {
-    ConfigInstance,
-    Configuration,
-    Immutable,
-    Immutables,
-    Projects,
-    Schema,
-    UidTrait,
-} from '..'
+import { Configurations, Immutable, Immutables, Projects, UidTrait } from '..'
 import { defaultMacroConfig, macroInstance } from './macro'
 import { ProjectSummaryView } from './views'
 import { WorkersPoolModel } from './workflow'
@@ -230,13 +222,15 @@ export class ProjectState {
         })
     }
 
-    exposeMacro<TSchema extends Schema>(
+    exposeMacro<TSchema extends Configurations.Schema>(
         macroUid: string,
         definition: {
-            configuration?: Configuration<TSchema>
+            configuration?: Configurations.Configuration<TSchema>
             inputs: string[]
             outputs: string[]
-            configMapper?: (configInstance: ConfigInstance<TSchema>) => {
+            configMapper?: (
+                configInstance: Configurations.ConfigInstance<TSchema>,
+            ) => {
                 [k: string]: { [k: string]: unknown }
             }
             workerPool?: {

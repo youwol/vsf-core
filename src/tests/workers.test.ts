@@ -12,7 +12,7 @@ import {
 } from '../lib/project/workers'
 import { deployMacroInWorker } from '../lib/project/workers/macro-workers'
 import { toClonable } from '../lib/project/workers/utils'
-import { Integer } from '../lib/common/configurations/attributes'
+import { Configurations } from '../lib'
 import { setupCdnHttpConnection } from './test.utils'
 import { setup } from '../auto-generated'
 
@@ -66,7 +66,7 @@ function addMapTakeMacro() {
                     outputs: ['(#take)0'],
                     configuration: {
                         schema: {
-                            takeCount: new Integer({ value: 1 }),
+                            takeCount: new Configurations.Integer({ value: 1 }),
                         },
                     },
                     configMapper: (instance) => {
