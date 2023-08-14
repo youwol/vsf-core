@@ -1,8 +1,7 @@
-import { ExpectationTrait } from './contract'
 //export * as Contracts from './contract'
 export * from './slot'
-
+import { Contracts } from '../..'
 export type Input<TData = unknown> = {
     description?: string
-    contract?: ExpectationTrait<TData>
+    contract?: Contracts.ExpectationTrait<TData>
 }

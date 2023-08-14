@@ -1,4 +1,4 @@
-import { Modules, Configurations } from '../../lib'
+import { Modules, Configurations, Contracts } from '../../lib'
 
 export const configuration = {
     schema: {
@@ -11,7 +11,7 @@ export const configuration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 

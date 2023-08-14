@@ -1,5 +1,10 @@
-import { ofUnknown } from './IOs/contract'
-import { ExecutionJournal, Configurations, Immutable, mergeWith } from '..'
+import {
+    ExecutionJournal,
+    Configurations,
+    Contracts,
+    Immutable,
+    mergeWith,
+} from '..'
 import { Context } from '@youwol/logging'
 import { Observable, of, ReplaySubject } from 'rxjs'
 import { catchError, filter, map } from 'rxjs/operators'
@@ -32,7 +37,7 @@ function prepareMessage(
     const step1 = { ...rawMessage, context: ctx }
 
     if (!contract) {
-        contract = ofUnknown
+        contract = Contracts.ofUnknown
     }
     const resolution = contract.resolve(step1.data, step1.context)
     step1.context.info('Contract resolution done', resolution)

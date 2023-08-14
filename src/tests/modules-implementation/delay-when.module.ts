@@ -1,4 +1,4 @@
-import { Modules, Configurations } from '../../lib'
+import { Modules, Configurations, Contracts } from '../../lib'
 import { delayWhen } from 'rxjs/operators'
 import { interval } from 'rxjs'
 
@@ -13,7 +13,7 @@ export const configuration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 

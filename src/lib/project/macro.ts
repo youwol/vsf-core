@@ -5,9 +5,8 @@ import {
     mergeMessagesContext,
     Module,
 } from '../modules'
-import { Configurations, Immutable, Immutables, Modules } from '..'
+import { Configurations, Immutable, Immutables, Modules, Contracts } from '..'
 import { InstancePool, InstancePoolTrait } from './instance-pool'
-import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './workers/macro-workers'
@@ -36,7 +35,7 @@ export function createMacroInputs(macro: Immutable<MacroModel>) {
             ...acc,
             [`input_${i}$`]: {
                 description: e,
-                contrat: ofUnknown,
+                contrat: Contracts.ofUnknown,
             },
         }
     }, {})

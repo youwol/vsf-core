@@ -1,4 +1,4 @@
-import { Modules, Configurations } from '../..'
+import { Modules, Configurations, Contracts } from '../..'
 import { Material, SphereGeometry, Mesh } from 'three'
 import { map } from 'rxjs/operators'
 
@@ -19,10 +19,10 @@ const configuration = {
 const inputs = {
     input$: {
         description: 'Material',
-        contract: Modules.expect.contract<{ material: Material }>({
+        contract: Contracts.contract<{ material: Material }>({
             description: 'Be able to retrieve a Three.Material',
             requirements: {
-                material: Modules.expect.instanceOf({
+                material: Contracts.instanceOf({
                     typeName: 'Three.Material',
                     Type: Material,
                 }),

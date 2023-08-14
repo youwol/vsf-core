@@ -1,11 +1,9 @@
-import { Modules, Configurations } from '../../index'
-
-import { ofUnknown } from '../../lib/modules/IOs/contract'
+import { Modules, Configurations, Contracts } from '../../index'
 
 const inputs = {
     input$: {
         description: 'the input stream',
-        contract: ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 const configuration = {

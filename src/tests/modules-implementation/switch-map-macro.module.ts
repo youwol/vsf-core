@@ -1,7 +1,7 @@
 // noinspection JSValidateJSDoc
 
 import { concatMap, exhaustMap, map, mergeMap, switchMap } from 'rxjs/operators'
-import { Configurations, Modules } from '../../lib'
+import { Configurations, Modules, Contracts } from '../../lib'
 import {
     InnerMacrosOrchestrationTrait,
     InnerMacrosPool,
@@ -28,7 +28,7 @@ export const partialConfiguration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 
