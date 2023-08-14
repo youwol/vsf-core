@@ -1,4 +1,9 @@
-import { MacroModel, ModuleModel } from './workflow'
+import {
+    MacroModel,
+    ModuleModel,
+    InstancePool,
+    InstancePoolTrait,
+} from '../project'
 import {
     Declaration,
     ImplementationTrait,
@@ -6,7 +11,6 @@ import {
     Module,
 } from '../modules'
 import { Configurations, Immutable, Immutables, Modules, Contracts } from '..'
-import { InstancePool, InstancePoolTrait } from './instance-pool'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { deployMacroInWorker } from './workers/macro-workers'

@@ -1,6 +1,6 @@
 import { KeysAsUnion } from '../../common'
 import { ProcessingMessage, SlotTrait } from '../../modules'
-import { Chart } from '../instance-pool'
+import { Chart } from '../../project'
 
 /**
  * Type literals for id kind of probe messages.

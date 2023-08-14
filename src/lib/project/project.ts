@@ -15,7 +15,7 @@ import { ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'
 import { Configurations, Immutable, Immutables, Projects, UidTrait } from '..'
-import { defaultMacroConfig, macroInstance } from './macro'
+import { defaultMacroConfig, macroInstance } from '../macros'
 import { ProjectSummaryView } from './views'
 import { WorkersPoolModel } from './workflow'
 

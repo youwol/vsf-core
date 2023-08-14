@@ -1,11 +1,4 @@
-import {
-    Chart,
-    InstancePoolTrait,
-    Inspector,
-    InstancePool,
-} from '../instance-pool'
 import { Immutable, Immutables } from '../../common'
-import { Environment } from '../environment'
 import { ContextLoggerTrait } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { Modules } from '../..'
@@ -20,7 +13,14 @@ import {
     ReadyMessage,
     Probe,
 } from './models'
-import { ConnectionTrait } from '../connection'
+import {
+    ConnectionTrait,
+    Chart,
+    InstancePoolTrait,
+    Inspector,
+    InstancePool,
+    Environment,
+} from '../../project'
 
 export type ImplementationProxy = Modules.ImplementationTrait
 export type ConnectionProxy = ConnectionTrait

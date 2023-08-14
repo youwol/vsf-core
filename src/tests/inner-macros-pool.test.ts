@@ -1,4 +1,5 @@
-import { InnerMacrosPool, ProjectState } from '../lib/project'
+import { ProjectState } from '../lib/project'
+import { InnerMacrosPool } from '../lib/macros'
 import { from, interval, Observable } from 'rxjs'
 import { delay, map, mergeMap, tap } from 'rxjs/operators'
 import { Configurations } from '../lib'

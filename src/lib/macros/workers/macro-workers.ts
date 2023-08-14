@@ -1,6 +1,5 @@
-import { Chart, InstancePool } from '../instance-pool'
 import { NoContext } from '@youwol/logging'
-import { MacroModel } from '../workflow'
+import { MacroModel, Chart, InstancePool } from '../../project'
 import { ForwardArgs, Implementation, ImplementationTrait } from '../../modules'
 import { takeUntil } from 'rxjs/operators'
 import { Observable } from 'rxjs'

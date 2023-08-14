@@ -4,9 +4,8 @@
 import type { WorkersPoolTypes } from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
-import type { InstancePool } from '../instance-pool'
 import type { ImplementationTrait, ProcessingMessage } from '../../modules'
-import type { ProjectState } from '..'
+import type { ProjectState, InstancePool } from '../../project'
 import type {
     DeployChart,
     InputClosed,

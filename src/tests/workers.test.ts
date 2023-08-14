@@ -3,15 +3,16 @@ import {
     installTestWorkersPoolModule,
     WorkersPoolTypes,
 } from '@youwol/cdn-client'
-import { createChart, macroInstance, ProjectState } from '../lib/project'
+import { ProjectState } from '../lib/project'
+import { createChart, macroInstance } from '../lib/macros'
 import { from, Observable } from 'rxjs'
 import { map, mergeMap, reduce, tap } from 'rxjs/operators'
 import {
     implementWorkerProcessTrait,
     InstancePoolWorker,
-} from '../lib/project/workers'
-import { deployMacroInWorker } from '../lib/project/workers/macro-workers'
-import { toClonable } from '../lib/project/workers/utils'
+} from '../lib/macros/workers'
+import { deployMacroInWorker } from '../lib/macros/workers/macro-workers'
+import { toClonable } from '../lib/macros/workers/utils'
 import { Configurations } from '../lib'
 import { setupCdnHttpConnection } from './test.utils'
 import { setup } from '../auto-generated'

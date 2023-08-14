@@ -11,8 +11,8 @@ import { VirtualDOM } from '@youwol/flux-view'
 
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { Observable } from 'rxjs'
-import { Version } from './workers/models'
-import { MacroSchema } from './macro'
+
+import { MacroSchema, Workers } from '../macros'
 
 /**
  * Layers specifies a hierarchical organization of a workflow.
@@ -220,7 +220,7 @@ export type WorkersPoolRunTime = {
      * Keys are workers' id
      */
     [k: string]: {
-        importedBundles: { [k: string]: Version[] }
+        importedBundles: { [k: string]: Workers.Version[] }
         executingTaskName?: string
     }
 }

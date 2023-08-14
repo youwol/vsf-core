@@ -5,7 +5,7 @@ import { Configurations, Modules, Contracts } from '../../lib'
 import {
     InnerMacrosOrchestrationTrait,
     InnerMacrosPool,
-} from '../../lib/project'
+} from '../../lib/macros'
 
 export type Policy = 'switch' | 'merge' | 'concat' | 'exhaust'
 export const partialConfiguration = {

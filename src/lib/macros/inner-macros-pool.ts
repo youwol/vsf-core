@@ -1,7 +1,6 @@
 import { ExecutionJournal, Immutable, Immutables } from '../common'
-import { Environment } from './environment'
-import { ProjectState } from './project'
-import { Chart, InstancePool } from './instance-pool'
+import { ProjectState, Environment, Chart, InstancePool } from '../project'
+
 import { ImplementationTrait, ProcessingMessage } from '../modules'
 import {
     BehaviorSubject,
