@@ -1,10 +1,11 @@
 import { Immutable, Immutables } from '../common'
 import { Modules, Projects, Configurations } from '..'
-import { Connection, ConnectionTrait, ImplementationTrait } from '../modules'
+import { ImplementationTrait } from '../modules'
 import { Environment } from './environment'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { WorkflowModel } from './workflow'
+import { Connection, ConnectionTrait } from './connection'
 
 /**
  * Specifies resources of a deployment.
@@ -50,7 +51,7 @@ export interface InstancePoolTrait {
     /**
      * connections instances
      */
-    connections: Immutables<Modules.ConnectionTrait>
+    connections: Immutables<ConnectionTrait>
 
     /**
      * Return an inspector object to retrieve/search objects from the pool.
@@ -104,11 +105,11 @@ export class InstancePool implements InstancePoolTrait {
 
     public readonly modules: Immutables<Modules.ImplementationTrait> = []
 
-    public readonly connections: Immutables<Modules.ConnectionTrait> = []
+    public readonly connections: Immutables<ConnectionTrait> = []
 
     constructor(params: {
         modules?: Immutables<Modules.ImplementationTrait>
-        connections?: Immutables<Modules.ConnectionTrait>
+        connections?: Immutables<ConnectionTrait>
         parentUid: string
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
@@ -265,7 +266,7 @@ export class Inspector {
 
     flat(): {
         modules: Immutables<Modules.ImplementationTrait>
-        connections: Immutables<Modules.ConnectionTrait>
+        connections: Immutables<ConnectionTrait>
     } {
         return this.modules
             .filter((module) => module.instancePool$ != undefined)

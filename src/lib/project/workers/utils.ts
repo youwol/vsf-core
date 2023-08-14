@@ -1,11 +1,7 @@
 import { Chart, InstancePool } from '../instance-pool'
 import { filter, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import {
-    ConnectionStatus,
-    ConnectionTrait,
-    ImplementationTrait,
-} from '../../modules'
+import { ImplementationTrait } from '../../modules'
 import { Environment } from '../environment'
 import { Immutable } from '../../common'
 import {
@@ -20,6 +16,7 @@ import {
 } from './models'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
+import { ConnectionStatus, ConnectionTrait } from '../connection'
 
 const noOp = () => {
     /*No op*/

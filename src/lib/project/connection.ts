@@ -1,6 +1,5 @@
-import { Api$Trait, SlotTrait } from './traits'
+import { Api$Trait, SlotTrait, InputMessage } from '../modules'
 import { concatMap, delay, map } from 'rxjs/operators'
-import { InputMessage } from './module'
 import { BehaviorSubject, of, ReplaySubject, Subscription } from 'rxjs'
 import { Environment } from '../project'
 import { Configurations, Immutable, Immutable$ } from '..'

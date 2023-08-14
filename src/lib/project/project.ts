@@ -9,8 +9,9 @@ import {
     parseMacroInput,
     parseMacroOutput,
     ToolBox,
+    ConnectionTrait,
 } from '../project'
-import { ConnectionTrait, ImplementationTrait } from '../modules'
+import { ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'
 import { Configurations, Immutable, Immutables, Projects, UidTrait } from '..'

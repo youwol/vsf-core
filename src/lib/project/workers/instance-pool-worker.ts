@@ -20,9 +20,10 @@ import {
     ReadyMessage,
     Probe,
 } from './models'
+import { ConnectionTrait } from '../connection'
 
 export type ImplementationProxy = Modules.ImplementationTrait
-export type ConnectionProxy = Modules.ConnectionTrait
+export type ConnectionProxy = ConnectionTrait
 
 /**
  * A trait for object related to a worker within a workers pool

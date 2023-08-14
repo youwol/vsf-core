@@ -15,13 +15,13 @@ import {
     InstancePool,
     InstancePoolTrait,
     ToolBox,
+    JsonMap,
+    Message,
 } from '../project'
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { moduleConnectors } from './connector'
-import { JsonMap } from './connection'
 import { mergeWith } from '../common'
-export * from './connection'
 
 /**
  * Helper function to generate uuidv4.
@@ -77,7 +77,7 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
  *
  * @typeParam TData the type of the data part of the message.
  */
-export type InputMessage<TData = unknown> = Modules.Message<TData> & {
+export type InputMessage<TData = unknown> = Message<TData> & {
     configuration?: JsonMap
 }
 

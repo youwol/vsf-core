@@ -5,7 +5,8 @@ import {
     ToolboxObjectTrait,
     UidTrait,
 } from './..'
-import { uuidv4, Message, ImplementationTrait } from '../modules'
+import { uuidv4, ImplementationTrait } from '../modules'
+import { Message } from './connection'
 import { VirtualDOM } from '@youwol/flux-view'
 
 import { WorkersPoolTypes } from '@youwol/cdn-client'
