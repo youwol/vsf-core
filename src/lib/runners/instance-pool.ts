@@ -1,10 +1,9 @@
 import { Immutable, Immutables } from '../common'
 import { Modules, Projects, Configurations } from '..'
 import { ImplementationTrait } from '../modules'
-import { Environment } from './environment'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { WorkflowModel } from './workflow'
+import { WorkflowModel, Environment } from '../project'
 import { Connection, ConnectionTrait } from './connection'
 
 /**

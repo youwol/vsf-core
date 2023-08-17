@@ -9,15 +9,14 @@ import {
     DocumentationTrait,
 } from '..'
 import { ImplementationTrait } from './traits'
+import { Environment, ToolBox } from '../project'
 import {
-    Environment,
     implementsDeployableTrait,
     InstancePool,
     InstancePoolTrait,
-    ToolBox,
     JsonMap,
     Message,
-} from '../project'
+} from '../runners'
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { moduleConnectors } from './connector'

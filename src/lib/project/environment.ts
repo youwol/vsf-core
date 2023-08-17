@@ -28,8 +28,7 @@ import {
 } from './workflow'
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { transmitProbeToMainThread } from '../macros/workers/in-worker'
-import { emitRuntime } from '../macros/workers/utils'
+import { transmitProbeToMainThread, emitRuntime } from '../runners'
 
 /**
  * Gathers related modules.

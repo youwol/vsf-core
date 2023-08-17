@@ -4,8 +4,9 @@
 import type { WorkersPoolTypes } from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
-import type { ImplementationTrait, ProcessingMessage } from '../../modules'
-import type { ProjectState, InstancePool } from '../../project'
+import type { ImplementationTrait, ProcessingMessage } from '../modules'
+import type { ProjectState } from '../project'
+import type { InstancePool } from './instance-pool'
 import type {
     DeployChart,
     InputClosed,
@@ -84,7 +85,7 @@ export async function startWorkerShadowPool({
     emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-    let instancePool: InstancePool = new vsfCore.Projects.InstancePool({
+    let instancePool: InstancePool = new vsfCore.Runners.InstancePool({
         parentUid: args.parentUid,
     })
 

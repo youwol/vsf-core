@@ -1,14 +1,14 @@
+import { Environment } from '../project'
 import {
     Chart,
     InstancePool,
-    Environment,
     ConnectionStatus,
     ConnectionTrait,
-} from '../../project'
+} from '../runners'
 import { filter, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import { ImplementationTrait } from '../../modules'
-import { Immutable } from '../../common'
+import { ImplementationTrait } from '../modules'
+import { Immutable } from '../common'
 import {
     ConnectionDescriberFromWorker,
     InstancePoolDescriberFromWorker,

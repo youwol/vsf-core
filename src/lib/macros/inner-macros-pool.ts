@@ -1,5 +1,6 @@
 import { ExecutionJournal, Immutable, Immutables } from '../common'
-import { ProjectState, Environment, Chart, InstancePool } from '../project'
+import { ProjectState, Environment } from '../project'
+import { Chart, InstancePool } from '../runners'
 
 import { ImplementationTrait, ProcessingMessage } from '../modules'
 import {

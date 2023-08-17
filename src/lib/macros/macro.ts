@@ -1,9 +1,5 @@
-import {
-    MacroModel,
-    ModuleModel,
-    InstancePool,
-    InstancePoolTrait,
-} from '../project'
+import { MacroModel, ModuleModel } from '../project'
+import { InstancePool, InstancePoolTrait } from '../runners'
 import {
     Declaration,
     ImplementationTrait,

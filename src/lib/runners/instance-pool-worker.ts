@@ -1,4 +1,4 @@
-import { Immutable, Immutables } from '../../common'
+import { Immutable, Immutables } from '../common'
 import { ContextLoggerTrait } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { Modules } from '../..'
@@ -13,15 +13,14 @@ import {
     ReadyMessage,
     Probe,
 } from './models'
+import { Environment } from '../project'
 import {
     ConnectionTrait,
     Chart,
     InstancePoolTrait,
     Inspector,
     InstancePool,
-    Environment,
-} from '../../project'
-
+} from '../runners'
 export type ImplementationProxy = Modules.ImplementationTrait
 export type ConnectionProxy = ConnectionTrait
 

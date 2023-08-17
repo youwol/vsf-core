@@ -4,15 +4,16 @@ import {
     Immutables,
     ToolboxObjectTrait,
     UidTrait,
+    Runners,
 } from './..'
 import { uuidv4, ImplementationTrait } from '../modules'
-import { Message } from './connection'
+import { Message } from '../runners'
 import { VirtualDOM } from '@youwol/flux-view'
 
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { Observable } from 'rxjs'
 
-import { MacroSchema, Workers } from '../macros'
+import { MacroSchema } from '../macros'
 
 /**
  * Layers specifies a hierarchical organization of a workflow.
@@ -220,7 +221,7 @@ export type WorkersPoolRunTime = {
      * Keys are workers' id
      */
     [k: string]: {
-        importedBundles: { [k: string]: Workers.Version[] }
+        importedBundles: { [k: string]: Runners.Version[] }
         executingTaskName?: string
     }
 }

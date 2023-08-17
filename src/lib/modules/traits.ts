@@ -1,6 +1,7 @@
 import { Configurations, Immutable, ToolboxObjectTrait } from '..'
 import { OutputSlot } from './IOs'
-import { Environment, InstancePoolTrait } from '../project'
+import { Environment } from '../project'
+import { InstancePoolTrait } from '../runners'
 import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
 import { GetGenericInput, Module } from './module'
 import * as IOs from './IOs'

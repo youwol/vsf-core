@@ -4,13 +4,12 @@ import {
     Environment,
     Layer,
     MacroModel,
-    InstancePool,
     WorkflowModel,
     parseMacroInput,
     parseMacroOutput,
     ToolBox,
-    ConnectionTrait,
 } from '../project'
+import { InstancePool, ConnectionTrait } from '../runners'
 import { ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'

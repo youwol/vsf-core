@@ -1,14 +1,12 @@
 import { NoContext } from '@youwol/logging'
-import { MacroModel, Chart, InstancePool } from '../../project'
+import { MacroModel } from '../../project'
+import { Chart, InstancePool, InstancePoolWorker, Probe } from '../../runners'
 import { ForwardArgs, Implementation, ImplementationTrait } from '../../modules'
 import { takeUntil } from 'rxjs/operators'
 import { Observable } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { createMacroInputs, createMacroOutputs } from '../macro'
 import { Immutable } from '../../common'
-
-import { InstancePoolWorker } from './instance-pool-worker'
-import { Probe } from './models'
 
 function transmitInputMessage(
     macroUid: string,

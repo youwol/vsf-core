@@ -10,9 +10,9 @@ import { map, mergeMap, reduce, tap } from 'rxjs/operators'
 import {
     implementWorkerProcessTrait,
     InstancePoolWorker,
-} from '../lib/macros/workers'
-import { deployMacroInWorker } from '../lib/macros/workers/macro-workers'
-import { toClonable } from '../lib/macros/workers/utils'
+    toClonable,
+} from '../lib/runners'
+import { deployMacroInWorker } from '../lib/macros/workers'
 import { Configurations } from '../lib'
 import { setupCdnHttpConnection } from './test.utils'
 import { setup } from '../auto-generated'
