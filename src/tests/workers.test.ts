@@ -4,7 +4,7 @@ import {
     WorkersPoolTypes,
 } from '@youwol/cdn-client'
 import { ProjectState } from '../lib/project'
-import { createChart, macroInstance } from '../lib/macros'
+import { createChart, macroInstance, deployMacroInWorker } from '../lib/macros'
 import { from, Observable } from 'rxjs'
 import { map, mergeMap, reduce, tap } from 'rxjs/operators'
 import {
@@ -12,7 +12,6 @@ import {
     InstancePoolWorker,
     toClonable,
 } from '../lib/runners'
-import { deployMacroInWorker } from '../lib/macros/workers'
 import { Configurations } from '../lib'
 import { setupCdnHttpConnection } from './test.utils'
 import { setup } from '../auto-generated'

@@ -9,7 +9,7 @@ import {
 import { Configurations, Immutable, Immutables, Modules, Contracts } from '..'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { deployMacroInWorker } from './workers/macro-workers'
+import { deployMacroInWorker } from './macro-workers'
 
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
