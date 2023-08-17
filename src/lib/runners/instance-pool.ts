@@ -29,7 +29,7 @@ export type Chart = {
     metadata?: Immutable<{ [k: string]: unknown }>
 }
 
-export interface InstancePoolTrait {
+export interface DeployerTrait {
     /**
      * Uid of entity ({@link Modules.Implementation} usually) owning this instance pool.
      */
@@ -75,21 +75,21 @@ export interface InstancePoolTrait {
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait,
-    ): Promise<InstancePoolTrait>
+    ): Promise<DeployerTrait>
 
     /**
      * Stop the pool, eventually keeping alive elements from another {@link InstancePool}.
      * @param keepAlive if provided, keep the elements of this pool alive.
      */
-    stop({ keepAlive }: { keepAlive?: Immutable<InstancePoolTrait> })
+    stop({ keepAlive }: { keepAlive?: Immutable<DeployerTrait> })
 }
 
-export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
+export function implementsDeployerTrait(d: unknown): d is DeployerTrait {
     return (
         d != undefined &&
-        (d as InstancePoolTrait).deploy != undefined &&
-        (d as InstancePoolTrait).modules != undefined &&
-        (d as InstancePoolTrait).connections != undefined
+        (d as DeployerTrait).deploy != undefined &&
+        (d as DeployerTrait).modules != undefined &&
+        (d as DeployerTrait).connections != undefined
     )
 }
 
@@ -97,7 +97,7 @@ export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
  * This class encapsulates running instances of modules as well as connections.
  *
  */
-export class InstancePool implements InstancePoolTrait {
+export class InstancePool implements DeployerTrait {
     public readonly parentUid: string
 
     terminated$: ReplaySubject<undefined>
@@ -220,11 +220,11 @@ export class InstancePool implements InstancePoolTrait {
 }
 
 export class Inspector {
-    public readonly pool: Immutable<InstancePoolTrait>
+    public readonly pool: Immutable<DeployerTrait>
     public readonly modules: Immutables<ImplementationTrait>
     public readonly connections: Immutables<ConnectionTrait>
 
-    constructor(params: { pool: Immutable<InstancePoolTrait> }) {
+    constructor(params: { pool: Immutable<DeployerTrait> }) {
         Object.assign(this, params)
         this.modules = this.pool.modules
         this.connections = this.pool.connections

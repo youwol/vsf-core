@@ -11,9 +11,8 @@ import {
 import { ImplementationTrait } from './traits'
 import { Environment, ToolBox } from '../project'
 import {
-    implementsDeployableTrait,
-    InstancePool,
-    InstancePoolTrait,
+    implementsDeployerTrait,
+    DeployerTrait,
     JsonMap,
     Message,
 } from '../runners'
@@ -170,8 +169,8 @@ export type UserArgs<
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
-        | Immutable<InstancePool>
-        | BehaviorSubject<Immutable<InstancePool>>
+        | Immutable<DeployerTrait>
+        | BehaviorSubject<Immutable<DeployerTrait>>
 }
 
 /**
@@ -435,9 +434,7 @@ export class Implementation<
      * A runtime associated to the module, if any provided by the developer.
      *
      */
-    public readonly instancePool$?: BehaviorSubject<
-        Immutable<InstancePoolTrait>
-    >
+    public readonly instancePool$?: BehaviorSubject<Immutable<DeployerTrait>>
 
     public readonly canvas?: (config?) => VirtualDOM
     public readonly html?: (config?) => VirtualDOM
@@ -454,8 +451,8 @@ export class Implementation<
         Object.assign(this, params, fwdParameters)
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
-        if (implementsDeployableTrait(params.instancePool)) {
-            this.instancePool$ = new BehaviorSubject<Immutable<InstancePool>>(
+        if (implementsDeployerTrait(params.instancePool)) {
+            this.instancePool$ = new BehaviorSubject<Immutable<DeployerTrait>>(
                 params.instancePool,
             )
         }

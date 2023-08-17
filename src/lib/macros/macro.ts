@@ -1,5 +1,5 @@
 import { MacroModel, ModuleModel } from '../project'
-import { InstancePool, InstancePoolTrait } from '../runners'
+import { InstancePool, DeployerTrait } from '../runners'
 import {
     Declaration,
     ImplementationTrait,
@@ -42,7 +42,7 @@ export function createMacroInputs(macro: Immutable<MacroModel>) {
 }
 export function createMacroOutputs(
     macro: Immutable<MacroModel>,
-    instancePool: InstancePoolTrait,
+    instancePool: DeployerTrait,
 ) {
     return () =>
         macro.outputs.reduce((acc, e, i) => {

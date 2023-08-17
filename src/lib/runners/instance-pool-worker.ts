@@ -17,7 +17,7 @@ import { Environment } from '../project'
 import {
     ConnectionTrait,
     Chart,
-    InstancePoolTrait,
+    DeployerTrait,
     Inspector,
     InstancePool,
 } from '../runners'
@@ -64,9 +64,7 @@ export function implementWorkerProcessTrait(
     )
 }
 
-export class InstancePoolWorker
-    implements InstancePoolTrait, WorkerProcessTrait
-{
+export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
     public readonly parentUid: string
     public readonly modules: Immutables<ImplementationProxy>
     public readonly connections: Immutables<ConnectionProxy>
