@@ -1,13 +1,4 @@
 import {
-    EnvironmentTrait,
-    Immutable,
-    Immutables,
-    macroToolbox,
-    Modules,
-    ToolBox,
-} from '..'
-
-import {
     Journal,
     LogChannel,
     Log,
@@ -15,21 +6,27 @@ import {
     NoContext,
     ContextLoggerTrait,
 } from '@youwol/logging'
-
-import * as vsf from '..'
 import { Observable, ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
-import { defaultViewsFactory } from './views'
+import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 
+import { setup } from '../../auto-generated'
+import * as vsf from '..'
 import {
+    EnvironmentTrait,
+    Immutable,
+    Immutables,
+    macroToolbox,
+    ToolBox,
+} from '../common'
+import { Modules, Runners } from '..'
+import {
+    defaultViewsFactory,
     WorkersPoolInstance,
     WorkersPoolModel,
     WorkersPoolRunTime,
-} from './workflow'
-import { setup } from '../../auto-generated'
-import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { transmitProbeToMainThread, emitRuntime } from '../runners'
+} from './'
 
 /**
  * Runtime environment.
@@ -284,8 +281,9 @@ export class Environment implements EnvironmentTrait {
                         },
                     },
                     globals: {
-                        transmitProbeToMainThread,
-                        emitRuntime,
+                        transmitProbeToMainThread:
+                            Runners.transmitProbeToMainThread,
+                        emitRuntime: Runners.emitRuntime,
                     },
                     pool,
                 })

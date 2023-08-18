@@ -1,5 +1,9 @@
 import { VirtualDOM } from '@youwol/flux-view'
-import { ProjectState } from './project'
+import { Journal, installJournalModule } from '@youwol/logging'
+import * as cdnClient from '@youwol/cdn-client'
+import * as fvTree from '@youwol/fv-tree'
+
+import { setup } from '../../auto-generated'
 import {
     ExecutionJournal,
     Immutable,
@@ -7,10 +11,7 @@ import {
     implementsDocumentationTrait,
     ToolBox,
 } from '../common'
-import { setup } from '../../auto-generated'
-import { Journal, installJournalModule } from '@youwol/logging'
-import * as cdnClient from '@youwol/cdn-client'
-import * as fvTree from '@youwol/fv-tree'
+import { ProjectState } from './'
 
 async function installFvTree(): Promise<typeof fvTree> {
     const version = setup.runTimeDependencies.externals['@youwol/fv-tree']

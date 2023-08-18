@@ -1,6 +1,6 @@
 import { KeysAsUnion } from '../common'
-import { ProcessingMessage, SlotTrait } from '../modules'
-import { Chart } from './instance-pool'
+import { Modules } from '..'
+import { Chart } from '.'
 
 /**
  * Type literals for id kind of probe messages.
@@ -169,8 +169,8 @@ export type ModuleDescriberFromWorker = {
  */
 export type ConnectionDescriberFromWorker = {
     uid: string
-    start: SlotTrait
-    end: SlotTrait
+    start: Modules.SlotTrait
+    end: Modules.SlotTrait
 }
 /**
  * Message sent from a worker to retrieve an {@link InstancePool} description in the main thread.
@@ -201,7 +201,7 @@ export type InputMessage = {
     kind: 'InputMessage'
     slotId: string
     moduleId: string
-    message: ProcessingMessage
+    message: Modules.ProcessingMessage
 }
 
 /**

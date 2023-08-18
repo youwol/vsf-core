@@ -1,10 +1,10 @@
-import { Immutable, Immutables } from '../common'
-import { Modules, Projects, Configurations, EnvironmentTrait } from '..'
-import { ImplementationTrait } from '../modules'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
+
+import { Immutable, Immutables, EnvironmentTrait } from '../common'
+import { Modules, Projects, Configurations } from '..'
+import { Connection, ConnectionTrait } from './'
 import { WorkflowModel } from '../project'
-import { Connection, ConnectionTrait } from './connection'
 
 /**
  * Specifies resources of a deployment.
@@ -221,7 +221,7 @@ export class InstancePool implements DeployerTrait {
 
 export class Inspector {
     public readonly pool: Immutable<DeployerTrait>
-    public readonly modules: Immutables<ImplementationTrait>
+    public readonly modules: Immutables<Modules.ImplementationTrait>
     public readonly connections: Immutables<ConnectionTrait>
 
     constructor(params: { pool: Immutable<DeployerTrait> }) {
@@ -233,7 +233,7 @@ export class Inspector {
      * Get a module running instance.
      * @param moduleId UID of the module
      */
-    getModule(moduleId: string): Immutable<ImplementationTrait> {
+    getModule(moduleId: string): Immutable<Modules.ImplementationTrait> {
         return this.modules.find((m) => m.uid == moduleId)
     }
 
@@ -249,7 +249,7 @@ export class Inspector {
      * Get a running instance, either module or connection
      * @param id id of the instance
      */
-    get(id: string): Immutable<ConnectionTrait | ImplementationTrait> {
+    get(id: string): Immutable<ConnectionTrait | Modules.ImplementationTrait> {
         return this.getModule(id) || this.getConnection(id)
     }
 

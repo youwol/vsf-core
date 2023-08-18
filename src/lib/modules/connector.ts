@@ -8,6 +8,7 @@ import {
 import { Context } from '@youwol/logging'
 import { Observable, of, ReplaySubject } from 'rxjs'
 import { catchError, filter, map } from 'rxjs/operators'
+
 import {
     GetGenericInput,
     GetGenericObservable,
@@ -16,8 +17,10 @@ import {
     OutputsReturn,
     ProcessingMessage,
     Scope,
-} from './module'
-import { Input, InputSlot, OutputSlot } from './IOs'
+    Input,
+    InputSlot,
+    OutputSlot,
+} from './'
 
 function prepareMessage(
     moduleId,

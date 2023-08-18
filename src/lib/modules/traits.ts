@@ -1,15 +1,16 @@
+import { BehaviorSubject } from 'rxjs'
+
 import {
-    Configurations,
     EnvironmentTrait,
     Immutable,
     ToolboxObjectTrait,
-} from '..'
-import { OutputSlot } from './IOs'
-import { DeployerTrait } from '../runners'
-import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
-import { GetGenericInput, Module } from './module'
-import * as IOs from './IOs'
-import { BehaviorSubject } from 'rxjs'
+    CanvasTrait,
+    HtmlTrait,
+    JournalTrait,
+    UidTrait,
+} from '../common'
+import { Runners, Configurations } from '..'
+import { OutputSlot, GetGenericInput, Module, Input, InputSlot } from './'
 
 /**
  * Trait for slot.
@@ -30,7 +31,7 @@ export interface SlotTrait {
  */
 export interface Api$Trait<TInputs> {
     inputSlots: Immutable<{
-        [Property in keyof TInputs]: IOs.InputSlot<
+        [Property in keyof TInputs]: InputSlot<
             GetGenericInput<TInputs[Property]>
         >
     }>
@@ -48,7 +49,7 @@ export interface Api$Trait<TInputs> {
  */
 export type ImplementationTrait<
     TSchema extends Configurations.Schema = Configurations.Schema,
-    TInputs = Record<string, IOs.Input>,
+    TInputs = Record<string, Input>,
     TState = unknown,
 > = Api$Trait<TInputs> &
     Configurations.ConfigurableTrait<TSchema> &
@@ -60,7 +61,7 @@ export type ImplementationTrait<
         factory: Module
         environment: Immutable<EnvironmentTrait>
         state?: Immutable<TState>
-        instancePool$?: BehaviorSubject<Immutable<DeployerTrait>>
+        instancePool$?: BehaviorSubject<Immutable<Runners.DeployerTrait>>
     }
 
 /**

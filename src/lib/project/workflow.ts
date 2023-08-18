@@ -1,20 +1,9 @@
-import {
-    Configurations,
-    Immutable,
-    Immutables,
-    ToolboxObjectTrait,
-    UidTrait,
-    Runners,
-} from './..'
-import { uuidv4, ImplementationTrait } from '../modules'
-import { Message } from '../runners'
 import { VirtualDOM } from '@youwol/flux-view'
-
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { Observable } from 'rxjs'
 
-import { MacroSchema } from '../macros'
-
+import { Immutable, Immutables, ToolboxObjectTrait, UidTrait } from '../common'
+import { Configurations, Runners, Modules, Macros } from '..'
 /**
  * Layers specifies a hierarchical organization of a workflow.
  */
@@ -53,7 +42,7 @@ export class Layer implements UidTrait {
         } = {},
     ) {
         Object.assign(this, params)
-        this.uid = this.uid || uuidv4()
+        this.uid = this.uid || Modules.uuidv4()
     }
 
     /**
@@ -161,7 +150,7 @@ export type ConnectionModel = UidTrait & {
         slotId: string | number
         moduleId: string
     }>
-    configuration: Immutable<{ adaptor?: (Message) => Message }>
+    configuration: Immutable<{ adaptor?: (Message) => Runners.Message }>
 }
 
 /**
@@ -178,7 +167,7 @@ export type WorkflowModel = UidTrait & {
  */
 export function emptyWorkflowModel(): WorkflowModel {
     return {
-        uid: uuidv4(),
+        uid: Modules.uuidv4(),
         modules: [],
         connections: [],
         rootLayer: new Layer({ uid: 'root' }),
@@ -202,14 +191,14 @@ export type MacroApi = {
         slotId: number
         moduleId: string
     }[]
-    html: (instance: ImplementationTrait, config: unknown) => VirtualDOM
+    html: (instance: Modules.ImplementationTrait, config: unknown) => VirtualDOM
 }
 
 /**
  * Specification of a macro for latter instantiation.
  */
 export type MacroModel = WorkflowModel &
-    Partial<Configurations.ConfigurableTrait<MacroSchema>> &
+    Partial<Configurations.ConfigurableTrait<Macros.MacroSchema>> &
     Partial<MacroApi> &
     ToolboxObjectTrait
 

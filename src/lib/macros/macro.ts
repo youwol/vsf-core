@@ -1,21 +1,16 @@
-import { MacroModel, ModuleModel } from '../project'
-import { InstancePool, DeployerTrait } from '../runners'
-import {
-    Declaration,
-    ImplementationTrait,
-    mergeMessagesContext,
-    Module,
-} from '../modules'
-import { Configurations, Immutable, Immutables, Modules, Contracts } from '..'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { deployMacroInWorker } from './macro-workers'
+
+import { Immutable, Immutables } from '../common'
+import { Configurations, Modules, Contracts, Runners } from '..'
+import { deployMacroInWorker } from './'
+import { MacroModel, ModuleModel } from '../project'
 
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
 }
 
-export type MacroDeclaration = Declaration & {
+export type MacroDeclaration = Modules.Declaration & {
     macroModel: Immutable<MacroModel>
 }
 
@@ -42,7 +37,7 @@ export function createMacroInputs(macro: Immutable<MacroModel>) {
 }
 export function createMacroOutputs(
     macro: Immutable<MacroModel>,
-    instancePool: DeployerTrait,
+    instancePool: Runners.DeployerTrait,
 ) {
     return () =>
         macro.outputs.reduce((acc, e, i) => {
@@ -100,8 +95,8 @@ export function createChart(
 
 export function macroInstance(
     macro: Immutable<MacroModel>,
-): Module<ImplementationTrait> {
-    return new Module<Modules.ImplementationTrait, MacroDeclaration>({
+): Modules.Module<Modules.ImplementationTrait> {
+    return new Modules.Module<Modules.ImplementationTrait, MacroDeclaration>({
         declaration: {
             typeId: macro.uid,
             dependencies: gatherDependencies(macro.modules),
@@ -165,7 +160,7 @@ async function deployMacroInMainThread(
             const { inputs, outputs, instancePool } = await ctx.withChildAsync(
                 'Preparation inner instance pool & IO',
                 async (ctxInner) => {
-                    let instancePool = new InstancePool({
+                    let instancePool = new Runners.InstancePool({
                         parentUid: fwdParams.uid,
                     })
                     instancePool = await instancePool.deploy(
@@ -215,9 +210,12 @@ async function deployMacroInMainThread(
                                 targetSlot.rawMessage$.next({
                                     data,
                                     configuration: {},
-                                    context: mergeMessagesContext(context, {
-                                        macroConfig: configuration,
-                                    }),
+                                    context: Modules.mergeMessagesContext(
+                                        context,
+                                        {
+                                            macroConfig: configuration,
+                                        },
+                                    ),
                                 })
                             },
                             (e) => {

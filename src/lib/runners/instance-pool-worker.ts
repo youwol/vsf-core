@@ -1,26 +1,25 @@
-import { Immutable, Immutables } from '../common'
 import { ContextLoggerTrait } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
-import { Modules } from '../..'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { startWorkerShadowPool } from './in-worker'
-import { createInstancePoolProxy, serializeChart } from './utils'
 import { filter, map, shareReplay, take } from 'rxjs/operators'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+
+import { Immutable, Immutables, EnvironmentTrait } from '../common'
+import { Modules } from '..'
 import {
-    isProbe,
-    ProbeMessageFromWorker,
-    ProbeMessageIdKeys,
-    ReadyMessage,
-    Probe,
-} from './models'
-import { EnvironmentTrait } from '..'
-import {
+    startWorkerShadowPool,
+    createInstancePoolProxy,
+    serializeChart,
     ConnectionTrait,
     Chart,
     DeployerTrait,
     Inspector,
     InstancePool,
-} from '../runners'
+    isProbe,
+    ProbeMessageFromWorker,
+    ProbeMessageIdKeys,
+    ReadyMessage,
+    Probe,
+} from './'
 export type ImplementationProxy = Modules.ImplementationTrait
 export type ConnectionProxy = ConnectionTrait
 

@@ -1,5 +1,9 @@
 // noinspection JSValidateJSDoc
 
+import { VirtualDOM } from '@youwol/flux-view'
+
+import { Immutable, Immutables, ToolBox, UidTrait } from '../common'
+import { Modules, Configurations, Macros, Runners } from '..'
 import {
     Environment,
     Layer,
@@ -7,24 +11,14 @@ import {
     WorkflowModel,
     parseMacroInput,
     parseMacroOutput,
-} from '../project'
-import { InstancePool, ConnectionTrait } from '../runners'
-import { ImplementationTrait } from '../modules'
-import { VirtualDOM } from '@youwol/flux-view'
-import { parseDag } from './parsing-utils'
-import {
-    Configurations,
-    Immutable,
-    Immutables,
-    Projects,
-    ToolBox,
-    UidTrait,
-} from '..'
-import { defaultMacroConfig, macroInstance } from '../macros'
-import { ProjectSummaryView } from './views'
-import { WorkersPoolModel } from './workflow'
-
-export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
+    parseDag,
+    emptyWorkflowModel,
+    ProjectSummaryView,
+    WorkersPoolModel,
+} from './'
+export type HtmlView = (
+    instancePool: Immutable<Runners.InstancePool>,
+) => VirtualDOM
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
 
@@ -64,8 +58,7 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly main: Immutable<WorkflowModel> =
-        Projects.emptyWorkflowModel()
+    public readonly main: Immutable<WorkflowModel> = emptyWorkflowModel()
     /**
      * List of available macros
      *
@@ -97,15 +90,16 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly instancePool: Immutable<InstancePool> = new InstancePool({
-        parentUid: 'main',
-    })
+    public readonly instancePool: Immutable<Runners.InstancePool> =
+        new Runners.InstancePool({
+            parentUid: 'main',
+        })
 
     constructor(
         params: {
             main?: Immutable<WorkflowModel>
             macros?: Immutables<MacroModel>
-            instancePool?: Immutable<InstancePool>
+            instancePool?: Immutable<Runners.InstancePool>
             views?: Immutable<HtmlViewsStore>
             environment?: Immutable<Environment>
         } = {},
@@ -136,7 +130,7 @@ export class ProjectState {
      * Get a module from the {@link main} workflow.
      * @param moduleId UID of the module
      */
-    getModule(moduleId): Immutable<ImplementationTrait> {
+    getModule(moduleId): Immutable<Modules.ImplementationTrait> {
         return this.instancePool.modules.find((m) => m.uid == moduleId)
     }
 
@@ -155,7 +149,7 @@ export class ProjectState {
      *
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<ConnectionTrait> {
+    getConnection(connectionId: string): Immutable<Runners.ConnectionTrait> {
         return this.instancePool.connections.find((c) => c.uid == connectionId)
     }
 
@@ -244,7 +238,7 @@ export class ProjectState {
                 stretchTo?: number
             }
             html?: (
-                instance: ImplementationTrait,
+                instance: Modules.ImplementationTrait,
                 config?: unknown,
             ) => VirtualDOM
         },
@@ -252,7 +246,7 @@ export class ProjectState {
         const macro = this.macros.find((m) => m.uid == macroUid)
         const configuration = {
             schema: {
-                ...defaultMacroConfig.schema,
+                ...Macros.defaultMacroConfig.schema,
                 ...(definition.configuration?.schema || {}),
             },
         }
@@ -277,7 +271,7 @@ export class ProjectState {
                 }),
             ),
         }
-        const module = macroInstance(newMacro)
+        const module = Macros.macroInstance(newMacro)
 
         return new ProjectState({
             ...this,
@@ -369,7 +363,7 @@ export class ProjectState {
      */
     addHtml(
         viewId: string,
-        vDOM: (instances: InstancePool) => VirtualDOM,
+        vDOM: (instances: Runners.InstancePool) => VirtualDOM,
     ): ProjectState {
         return new ProjectState({
             ...this,

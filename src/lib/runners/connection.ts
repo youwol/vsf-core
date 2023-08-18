@@ -1,6 +1,6 @@
-import { Api$Trait, SlotTrait, InputMessage } from '../modules'
 import { concatMap, delay, map } from 'rxjs/operators'
 import { BehaviorSubject, of, ReplaySubject, Subscription } from 'rxjs'
+
 import {
     EnvironmentTrait,
     Immutable,
@@ -10,8 +10,8 @@ import {
     StatusTrait,
     ExecutionJournal,
 } from '../common'
-import { Configurations } from '..'
-import { extractConfigWith } from '../configurations'
+
+import { Modules, Configurations } from '..'
 
 export type AnyJson = boolean | number | string | null | JsonArray | JsonMap
 export type JsonMap = {
@@ -46,7 +46,7 @@ export type Message<TData = unknown> = {
  * *  providing dynamic configuration properties of the module connected at the end of the connection.
  * *  providing context that will be propagated through the branch of the workflows.
  */
-export type Adaptor = (Message) => InputMessage
+export type Adaptor = (Message) => Modules.InputMessage
 
 /**
  * Type of connection status as emitted by {@link Connection.status$}
@@ -59,8 +59,8 @@ export type ConnectionStatus =
     | 'disconnected'
 
 export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
-    start: Immutable<SlotTrait>
-    end: Immutable<SlotTrait>
+    start: Immutable<Modules.SlotTrait>
+    end: Immutable<Modules.SlotTrait>
     start$: Immutable$<Message>
     end$: Immutable$<Message>
     connect: ({ apiFinder }) => void
@@ -91,14 +91,14 @@ export class Connection implements ConnectionTrait {
      *
      * @group Immutable Properties
      */
-    public readonly start: Immutable<SlotTrait>
+    public readonly start: Immutable<Modules.SlotTrait>
 
     /**
      * Reference the end of the connection (an {@link InputSlot} of a module {@link Implementation}).
      *
      * @group Immutable Properties
      */
-    public readonly end: Immutable<SlotTrait>
+    public readonly end: Immutable<Modules.SlotTrait>
 
     /**
      * uid
@@ -177,8 +177,8 @@ export class Connection implements ConnectionTrait {
         environment,
     }: {
         uid: string
-        start: Immutable<SlotTrait>
-        end: Immutable<SlotTrait>
+        start: Immutable<Modules.SlotTrait>
+        end: Immutable<Modules.SlotTrait>
         configuration: { adaptor?: Adaptor }
         environment: Immutable<EnvironmentTrait>
     }) {
@@ -188,7 +188,7 @@ export class Connection implements ConnectionTrait {
         this.journal = new ExecutionJournal({
             logsChannels: this.environment.logsChannels,
         })
-        this.configurationInstance = extractConfigWith(
+        this.configurationInstance = Configurations.extractConfigWith(
             {
                 configuration: this.configuration,
                 values: configuration,
@@ -209,7 +209,7 @@ export class Connection implements ConnectionTrait {
     connect({
         apiFinder,
     }: {
-        apiFinder: (uid: string) => Immutable<Api$Trait<unknown>>
+        apiFinder: (uid: string) => Immutable<Modules.Api$Trait<unknown>>
     }) {
         const startModule = apiFinder(this.start.moduleId)
         const endModule = apiFinder(this.end.moduleId)
@@ -245,7 +245,7 @@ export class Connection implements ConnectionTrait {
                   )
                 : adapted$
         this.subscription = delayed$.subscribe(
-            (adaptedMessage: InputMessage<unknown>) => {
+            (adaptedMessage: Modules.InputMessage<unknown>) => {
                 this._end$ && this._end$.next(adaptedMessage)
                 endSlot.rawMessage$.next(adaptedMessage)
             },

@@ -6,3 +6,4 @@
 export * from './IOs'
 export * from './module'
 export * from './traits'
+export * from './connector'

@@ -1,15 +1,15 @@
-import { EnvironmentTrait } from '..'
+import { filter, takeWhile } from 'rxjs/operators'
+import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+import * as CdnClient from '@youwol/cdn-client'
+
+import { EnvironmentTrait, Immutable } from '../common'
+import { Modules } from '..'
 import {
     Chart,
     InstancePool,
     ConnectionStatus,
     ConnectionTrait,
-} from '../runners'
-import { filter, takeWhile } from 'rxjs/operators'
-import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import { ImplementationTrait } from '../modules'
-import { Immutable } from '../common'
-import {
     ConnectionDescriberFromWorker,
     InstancePoolDescriberFromWorker,
     isConnectionMessageProbe,
@@ -18,9 +18,7 @@ import {
     ModuleDescriberFromWorker,
     ProbeMessageFromWorker,
     RuntimeNotification,
-} from './models'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import * as CdnClient from '@youwol/cdn-client'
+} from './'
 
 const noOp = () => {
     /*No op*/
@@ -106,7 +104,7 @@ function toModuleProxy({
     description: Immutable<ModuleDescriberFromWorker>
     environment: Immutable<EnvironmentTrait>
     probe$: Observable<ProbeMessageFromWorker>
-}): ImplementationTrait {
+}): Modules.ImplementationTrait {
     const guards = {
         in: isInputRawMessageProbe,
         out: isOutputObservableProbe,

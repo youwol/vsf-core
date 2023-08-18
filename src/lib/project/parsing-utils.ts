@@ -1,6 +1,6 @@
-import { uuidv4 } from '../modules'
-import { ConnectionModel, ModuleModel } from '../project'
 import { Immutables, ToolBox, UidTrait } from '../common'
+import { Modules } from '..'
+import { ConnectionModel, ModuleModel } from '../project'
 
 /**
  * Parse a string representation of a DAG into {@link ModuleModel} & {@link ConnectionModel}.
@@ -139,7 +139,7 @@ function parseModule({
     }
     return {
         typeId,
-        uid: moduleId || uuidv4(),
+        uid: moduleId || Modules.uuidv4(),
         configuration: moduleId ? configs[moduleId] : undefined,
         toolboxId: toolbox.origin.packageName,
         toolboxVersion: toolbox.origin.version,

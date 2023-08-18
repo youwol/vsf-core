@@ -1,9 +1,10 @@
 import { BehaviorSubject, from, ReplaySubject } from 'rxjs'
-import { VirtualDOM } from '@youwol/flux-view'
-import { ProjectState } from './project'
-import { Environment } from '../project'
-import { Configurations, Immutable, Immutables } from '..'
 import { Journal } from '@youwol/logging'
+import { VirtualDOM } from '@youwol/flux-view'
+
+import { Immutable, Immutables } from '../common'
+import { Configurations } from '..'
+import { ProjectState, Environment } from './'
 
 /**
  * Cell function signature for {@link JsCell}

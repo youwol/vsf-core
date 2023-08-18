@@ -1,7 +1,8 @@
-import * as IOs from './IOs'
+import { VirtualDOM } from '@youwol/flux-view'
+import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { InstallInputs } from '@youwol/cdn-client'
 import { BehaviorSubject, Observable } from 'rxjs'
-import { Modules, Configurations } from '..'
+
 import {
     ExecutionJournal,
     Immutable,
@@ -10,17 +11,9 @@ import {
     mergeWith,
     EnvironmentTrait,
 } from '../common'
-import { ImplementationTrait } from './traits'
-
-import {
-    implementsDeployerTrait,
-    DeployerTrait,
-    JsonMap,
-    Message,
-} from '../runners'
-import { VirtualDOM } from '@youwol/flux-view'
-import { Context, ContextLoggerTrait } from '@youwol/logging'
-import { moduleConnectors } from './connector'
+import { Configurations, Runners } from '..'
+import { ImplementationTrait, moduleConnectors } from './'
+import * as IOs from './IOs'
 
 /**
  * Helper function to generate uuidv4.
@@ -76,8 +69,8 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
  *
  * @typeParam TData the type of the data part of the message.
  */
-export type InputMessage<TData = unknown> = Message<TData> & {
-    configuration?: JsonMap
+export type InputMessage<TData = unknown> = Runners.Message<TData> & {
+    configuration?: Runners.JsonMap
 }
 
 /**
@@ -170,8 +163,8 @@ export type UserArgs<
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
-        | Immutable<DeployerTrait>
-        | BehaviorSubject<Immutable<DeployerTrait>>
+        | Immutable<Runners.DeployerTrait>
+        | BehaviorSubject<Immutable<Runners.DeployerTrait>>
 }
 
 /**
@@ -276,7 +269,7 @@ export type ForwardArgs = {
     /**
      * Module's factory
      */
-    factory: Modules.Module<Modules.ImplementationTrait>
+    factory: Module<ImplementationTrait>
 
     /**
      * Owning toolbox
@@ -326,7 +319,7 @@ export class Implementation<
      *
      * @group Immutable Properties
      */
-    public readonly factory: Modules.Module
+    public readonly factory: Module
 
     /**
      * `typeId` of the module within its toolbox.
@@ -435,7 +428,9 @@ export class Implementation<
      * A runtime associated to the module, if any provided by the developer.
      *
      */
-    public readonly instancePool$?: BehaviorSubject<Immutable<DeployerTrait>>
+    public readonly instancePool$?: BehaviorSubject<
+        Immutable<Runners.DeployerTrait>
+    >
 
     public readonly canvas?: (config?) => VirtualDOM
     public readonly html?: (config?) => VirtualDOM
@@ -452,10 +447,10 @@ export class Implementation<
         Object.assign(this, params, fwdParameters)
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
-        if (implementsDeployerTrait(params.instancePool)) {
-            this.instancePool$ = new BehaviorSubject<Immutable<DeployerTrait>>(
-                params.instancePool,
-            )
+        if (Runners.implementsDeployerTrait(params.instancePool)) {
+            this.instancePool$ = new BehaviorSubject<
+                Immutable<Runners.DeployerTrait>
+            >(params.instancePool)
         }
         if (
             params.instancePool &&
@@ -523,7 +518,7 @@ export class Implementation<
  * @typeParam TImplementation the type of the module's created; usually {@link Implementation}.
  */
 export class Module<
-    TImplementation extends Modules.ImplementationTrait = Modules.ImplementationTrait,
+    TImplementation extends ImplementationTrait = ImplementationTrait,
     TDeclaration extends Declaration = Declaration,
 > {
     /**

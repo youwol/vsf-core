@@ -1,14 +1,4 @@
 import {
-    ExecutionJournal,
-    Immutable,
-    Immutables,
-    macroToolbox,
-} from '../common'
-import { EnvironmentTrait, Modules } from '..'
-import { Chart, InstancePool } from '../runners'
-
-import { ImplementationTrait, ProcessingMessage } from '../modules'
-import {
     BehaviorSubject,
     from,
     Observable,
@@ -18,7 +8,16 @@ import {
 } from 'rxjs'
 import { Context } from '@youwol/logging'
 import { finalize, mergeMap, tap } from 'rxjs/operators'
-import { MacroSchema } from './macro'
+
+import {
+    ExecutionJournal,
+    Immutable,
+    Immutables,
+    macroToolbox,
+    EnvironmentTrait,
+} from '../common'
+import { Modules, Runners } from '..'
+import { MacroSchema } from './'
 
 const getMacroDeployment = ({
     environment,
@@ -47,10 +46,13 @@ const getMacroDeployment = ({
     },
 })
 
-function mergeInstancePools(uid: string, ...pools: Immutables<InstancePool>) {
+function mergeInstancePools(
+    uid: string,
+    ...pools: Immutables<Runners.InstancePool>
+) {
     const modules = pools.reduce((acc, e) => [...acc, ...e.modules], [])
     const connections = pools.reduce((acc, e) => [...acc, ...e.connections], [])
-    return new InstancePool({
+    return new Runners.InstancePool({
         parentUid: uid,
         modules,
         connections,
@@ -95,7 +97,7 @@ export type InnerMacroSpecTrait = {
  * but its `configuration` attribute is constrained by {@link InnerMacroSpecTrait}.
  */
 export type TriggerMessage = Immutable<
-    ProcessingMessage<unknown, InnerMacroSpecTrait>
+    Modules.ProcessingMessage<unknown, InnerMacroSpecTrait>
 >
 
 /**
@@ -121,7 +123,7 @@ export type OnInnerMacroEventEndArgs = OnInnerMacroEventArgs & {
     /**
      * Instance of the macro.
      */
-    macroModule: Immutable<ImplementationTrait>
+    macroModule: Immutable<Modules.ImplementationTrait>
 }
 
 /**
@@ -189,7 +191,9 @@ export class InnerMacrosPool {
      * `instancePool$` gather the 'global' instance pool of macro.
      * It includes all the macros that are running at a particular point in time.
      */
-    public readonly instancePool$: BehaviorSubject<Immutable<InstancePool>>
+    public readonly instancePool$: BehaviorSubject<
+        Immutable<Runners.InstancePool>
+    >
     /**
      * If `true`, terminated macro are not kept in memory.
      */
@@ -221,7 +225,7 @@ export class InnerMacrosPool {
      */
     public readonly instancePools: Map<
         Immutable<TriggerMessage>,
-        Promise<Immutable<InstancePool>>
+        Promise<Immutable<Runners.InstancePool>>
     > = new Map()
     private index = 0
     private sourceCompleted = false
@@ -244,7 +248,7 @@ export class InnerMacrosPool {
             logsChannels: this.environment.logsChannels,
         })
         this.instancePool$ = new BehaviorSubject(
-            new InstancePool({ parentUid: this.parentUid }),
+            new Runners.InstancePool({ parentUid: this.parentUid }),
         )
         this.overallContext = this.journal.addPage({
             title: `overall`,
@@ -372,7 +376,7 @@ export class InnerMacrosPool {
             })
             this.instanceContext.set(message, instanceCtx)
             const deployment: {
-                chart: Immutable<Chart>
+                chart: Immutable<Runners.Chart>
                 environment: Immutable<EnvironmentTrait>
                 scope: Immutable<{ [p: string]: unknown }>
             } = getMacroDeployment({
@@ -382,7 +386,7 @@ export class InnerMacrosPool {
             })
             this.instancePools.set(
                 message,
-                new InstancePool({ parentUid: this.parentUid }).deploy(
+                new Runners.InstancePool({ parentUid: this.parentUid }).deploy(
                     deployment,
                     instanceCtx,
                 ),
@@ -438,7 +442,7 @@ export class InnerMacrosPool {
                 ctx.end()
                 this.instancePools.delete(message)
                 this.instancePool$.next(
-                    new InstancePool({
+                    new Runners.InstancePool({
                         parentUid: this.parentUid,
                         modules,
                         connections: [],
