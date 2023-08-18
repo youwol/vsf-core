@@ -1,5 +1,10 @@
-import { ExecutionJournal, Immutable, Immutables } from '../common'
-import { ProjectState, Environment } from '../project'
+import {
+    ExecutionJournal,
+    Immutable,
+    Immutables,
+    macroToolbox,
+} from '../common'
+import { EnvironmentTrait, Modules } from '..'
 import { Chart, InstancePool } from '../runners'
 
 import { ImplementationTrait, ProcessingMessage } from '../modules'
@@ -14,14 +19,13 @@ import {
 import { Context } from '@youwol/logging'
 import { finalize, mergeMap, tap } from 'rxjs/operators'
 import { MacroSchema } from './macro'
-import { Modules } from '..'
 
 const getMacroDeployment = ({
     environment,
     uid,
     configuration,
 }: {
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
     uid: string
     configuration: Immutable<InnerMacroSpecTrait['innerMacro']>
 }) => ({
@@ -36,7 +40,7 @@ const getMacroDeployment = ({
                 uid,
                 typeId: configuration.macroTypeId,
                 configuration: configuration.configuration,
-                toolboxId: ProjectState.macrosToolbox,
+                toolboxId: macroToolbox.uid,
             },
         ],
         connections: [],
@@ -197,7 +201,7 @@ export class InnerMacrosPool {
     /**
      * Environment in which the instances are running.
      */
-    public readonly environment: Immutable<Environment>
+    public readonly environment: Immutable<EnvironmentTrait>
     /**
      * Journal used to log information
      */
@@ -231,7 +235,7 @@ export class InnerMacrosPool {
      */
     constructor(params: {
         parentUid: string
-        environment: Immutable<Environment>
+        environment: Immutable<EnvironmentTrait>
         purgeOnTerminated: boolean
         orchestrator: Immutable<InnerMacrosOrchestrationTrait>
     }) {
@@ -369,7 +373,7 @@ export class InnerMacrosPool {
             this.instanceContext.set(message, instanceCtx)
             const deployment: {
                 chart: Immutable<Chart>
-                environment: Immutable<Environment>
+                environment: Immutable<EnvironmentTrait>
                 scope: Immutable<{ [p: string]: unknown }>
             } = getMacroDeployment({
                 environment: this.environment,

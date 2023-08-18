@@ -1,14 +1,16 @@
 import { Api$Trait, SlotTrait, InputMessage } from '../modules'
 import { concatMap, delay, map } from 'rxjs/operators'
 import { BehaviorSubject, of, ReplaySubject, Subscription } from 'rxjs'
-import { Environment } from '../project'
-import { Configurations, Immutable, Immutable$ } from '..'
 import {
+    EnvironmentTrait,
+    Immutable,
+    Immutable$,
     UidTrait,
     JournalTrait,
     StatusTrait,
     ExecutionJournal,
 } from '../common'
+import { Configurations } from '..'
 import { extractConfigWith } from '../configurations'
 
 export type AnyJson = boolean | number | string | null | JsonArray | JsonMap
@@ -82,7 +84,7 @@ export class Connection implements ConnectionTrait {
      *
      * @group Immutable Properties
      */
-    public readonly environment: Immutable<Environment>
+    public readonly environment: Immutable<EnvironmentTrait>
 
     /**
      * Reference the start of the connection (an {@link OutputSlot} of a module {@link Implementation}).
@@ -178,7 +180,7 @@ export class Connection implements ConnectionTrait {
         start: Immutable<SlotTrait>
         end: Immutable<SlotTrait>
         configuration: { adaptor?: Adaptor }
-        environment: Immutable<Environment>
+        environment: Immutable<EnvironmentTrait>
     }) {
         this.environment = environment
         this.start = start

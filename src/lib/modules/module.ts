@@ -1,16 +1,17 @@
 import * as IOs from './IOs'
 import { InstallInputs } from '@youwol/cdn-client'
 import { BehaviorSubject, Observable } from 'rxjs'
+import { Modules, Configurations } from '..'
 import {
-    Modules,
     ExecutionJournal,
-    Configurations,
     Immutable,
     DocumentationTrait,
-} from '..'
+    ToolBox,
+    mergeWith,
+    EnvironmentTrait,
+} from '../common'
 import { ImplementationTrait } from './traits'
-import { Environment } from '../project'
-import { ToolBox, mergeWith } from '../common'
+
 import {
     implementsDeployerTrait,
     DeployerTrait,
@@ -294,7 +295,7 @@ export type ForwardArgs = {
     /**
      * Run time environment
      */
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
 
     /**
      * {@link Scope} associated to the module
@@ -353,7 +354,7 @@ export class Implementation<
      *
      * @group Immutable Properties
      */
-    public readonly environment: Immutable<Environment>
+    public readonly environment: Immutable<EnvironmentTrait>
     /**
      * Configuration of the module, as defined by the developer in {@link UserArgs}
      *

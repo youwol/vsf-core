@@ -13,7 +13,7 @@ import {
     ReadyMessage,
     Probe,
 } from './models'
-import { Environment } from '../project'
+import { EnvironmentTrait } from '..'
 import {
     ConnectionTrait,
     Chart,
@@ -147,7 +147,7 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
             probes,
         }: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
             customArgs: TArgs
             probes: (

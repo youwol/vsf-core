@@ -1,9 +1,9 @@
 import { Immutable, Immutables } from '../common'
-import { Modules, Projects, Configurations } from '..'
+import { Modules, Projects, Configurations, EnvironmentTrait } from '..'
 import { ImplementationTrait } from '../modules'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { WorkflowModel, Environment } from '../project'
+import { WorkflowModel } from '../project'
 import { Connection, ConnectionTrait } from './connection'
 
 /**
@@ -71,7 +71,7 @@ export interface DeployerTrait {
     deploy(
         params: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait,
@@ -122,7 +122,7 @@ export class InstancePool implements DeployerTrait {
             scope,
         }: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait = NoContext,

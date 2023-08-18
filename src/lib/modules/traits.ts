@@ -1,6 +1,10 @@
-import { Configurations, Immutable, ToolboxObjectTrait } from '..'
+import {
+    Configurations,
+    EnvironmentTrait,
+    Immutable,
+    ToolboxObjectTrait,
+} from '..'
 import { OutputSlot } from './IOs'
-import { Environment } from '../project'
 import { DeployerTrait } from '../runners'
 import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
 import { GetGenericInput, Module } from './module'
@@ -54,7 +58,7 @@ export type ImplementationTrait<
     Partial<HtmlTrait> &
     Partial<CanvasTrait> & {
         factory: Module
-        environment: Immutable<Environment>
+        environment: Immutable<EnvironmentTrait>
         state?: Immutable<TState>
         instancePool$?: BehaviorSubject<Immutable<DeployerTrait>>
     }

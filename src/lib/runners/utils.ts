@@ -1,4 +1,4 @@
-import { Environment } from '../project'
+import { EnvironmentTrait } from '..'
 import {
     Chart,
     InstancePool,
@@ -80,7 +80,7 @@ export function createInstancePoolProxy({
 }: {
     instancePool: InstancePoolDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
     parentUid: string
 }) {
     return new InstancePool({
@@ -104,7 +104,7 @@ function toModuleProxy({
     probe$,
 }: {
     description: Immutable<ModuleDescriberFromWorker>
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
     probe$: Observable<ProbeMessageFromWorker>
 }): ImplementationTrait {
     const guards = {

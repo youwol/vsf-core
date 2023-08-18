@@ -1,4 +1,11 @@
-import { Immutable, Immutables, macroToolbox, Modules, ToolBox } from '..'
+import {
+    EnvironmentTrait,
+    Immutable,
+    Immutables,
+    macroToolbox,
+    Modules,
+    ToolBox,
+} from '..'
 
 import {
     Journal,
@@ -27,7 +34,7 @@ import { transmitProbeToMainThread, emitRuntime } from '../runners'
 /**
  * Runtime environment.
  */
-export class Environment {
+export class Environment implements EnvironmentTrait {
     /**
      * Standard toolboxes are toolboxes provided at construction
      * and already instantiated. They can be imported without download step.
