@@ -1,6 +1,8 @@
-import { ExecutionJournal } from '..'
+import { ExecutionJournal, Immutable, Immutables, Modules, ToolBox } from '..'
 import { VirtualDOM } from '@youwol/flux-view'
 import { BehaviorSubject } from 'rxjs'
+import { ContextLoggerTrait, LogChannel } from '@youwol/logging'
+import { WorkersPoolInstance } from '../project'
 
 /**
  * Trait for object with unique ID
@@ -73,3 +75,57 @@ export function implementsDocumentationTrait(
 ): object is DocumentationTrait {
     return (object as DocumentationTrait).documentation != undefined
 }
+
+/**
+ * Trait for objects that logging runtime information.
+ */
+export interface LoggerTrait {
+    /**
+     * Broadcasting channels
+     */
+    logsChannels: Immutables<LogChannel>
+}
+
+/**
+ * Runtime environment.
+ */
+export interface InstallerTrait {
+    instantiateModule<T>(
+        {
+            typeId,
+            moduleId,
+            configuration,
+            scope,
+        }: {
+            typeId: string
+            moduleId?: string
+            configuration?: { [_k: string]: unknown }
+            scope: Immutable<{ [k: string]: unknown }>
+        },
+        context: ContextLoggerTrait,
+    ): Promise<T & Modules.ImplementationTrait>
+
+    installDependencies(
+        {
+            modules,
+        }: {
+            modules: Immutables<{ typeId: string }>
+        },
+        context: ContextLoggerTrait,
+    )
+
+    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }): {
+        factory: Modules.Module<Modules.ImplementationTrait>
+        toolbox: ToolBox
+    }
+}
+
+export type EnvironmentTrait = LoggerTrait &
+    InstallerTrait & {
+        /**
+         * Available workers pools, see {@link addWorkersPool}.
+         */
+        workersPools: Immutables<WorkersPoolInstance>
+        toolboxes: Immutables<ToolBox>
+        macrosToolbox: Immutable<ToolBox>
+    }
