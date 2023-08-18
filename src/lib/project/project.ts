@@ -7,13 +7,19 @@ import {
     WorkflowModel,
     parseMacroInput,
     parseMacroOutput,
-    ToolBox,
 } from '../project'
 import { InstancePool, ConnectionTrait } from '../runners'
 import { ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
 import { parseDag } from './parsing-utils'
-import { Configurations, Immutable, Immutables, Projects, UidTrait } from '..'
+import {
+    Configurations,
+    Immutable,
+    Immutables,
+    Projects,
+    ToolBox,
+    UidTrait,
+} from '..'
 import { defaultMacroConfig, macroInstance } from '../macros'
 import { ProjectSummaryView } from './views'
 import { WorkersPoolModel } from './workflow'

@@ -1,4 +1,5 @@
 export * from './traits'
 export * from './journal'
 export * from './types'
+export * from './types-domain'
 export * from './utils'

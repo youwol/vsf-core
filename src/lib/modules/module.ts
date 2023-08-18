@@ -9,7 +9,8 @@ import {
     DocumentationTrait,
 } from '..'
 import { ImplementationTrait } from './traits'
-import { Environment, ToolBox } from '../project'
+import { Environment } from '../project'
+import { ToolBox, mergeWith } from '../common'
 import {
     implementsDeployerTrait,
     DeployerTrait,
@@ -19,7 +20,6 @@ import {
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
 import { moduleConnectors } from './connector'
-import { mergeWith } from '../common'
 
 /**
  * Helper function to generate uuidv4.

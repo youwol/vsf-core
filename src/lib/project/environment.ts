@@ -1,11 +1,5 @@
-import {
-    DocumentationTrait,
-    Immutable,
-    Immutables,
-    Modules,
-    UidTrait,
-} from '..'
-import { ImplementationTrait } from '../modules'
+import { Immutable, Immutables, macroToolbox, Modules, ToolBox } from '..'
+
 import {
     Journal,
     LogChannel,
@@ -20,7 +14,7 @@ import { Observable, ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
 import { defaultViewsFactory } from './views'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
-import { ProjectState } from './project'
+
 import {
     WorkersPoolInstance,
     WorkersPoolModel,
@@ -29,42 +23,6 @@ import {
 import { setup } from '../../auto-generated'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { transmitProbeToMainThread, emitRuntime } from '../runners'
-
-/**
- * Gathers related modules.
- */
-export type ToolBox = UidTrait &
-    Partial<DocumentationTrait> & {
-        /**
-         *
-         */
-        origin: {
-            packageName: string
-            version: string
-        }
-        /**
-         * list of included modules
-         */
-        modules: Immutables<Modules.Module<ImplementationTrait>>
-        /**
-         * name of the toolbox
-         */
-        name: string
-
-        icon?: {
-            svgString?: string
-        }
-    }
-
-const macroToolbox = {
-    name: 'Macros',
-    uid: ProjectState.macrosToolbox,
-    origin: {
-        packageName: 'Macros',
-        version: 'NA',
-    },
-    modules: [],
-}
 
 /**
  * Runtime environment.

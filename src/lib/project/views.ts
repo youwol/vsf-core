@@ -5,12 +5,12 @@ import {
     Immutable,
     implementsHtmlTrait,
     implementsDocumentationTrait,
+    ToolBox,
 } from '../common'
 import { setup } from '../../auto-generated'
 import { Journal, installJournalModule } from '@youwol/logging'
 import * as cdnClient from '@youwol/cdn-client'
 import * as fvTree from '@youwol/fv-tree'
-import { Projects } from '..'
 
 async function installFvTree(): Promise<typeof fvTree> {
     const version = setup.runTimeDependencies.externals['@youwol/fv-tree']
@@ -82,7 +82,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
         name: 'Documentation',
         description: 'Expose documentation',
         isCompatible: (d: unknown) => implementsDocumentationTrait(d),
-        view: (data: Projects.ToolBox) => {
+        view: (data: ToolBox) => {
             return {
                 tag: 'iframe',
                 src: data.documentation,

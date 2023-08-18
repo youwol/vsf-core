@@ -1,6 +1,6 @@
 import { uuidv4 } from '../modules'
-import { ConnectionModel, ModuleModel, ToolBox } from '../project'
-import { Immutables, UidTrait } from '../common'
+import { ConnectionModel, ModuleModel } from '../project'
+import { Immutables, ToolBox, UidTrait } from '../common'
 
 /**
  * Parse a string representation of a DAG into {@link ModuleModel} & {@link ConnectionModel}.
