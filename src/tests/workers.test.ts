@@ -11,7 +11,7 @@ import {
     implementWorkerProcessTrait,
     InstancePoolWorker,
     toClonable,
-} from '../lib/runners'
+} from '../lib/deployers'
 import { Configurations } from '../lib'
 import { setupCdnHttpConnection } from './test.utils'
 import { setup } from '../auto-generated'

@@ -2,7 +2,7 @@ import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 
 import { Immutable, Immutables } from '../common'
-import { Configurations, Modules, Contracts, Runners } from '..'
+import { Configurations, Modules, Contracts, Deployers } from '..'
 import { deployMacroInWorker } from './'
 import { MacroModel, ModuleModel } from '../project'
 
@@ -37,7 +37,7 @@ export function createMacroInputs(macro: Immutable<MacroModel>) {
 }
 export function createMacroOutputs(
     macro: Immutable<MacroModel>,
-    instancePool: Runners.DeployerTrait,
+    instancePool: Deployers.DeployerTrait,
 ) {
     return () =>
         macro.outputs.reduce((acc, e, i) => {
@@ -160,7 +160,7 @@ async function deployMacroInMainThread(
             const { inputs, outputs, instancePool } = await ctx.withChildAsync(
                 'Preparation inner instance pool & IO',
                 async (ctxInner) => {
-                    let instancePool = new Runners.InstancePool({
+                    let instancePool = new Deployers.InstancePool({
                         parentUid: fwdParams.uid,
                     })
                     instancePool = await instancePool.deploy(

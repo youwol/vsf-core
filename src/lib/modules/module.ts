@@ -11,7 +11,7 @@ import {
     mergeWith,
     EnvironmentTrait,
 } from '../common'
-import { Configurations, Runners } from '..'
+import { Configurations, Deployers } from '..'
 import { ImplementationTrait, moduleConnectors } from './'
 import * as IOs from './IOs'
 
@@ -69,8 +69,8 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
  *
  * @typeParam TData the type of the data part of the message.
  */
-export type InputMessage<TData = unknown> = Runners.Message<TData> & {
-    configuration?: Runners.JsonMap
+export type InputMessage<TData = unknown> = Deployers.Message<TData> & {
+    configuration?: Deployers.JsonMap
 }
 
 /**
@@ -163,8 +163,8 @@ export type UserArgs<
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
-        | Immutable<Runners.DeployerTrait>
-        | BehaviorSubject<Immutable<Runners.DeployerTrait>>
+        | Immutable<Deployers.DeployerTrait>
+        | BehaviorSubject<Immutable<Deployers.DeployerTrait>>
 }
 
 /**
@@ -429,7 +429,7 @@ export class Implementation<
      *
      */
     public readonly instancePool$?: BehaviorSubject<
-        Immutable<Runners.DeployerTrait>
+        Immutable<Deployers.DeployerTrait>
     >
 
     public readonly canvas?: (config?) => VirtualDOM
@@ -447,9 +447,9 @@ export class Implementation<
         Object.assign(this, params, fwdParameters)
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
-        if (Runners.implementsDeployerTrait(params.instancePool)) {
+        if (Deployers.implementsDeployerTrait(params.instancePool)) {
             this.instancePool$ = new BehaviorSubject<
-                Immutable<Runners.DeployerTrait>
+                Immutable<Deployers.DeployerTrait>
             >(params.instancePool)
         }
         if (

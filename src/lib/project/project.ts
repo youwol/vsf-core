@@ -3,7 +3,7 @@
 import { VirtualDOM } from '@youwol/flux-view'
 
 import { Immutable, Immutables, ToolBox, UidTrait } from '../common'
-import { Modules, Configurations, Macros, Runners } from '..'
+import { Modules, Configurations, Macros, Deployers } from '..'
 import {
     Environment,
     Layer,
@@ -17,7 +17,7 @@ import {
     WorkersPoolModel,
 } from './'
 export type HtmlView = (
-    instancePool: Immutable<Runners.InstancePool>,
+    instancePool: Immutable<Deployers.InstancePool>,
 ) => VirtualDOM
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
@@ -90,8 +90,8 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly instancePool: Immutable<Runners.InstancePool> =
-        new Runners.InstancePool({
+    public readonly instancePool: Immutable<Deployers.InstancePool> =
+        new Deployers.InstancePool({
             parentUid: 'main',
         })
 
@@ -99,7 +99,7 @@ export class ProjectState {
         params: {
             main?: Immutable<WorkflowModel>
             macros?: Immutables<MacroModel>
-            instancePool?: Immutable<Runners.InstancePool>
+            instancePool?: Immutable<Deployers.InstancePool>
             views?: Immutable<HtmlViewsStore>
             environment?: Immutable<Environment>
         } = {},
@@ -149,7 +149,7 @@ export class ProjectState {
      *
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<Runners.ConnectionTrait> {
+    getConnection(connectionId: string): Immutable<Deployers.ConnectionTrait> {
         return this.instancePool.connections.find((c) => c.uid == connectionId)
     }
 
@@ -363,7 +363,7 @@ export class ProjectState {
      */
     addHtml(
         viewId: string,
-        vDOM: (instances: Runners.InstancePool) => VirtualDOM,
+        vDOM: (instances: Deployers.InstancePool) => VirtualDOM,
     ): ProjectState {
         return new ProjectState({
             ...this,

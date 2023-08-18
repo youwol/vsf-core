@@ -9,7 +9,7 @@ import {
     JournalTrait,
     UidTrait,
 } from '../common'
-import { Runners, Configurations } from '..'
+import { Deployers, Configurations } from '..'
 import { OutputSlot, GetGenericInput, Module, Input, InputSlot } from './'
 
 /**
@@ -61,7 +61,7 @@ export type ImplementationTrait<
         factory: Module
         environment: Immutable<EnvironmentTrait>
         state?: Immutable<TState>
-        instancePool$?: BehaviorSubject<Immutable<Runners.DeployerTrait>>
+        instancePool$?: BehaviorSubject<Immutable<Deployers.DeployerTrait>>
     }
 
 /**

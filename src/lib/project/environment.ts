@@ -20,7 +20,7 @@ import {
     macroToolbox,
     ToolBox,
 } from '../common'
-import { Modules, Runners } from '..'
+import { Modules, Deployers } from '..'
 import {
     defaultViewsFactory,
     WorkersPoolInstance,
@@ -282,8 +282,8 @@ export class Environment implements EnvironmentTrait {
                     },
                     globals: {
                         transmitProbeToMainThread:
-                            Runners.transmitProbeToMainThread,
-                        emitRuntime: Runners.emitRuntime,
+                            Deployers.transmitProbeToMainThread,
+                        emitRuntime: Deployers.emitRuntime,
                     },
                     pool,
                 })

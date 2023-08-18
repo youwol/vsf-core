@@ -4,7 +4,7 @@ import { Observable } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 import { Immutable } from '../common'
-import { Runners, Modules } from '..'
+import { Deployers, Modules } from '..'
 import { createMacroInputs, createMacroOutputs } from './'
 import { MacroModel } from '../project'
 
@@ -36,7 +36,7 @@ function transmitInputMessage(
         },
     )
 }
-export function getProbes(instancePool: Runners.InstancePool, customArgs) {
+export function getProbes(instancePool: Deployers.InstancePool, customArgs) {
     const notForwarded = () => {
         return {
             data: 'Data not forwarded',
@@ -53,7 +53,7 @@ export function getProbes(instancePool: Runners.InstancePool, customArgs) {
                         slotId: inputSlot.slotId,
                     },
                     message: notForwarded,
-                } as Runners.Probe<'module.inputSlot.rawMessage$'>
+                } as Deployers.Probe<'module.inputSlot.rawMessage$'>
             }),
         ...instancePool.modules
             .flatMap((m) =>
@@ -80,14 +80,14 @@ export function getProbes(instancePool: Runners.InstancePool, customArgs) {
                     message: isMacroOutputs
                         ? (inWorkerMessage) => inWorkerMessage
                         : notForwarded,
-                } as Runners.Probe<'module.outputSlot.observable$'>
+                } as Deployers.Probe<'module.outputSlot.observable$'>
             }),
         ...instancePool.connections.map((connection) => {
             return {
                 kind: 'connection.status$',
                 id: { connectionId: connection.uid },
                 message: (inWorkerMessage) => inWorkerMessage,
-            } as Runners.Probe<'connection.status$'>
+            } as Deployers.Probe<'connection.status$'>
         }),
     ]
 }
@@ -99,7 +99,7 @@ export async function deployMacroInWorker(
         fwdParams,
     }: {
         macro: Immutable<MacroModel>
-        chart: Runners.Chart
+        chart: Deployers.Chart
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
         fwdParams: Modules.ForwardArgs
     },
@@ -108,7 +108,7 @@ export async function deployMacroInWorker(
     return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
         ctx.info('Workers pool', workersPool)
 
-        let instancePoolWorker = await Runners.InstancePoolWorker.empty({
+        let instancePoolWorker = await Deployers.InstancePoolWorker.empty({
             processName: fwdParams.uid,
             workersPool,
             parentUid: fwdParams.uid,

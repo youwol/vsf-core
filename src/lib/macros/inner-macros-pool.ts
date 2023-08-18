@@ -16,7 +16,7 @@ import {
     macroToolbox,
     EnvironmentTrait,
 } from '../common'
-import { Modules, Runners } from '..'
+import { Modules, Deployers } from '..'
 import { MacroSchema } from './'
 
 const getMacroDeployment = ({
@@ -48,11 +48,11 @@ const getMacroDeployment = ({
 
 function mergeInstancePools(
     uid: string,
-    ...pools: Immutables<Runners.InstancePool>
+    ...pools: Immutables<Deployers.InstancePool>
 ) {
     const modules = pools.reduce((acc, e) => [...acc, ...e.modules], [])
     const connections = pools.reduce((acc, e) => [...acc, ...e.connections], [])
-    return new Runners.InstancePool({
+    return new Deployers.InstancePool({
         parentUid: uid,
         modules,
         connections,
@@ -192,7 +192,7 @@ export class InnerMacrosPool {
      * It includes all the macros that are running at a particular point in time.
      */
     public readonly instancePool$: BehaviorSubject<
-        Immutable<Runners.InstancePool>
+        Immutable<Deployers.InstancePool>
     >
     /**
      * If `true`, terminated macro are not kept in memory.
@@ -225,7 +225,7 @@ export class InnerMacrosPool {
      */
     public readonly instancePools: Map<
         Immutable<TriggerMessage>,
-        Promise<Immutable<Runners.InstancePool>>
+        Promise<Immutable<Deployers.InstancePool>>
     > = new Map()
     private index = 0
     private sourceCompleted = false
@@ -248,7 +248,7 @@ export class InnerMacrosPool {
             logsChannels: this.environment.logsChannels,
         })
         this.instancePool$ = new BehaviorSubject(
-            new Runners.InstancePool({ parentUid: this.parentUid }),
+            new Deployers.InstancePool({ parentUid: this.parentUid }),
         )
         this.overallContext = this.journal.addPage({
             title: `overall`,
@@ -376,7 +376,7 @@ export class InnerMacrosPool {
             })
             this.instanceContext.set(message, instanceCtx)
             const deployment: {
-                chart: Immutable<Runners.Chart>
+                chart: Immutable<Deployers.Chart>
                 environment: Immutable<EnvironmentTrait>
                 scope: Immutable<{ [p: string]: unknown }>
             } = getMacroDeployment({
@@ -386,10 +386,9 @@ export class InnerMacrosPool {
             })
             this.instancePools.set(
                 message,
-                new Runners.InstancePool({ parentUid: this.parentUid }).deploy(
-                    deployment,
-                    instanceCtx,
-                ),
+                new Deployers.InstancePool({
+                    parentUid: this.parentUid,
+                }).deploy(deployment, instanceCtx),
             )
             const instancePool = await this.instancePools.get(message)
             const reducedPool = mergeInstancePools(
@@ -442,7 +441,7 @@ export class InnerMacrosPool {
                 ctx.end()
                 this.instancePools.delete(message)
                 this.instancePool$.next(
-                    new Runners.InstancePool({
+                    new Deployers.InstancePool({
                         parentUid: this.parentUid,
                         modules,
                         connections: [],

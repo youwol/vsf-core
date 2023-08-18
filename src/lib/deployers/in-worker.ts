@@ -86,7 +86,7 @@ export async function startWorkerShadowPool({
     emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-    let instancePool: InstancePool = new vsfCore.Runners.InstancePool({
+    let instancePool: InstancePool = new vsfCore.Deployers.InstancePool({
         parentUid: args.parentUid,
     })
 

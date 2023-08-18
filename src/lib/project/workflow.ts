@@ -3,7 +3,7 @@ import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { Observable } from 'rxjs'
 
 import { Immutable, Immutables, ToolboxObjectTrait, UidTrait } from '../common'
-import { Configurations, Runners, Modules, Macros } from '..'
+import { Configurations, Deployers, Modules, Macros } from '..'
 /**
  * Layers specifies a hierarchical organization of a workflow.
  */
@@ -150,7 +150,7 @@ export type ConnectionModel = UidTrait & {
         slotId: string | number
         moduleId: string
     }>
-    configuration: Immutable<{ adaptor?: (Message) => Runners.Message }>
+    configuration: Immutable<{ adaptor?: (Message) => Deployers.Message }>
 }
 
 /**
@@ -210,7 +210,7 @@ export type WorkersPoolRunTime = {
      * Keys are workers' id
      */
     [k: string]: {
-        importedBundles: { [k: string]: Runners.Version[] }
+        importedBundles: { [k: string]: Deployers.Version[] }
         executingTaskName?: string
     }
 }
