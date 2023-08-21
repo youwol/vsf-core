@@ -9,16 +9,20 @@ import {
     UidTrait,
     WorkersPoolModel,
 } from '../common'
-import { Modules, Configurations, Connections, Macros, Deployers } from '..'
+import {
+    Modules,
+    Configurations,
+    Connections,
+    Macros,
+    Deployers,
+    Workflows,
+} from '..'
 import {
     Environment,
-    Layer,
     MacroModel,
-    WorkflowModel,
     parseMacroInput,
     parseMacroOutput,
     parseDag,
-    emptyWorkflowModel,
     ProjectSummaryView,
 } from './'
 export type HtmlView = (
@@ -63,7 +67,8 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly main: Immutable<WorkflowModel> = emptyWorkflowModel()
+    public readonly main: Immutable<Workflows.WorkflowModel> =
+        Workflows.emptyWorkflowModel()
     /**
      * List of available macros
      *
@@ -102,7 +107,7 @@ export class ProjectState {
 
     constructor(
         params: {
-            main?: Immutable<WorkflowModel>
+            main?: Immutable<Workflows.WorkflowModel>
             macros?: Immutables<MacroModel>
             instancePool?: Immutable<Deployers.InstancePool>
             views?: Immutable<HtmlViewsStore>
@@ -177,7 +182,7 @@ export class ProjectState {
                   uid: macroUid,
                   modules: [],
                   connections: [],
-                  rootLayer: new Layer(),
+                  rootLayer: new Workflows.Layer(),
               }
             : this.main
         const model = parseDag({
@@ -200,7 +205,7 @@ export class ProjectState {
             uid: wfBase.uid,
             modules: [...modulesSet],
             connections: [...connectionsSet],
-            rootLayer: new Layer({
+            rootLayer: new Workflows.Layer({
                 uid: wfBase.rootLayer.uid,
                 children: wfBase.rootLayer.children,
                 moduleIds: [...rootModuleIds],
@@ -316,7 +321,7 @@ export class ProjectState {
         )
         const layers = workflow.rootLayer.filter((l) => uids.includes(l.uid))
 
-        const layer = new Layer({
+        const layer = new Workflows.Layer({
             uid: layerId,
             moduleIds: moduleIds,
             children: layers,

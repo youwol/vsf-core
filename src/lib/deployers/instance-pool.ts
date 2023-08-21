@@ -2,8 +2,7 @@ import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 
 import { Immutable, Immutables, EnvironmentTrait } from '../common'
-import { Modules, Projects, Configurations, Connections } from '..'
-import { WorkflowModel } from '../project'
+import { Modules, Configurations, Connections, Workflows } from '..'
 
 /**
  * Specifies resources of a deployment.
@@ -288,7 +287,7 @@ export class Inspector {
             )
     }
 
-    toFlatWorkflowModel(): WorkflowModel {
+    toFlatWorkflowModel(): Workflows.WorkflowModel {
         const flattened = this.flat()
         return {
             uid: '',
@@ -307,7 +306,7 @@ export class Inspector {
                     }),
                 }
             }),
-            rootLayer: new Projects.Layer({
+            rootLayer: new Workflows.Layer({
                 moduleIds: this.modules.map((m) => m.uid),
             }),
         }
