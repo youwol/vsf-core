@@ -1,10 +1,10 @@
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
+import { VirtualDOM } from '@youwol/flux-view'
 
-import { Immutable, Immutables } from '../common'
-import { Configurations, Modules, Contracts, Deployers } from '..'
+import { Immutable, Immutables, ToolboxObjectTrait } from '../common'
+import { Configurations, Modules, Contracts, Deployers, Workflows } from '..'
 import { deployMacroInWorker } from './'
-import { MacroModel } from '../project'
 
 export const macroToolbox = {
     name: 'Macros',
@@ -244,3 +244,31 @@ async function deployMacroInMainThread(
         },
     )
 }
+
+/**
+ * Specification of a {@link MacroModel} API.
+ */
+export type MacroApi = {
+    configMapper?: (
+        configInstance: Configurations.ConfigInstance<Configurations.Schema>,
+    ) => {
+        [k: string]: { [k: string]: unknown }
+    }
+    inputs?: {
+        slotId: number
+        moduleId: string
+    }[]
+    outputs?: {
+        slotId: number
+        moduleId: string
+    }[]
+    html: (instance: Modules.ImplementationTrait, config: unknown) => VirtualDOM
+}
+
+/**
+ * Specification of a macro for latter instantiation.
+ */
+export type MacroModel = Workflows.WorkflowModel &
+    Partial<Configurations.ConfigurableTrait<MacroSchema>> &
+    Partial<MacroApi> &
+    ToolboxObjectTrait

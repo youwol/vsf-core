@@ -19,7 +19,6 @@ import {
 } from '..'
 import {
     Environment,
-    MacroModel,
     parseMacroInput,
     parseMacroOutput,
     parseDag,
@@ -74,7 +73,7 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly macros: Immutables<MacroModel> = []
+    public readonly macros: Immutables<Macros.MacroModel> = []
     /**
      * HTML views associated to the project
      *
@@ -108,7 +107,7 @@ export class ProjectState {
     constructor(
         params: {
             main?: Immutable<Workflows.WorkflowModel>
-            macros?: Immutables<MacroModel>
+            macros?: Immutables<Macros.MacroModel>
             instancePool?: Immutable<Deployers.InstancePool>
             views?: Immutable<HtmlViewsStore>
             environment?: Immutable<Environment>
@@ -262,7 +261,7 @@ export class ProjectState {
                 ...(definition.configuration?.schema || {}),
             },
         }
-        const newMacro: MacroModel = {
+        const newMacro: Macros.MacroModel = {
             ...macro,
             ...definition,
             configuration,

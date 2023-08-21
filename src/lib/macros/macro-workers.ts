@@ -5,8 +5,7 @@ import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 import { Immutable } from '../common'
 import { Deployers, Modules } from '..'
-import { createMacroInputs, createMacroOutputs } from './'
-import { MacroModel } from '../project'
+import { createMacroInputs, createMacroOutputs, MacroModel } from './'
 
 function transmitInputMessage(
     macroUid: string,
