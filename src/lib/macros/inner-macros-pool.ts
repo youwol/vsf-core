@@ -13,11 +13,10 @@ import {
     ExecutionJournal,
     Immutable,
     Immutables,
-    macroToolbox,
     EnvironmentTrait,
 } from '../common'
 import { Modules, Deployers } from '..'
-import { MacroSchema } from './'
+import { MacroSchema, macroToolbox } from './'
 
 const getMacroDeployment = ({
     environment,

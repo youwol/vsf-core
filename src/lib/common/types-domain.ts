@@ -26,13 +26,3 @@ export type ToolBox = UidTrait &
             svgString?: string
         }
     }
-
-export const macroToolbox = {
-    name: 'Macros',
-    uid: 'Macros',
-    origin: {
-        packageName: 'Macros',
-        version: 'NA',
-    },
-    modules: [],
-}

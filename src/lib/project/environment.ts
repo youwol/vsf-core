@@ -13,14 +13,8 @@ import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 
 import { setup } from '../../auto-generated'
 import * as vsf from '..'
-import {
-    EnvironmentTrait,
-    Immutable,
-    Immutables,
-    macroToolbox,
-    ToolBox,
-} from '../common'
-import { Modules, Deployers } from '..'
+import { EnvironmentTrait, Immutable, Immutables, ToolBox } from '../common'
+import { Modules, Deployers, Macros } from '..'
 import {
     defaultViewsFactory,
     WorkersPoolInstance,
@@ -51,7 +45,7 @@ export class Environment implements EnvironmentTrait {
      *
      * @group Immutable Properties
      */
-    public readonly macrosToolbox: Immutable<ToolBox> = macroToolbox
+    public readonly macrosToolbox: Immutable<ToolBox> = Macros.macroToolbox
 
     /**
      * Gather all kind of toolboxes.

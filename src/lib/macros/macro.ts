@@ -6,6 +6,16 @@ import { Configurations, Modules, Contracts, Deployers } from '..'
 import { deployMacroInWorker } from './'
 import { MacroModel, ModuleModel } from '../project'
 
+export const macroToolbox = {
+    name: 'Macros',
+    uid: 'Macros',
+    origin: {
+        packageName: 'Macros',
+        version: 'NA',
+    },
+    modules: [],
+}
+
 function gatherDependencies(_modules: Immutables<ModuleModel>) {
     return {}
 }
