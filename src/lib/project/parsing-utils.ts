@@ -1,6 +1,5 @@
 import { Immutables, ToolBox, UidTrait } from '../common'
 import { Modules, Connections } from '..'
-import { ModuleModel } from '../project'
 
 /**
  * Parse a string representation of a DAG into {@link ModuleModel} & {@link ConnectionModel}.
@@ -23,8 +22,11 @@ export function parseDag({
     flows: string | string[]
     configs: { [_k: string]: unknown }
     toolboxes: Immutables<ToolBox>
-    availableModules: Immutables<ModuleModel>
-}): { modules: ModuleModel[]; connections: Connections.ConnectionModel[] } {
+    availableModules: Immutables<Modules.ModuleModel>
+}): {
+    modules: Modules.ModuleModel[]
+    connections: Connections.ConnectionModel[]
+} {
     const sanitizedFlows: string[] = Array.isArray(flows) ? flows : [flows]
 
     const { modules, connections } = sanitizedFlows.reduce(
@@ -41,13 +43,13 @@ export function parseDag({
             }
         },
         {
-            modules: [] as ModuleModel[],
+            modules: [] as Modules.ModuleModel[],
             connections: [] as Connections.ConnectionModel[],
         },
     )
     const removeDuplicates = (
-        modules: Immutables<ModuleModel>,
-    ): ModuleModel[] => {
+        modules: Immutables<Modules.ModuleModel>,
+    ): Modules.ModuleModel[] => {
         const newModules = Object.values(modules).filter(
             (m) => availableModules.find((m2) => m2.uid == m.uid) == undefined,
         )
@@ -76,7 +78,7 @@ export function parseBranch({
     branch: string
     configs
     toolboxes: Immutables<ToolBox>
-    availableModules: Immutables<ModuleModel>
+    availableModules: Immutables<Modules.ModuleModel>
 }) {
     const starts = locations('(', branch)
     const ends = locations(')', branch)
@@ -117,7 +119,7 @@ function parseModule({
     moduleStr: string
     configs: { [_k: string]: unknown }
     toolboxes: Immutables<ToolBox>
-    availableModules: Immutables<ModuleModel>
+    availableModules: Immutables<Modules.ModuleModel>
 }) {
     const idIndex = moduleStr.indexOf('#')
     const [typeId, moduleId] =
@@ -146,7 +148,7 @@ function parseModule({
         configuration: moduleId ? configs[moduleId] : undefined,
         toolboxId: toolbox.origin.packageName,
         toolboxVersion: toolbox.origin.version,
-    } as ModuleModel
+    } as Modules.ModuleModel
 }
 
 function parseConnection({
@@ -195,7 +197,7 @@ export function parseMacroInput({
 }: {
     inputStr: string
     toolboxes: Immutables<ToolBox>
-    availableModules: Immutables<ModuleModel>
+    availableModules: Immutables<Modules.ModuleModel>
 }): {
     slotId: number
     moduleId: string
@@ -215,7 +217,7 @@ export function parseMacroOutput({
 }: {
     outputStr: string
     toolboxes: Immutables<ToolBox>
-    availableModules: Immutables<ModuleModel>
+    availableModules: Immutables<Modules.ModuleModel>
 }): {
     slotId: number
     moduleId: string

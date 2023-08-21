@@ -10,6 +10,8 @@ import {
     ToolBox,
     mergeWith,
     EnvironmentTrait,
+    UidTrait,
+    ToolboxObjectTrait,
 } from '../common'
 import { Configurations, Deployers, Connections } from '..'
 import { ImplementationTrait, moduleConnectors } from './'
@@ -564,3 +566,11 @@ export class Module<
         return result instanceof Promise ? await result : result
     }
 }
+
+/**
+ * Specification of a module for latter instantiation in {@link Modules.ImplementationTrait}.
+ */
+export type ModuleModel = UidTrait &
+    ToolboxObjectTrait & {
+        readonly configuration?: Immutable<{ [k: string]: unknown }>
+    }

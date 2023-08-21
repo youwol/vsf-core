@@ -14,7 +14,7 @@ export type Chart = {
      *
      * @group Immutable Properties
      */
-    modules: Immutables<Projects.ModuleModel>
+    modules: Immutables<Modules.ModuleModel>
     /**
      * Connections to deploy.
      *

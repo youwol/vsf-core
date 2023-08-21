@@ -131,18 +131,10 @@ function merge({
 }
 
 /**
- * Specification of a module for latter instantiation in {@link Modules.ImplementationTrait}.
- */
-export type ModuleModel = UidTrait &
-    ToolboxObjectTrait & {
-        readonly configuration?: Immutable<{ [k: string]: unknown }>
-    }
-
-/**
  * Specification of a workflow for latter instantiation.
  */
 export type WorkflowModel = UidTrait & {
-    readonly modules: Immutables<ModuleModel>
+    readonly modules: Immutables<Modules.ModuleModel>
     readonly connections: Immutables<Connections.ConnectionModel>
     readonly rootLayer: Immutable<Layer>
 }

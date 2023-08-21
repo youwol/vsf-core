@@ -4,7 +4,7 @@ import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 import { Immutable, Immutables } from '../common'
 import { Configurations, Modules, Contracts, Deployers } from '..'
 import { deployMacroInWorker } from './'
-import { MacroModel, ModuleModel } from '../project'
+import { MacroModel } from '../project'
 
 export const macroToolbox = {
     name: 'Macros',
@@ -16,7 +16,7 @@ export const macroToolbox = {
     modules: [],
 }
 
-function gatherDependencies(_modules: Immutables<ModuleModel>) {
+function gatherDependencies(_modules: Immutables<Modules.ModuleModel>) {
     return {}
 }
 
