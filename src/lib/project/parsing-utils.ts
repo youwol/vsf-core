@@ -2,7 +2,7 @@ import { Immutables, ToolBox, UidTrait } from '../common'
 import { Modules, Connections } from '..'
 
 /**
- * Parse a string representation of a DAG into {@link ModuleModel} & {@link ConnectionModel}.
+ * Parse a string representation of a DAG into {@link Modules.ModuleModel} & {@link Connections.ConnectionModel}.
  *
  * @param flows string representation of one or multiple flows.
  * Typically `(map#map0)>>(filter#filter0)>#C0>0(take)`

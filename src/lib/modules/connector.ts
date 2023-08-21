@@ -34,7 +34,6 @@ function prepareMessage(
 ): ProcessingMessage {
     const ctx = executionJournal.addPage({
         title: `Enter slot ${slotId}`,
-        userData: rawMessage.context,
     })
     ctx.info('Received message', rawMessage)
     const step1 = { ...rawMessage, context: ctx }
@@ -104,7 +103,7 @@ export function moduleConnectors<
     }
 } {
     const inputSlots = Object.entries(params.inputs || {}).map(
-        ([slotId, input]: [string, Input<unknown>]) => {
+        ([slotId, input]: [string, Input]) => {
             const rawMessage$ = new ReplaySubject<InputMessage>()
             const preparedMessage$ = rawMessage$.pipe(
                 map((rawMessage) => {
@@ -149,7 +148,7 @@ export function moduleConnectors<
             logContext: params.context,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- pass the ts compiler but IDE report an error
             // @ts-ignore
-            configuration: extractConfigWith(
+            configuration: Configurations.extractConfigWith(
                 {
                     configuration: params.defaultConfiguration,
                     values: {

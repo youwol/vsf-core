@@ -153,9 +153,6 @@ export type WorkersPoolInstance = {
 
 export type EnvironmentTrait = LoggerTrait &
     InstallerTrait & {
-        /**
-         * Available workers pools, see {@link addWorkersPool}.
-         */
         workersPools: Immutables<WorkersPoolInstance>
         toolboxes: Immutables<ToolBox>
         macrosToolbox: Immutable<ToolBox>

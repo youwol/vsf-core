@@ -6,7 +6,7 @@ import { Immutable, mergeWith } from '../common'
  * Formalize a JSON-like data-structure in terms of attributes.
  *
  * Used in the definition of a module's {@link Configuration},
- * see {@link Attributes} for the list of available attributes.
+ * see {@link AttributeTrait} for the list of available attributes.
  */
 export type Schema = {
     [k: string]: Schema | Schema[] | Attributes.AttributeTrait<unknown>

@@ -33,14 +33,13 @@ export type Message<TData = unknown> = {
     data: TData
     /**
      * context part of the message.
-     * Context are set up using {@link Adaptor} and propagated along the branches of the
-     * {@link Projects.WorkflowModel}.
+     * Context are set up using {@link Adaptor} and propagated along the branches of the flows.
      */
     context?: UserContext
 }
 
 /**
- * Adaptor are associated to  {@link Connection} and transforms  {@link Message} to {@link InputMessage}.
+ * Adaptor are associated to  {@link Connection} and transforms  {@link Message} to {@link Modules.InputMessage}.
  *
  * They are typically used for:
  * *  providing dynamic configuration properties of the module connected at the end of the connection.
@@ -76,7 +75,7 @@ export type ConnectionTrait = UidTrait &
     ConnectableTrait
 
 /**
- * Connection conveys {@link Message} between {@link InputSlot} & {@link OutputSlot} of 2 modules.
+ * Connection conveys {@link Message} between {@link Modules.InputSlot} & {@link Modules.OutputSlot} of 2 modules.
  */
 export class Connection implements ConnectionTrait {
     /**
@@ -87,14 +86,14 @@ export class Connection implements ConnectionTrait {
     public readonly environment: Immutable<EnvironmentTrait>
 
     /**
-     * Reference the start of the connection (an {@link OutputSlot} of a module {@link Implementation}).
+     * Reference the start of the connection (an {@link Modules.OutputSlot} of a module {@link Modules.Implementation}).
      *
      * @group Immutable Properties
      */
     public readonly start: Immutable<Modules.SlotTrait>
 
     /**
-     * Reference the end of the connection (an {@link InputSlot} of a module {@link Implementation}).
+     * Reference the end of the connection (an {@link Modules.InputSlot} of a module {@link Modules.Implementation}).
      *
      * @group Immutable Properties
      */
@@ -204,7 +203,7 @@ export class Connection implements ConnectionTrait {
     /**
      * Connect the connection (subscribing associated observables).
      *
-     * @param apiFinder a function that returns connectable entities ({@link Api$Trait}) for particular uid.
+     * @param apiFinder a function that returns connectable entities ({@link Modules.Api$Trait}) for particular uid.
      */
     connect({
         apiFinder,
@@ -222,7 +221,7 @@ export class Connection implements ConnectionTrait {
         this.status$.next('connected')
 
         const adapted$ = startSlot.observable$.pipe(
-            map((message: Message<unknown>) => {
+            map((message: Message) => {
                 this.status$.next('started')
                 const ctx = this.journal.addPage({
                     title: 'data transiting',
@@ -245,7 +244,7 @@ export class Connection implements ConnectionTrait {
                   )
                 : adapted$
         this.subscription = delayed$.subscribe(
-            (adaptedMessage: Modules.InputMessage<unknown>) => {
+            (adaptedMessage: Modules.InputMessage) => {
                 this._end$ && this._end$.next(adaptedMessage)
                 endSlot.rawMessage$.next(adaptedMessage)
             },
@@ -282,13 +281,13 @@ export class Connection implements ConnectionTrait {
      * Apply the adaptor
      * @param d
      */
-    adapt(d: Message<unknown>) {
+    adapt(d: Message) {
         return this.configurationInstance.adaptor(d)
     }
 }
 
 /**
- * Specification of a connection for latter instantiation in {@link Modules.Connection}.
+ * Specification of a connection for latter instantiation in {@link Connection}.
  */
 export type ConnectionModel = UidTrait & {
     start: Immutable<{

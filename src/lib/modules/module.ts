@@ -161,7 +161,7 @@ export type UserArgs<
     state?: TState
 
     /**
-     * Eventual {@link Projects.InstancePool} associated to the module.
+     * Eventual {@link Deployers.InstancePool} associated to the module.
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
@@ -260,7 +260,7 @@ export type OutputsReturn<
 
 /**
  * A scope gathers immutable data related to the parent instance of modules.
- * It is used for instance when deploying using {@link Projects.InstancePool}.
+ * It is used for instance when deploying using {@link Deployers.InstancePool}.
  */
 export type Scope = Immutable<{ [k: string]: unknown }>
 
@@ -271,7 +271,7 @@ export type ForwardArgs = {
     /**
      * Module's factory
      */
-    factory: Module<ImplementationTrait>
+    factory: Module
 
     /**
      * Owning toolbox
@@ -481,7 +481,7 @@ export class Implementation<
         context.info('Parameters', { userParams: params, fwdParameters })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- pass the ts compiler but IDE report an error
         // @ts-ignore
-        this.configurationInstance = extractConfigWith(
+        this.configurationInstance = Configurations.extractConfigWith(
             {
                 configuration: this.configuration,
                 values: fwdParameters.configurationInstance,
@@ -558,7 +558,7 @@ export class Module<
     }
 
     /**
-     * Instantiate the module, usually called by {@link Projects.Environment} classes.
+     * Instantiate the module, usually called by {@link EnvironmentTrait} classes.
      * @param params.fwdParams 'System' argument
      */
     async getInstance(params: { fwdParams: ForwardArgs }) {
@@ -568,7 +568,7 @@ export class Module<
 }
 
 /**
- * Specification of a module for latter instantiation in {@link Modules.ImplementationTrait}.
+ * Specification of a module for latter instantiation using {@link ImplementationTrait}.
  */
 export type ModuleModel = UidTrait &
     ToolboxObjectTrait & {

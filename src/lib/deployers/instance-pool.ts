@@ -58,7 +58,7 @@ export interface DeployerTrait {
     /**
      * Deploy a {@link Chart}.
      * Environment is kept unchanged: eventual dependencies should have been installed first (e.g. using
-     * {@link Environment.installDependencies}).
+     * {@link EnvironmentTrait}).
      *
      * @param params
      * @param params.chart chart to instantiate

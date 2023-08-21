@@ -1,5 +1,4 @@
 import { DocumentationTrait, Immutables, Modules, UidTrait } from '..'
-import { ImplementationTrait } from '../modules'
 
 /**
  * Gathers related modules.
@@ -16,7 +15,7 @@ export type ToolBox = UidTrait &
         /**
          * list of included modules
          */
-        modules: Immutables<Modules.Module<ImplementationTrait>>
+        modules: Immutables<Modules.Module>
         /**
          * name of the toolbox
          */

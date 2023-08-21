@@ -36,20 +36,15 @@ export type HtmlViewsStore = { [k: string]: HtmlView }
 export type CanvasView = {
     /**
      * Specify on which elements the view apply.
-     * @param elem either {@link Modules.Implementation} or {@link Modules.Connection}
+     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
      */
     selector: (elem: Immutable<UidTrait>) => boolean
     /**
      * View factory.
-     * @param elem either {@link Modules.Implementation} or {@link Modules.Connection}
+     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
      */
     view: (elem: Immutable<unknown>) => VirtualDOM
 }
-
-/**
- * Store for canvas views.
- */
-export type CanvasViewsStore = CanvasView[]
 
 /**
  * State of a project.
@@ -370,7 +365,7 @@ export class ProjectState {
      * Add an HTML view to the project.
      *
      * @param viewId UID of the view
-     * @param vDOM Virtual DOM generator, takes the {@link InstancePool} as argument.
+     * @param vDOM Virtual DOM generator, takes the {@link Deployers.InstancePool} as argument.
      */
     addHtml(
         viewId: string,
@@ -398,7 +393,7 @@ export class ProjectState {
      *      view: (elem: HtmlTrait) => elem.html()
      * })
      * ```
-     * Below is an example displaying the data part of a message reaching the end of a {@link Modules.Connection} with `uid='c'`:
+     * Below is an example displaying the data part of a message reaching the end of a {@link Connections.Connection} with `uid='c'`:
      *
      * ```
      * project = project.addToCanvas({

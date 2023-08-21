@@ -1,4 +1,4 @@
-import { Modules, Configurations, Contracts } from '../../index'
+import { Modules, Configurations, Contracts } from '../../lib'
 
 const inputs = {
     input$: {

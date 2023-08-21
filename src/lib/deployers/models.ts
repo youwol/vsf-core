@@ -39,7 +39,7 @@ export type ProbeMessageId = {
     }
     // noinspection JSValidateJSDoc -> Ok for typedoc
     /**
-     * Probe message bound to `status$` of a {@link Modules.Connection}.
+     * Probe message bound to `status$` of a {@link Connections.Connection}.
      */
     'connection.status$': {
         connectionId: string
@@ -165,7 +165,7 @@ export type ModuleDescriberFromWorker = {
 }
 // noinspection JSValidateJSDoc -> Ok for typedoc
 /**
- * Message sent from a worker to retrieve a {@link Modules.Connection} description in the main thread
+ * Message sent from a worker to retrieve a {@link Connections.Connection} description in the main thread
  */
 export type ConnectionDescriberFromWorker = {
     uid: string

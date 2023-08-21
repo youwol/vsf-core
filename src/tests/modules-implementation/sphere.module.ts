@@ -1,4 +1,4 @@
-import { Modules, Configurations, Contracts } from '../..'
+import { Modules, Configurations, Contracts } from '../../lib'
 import { Material, SphereGeometry, Mesh } from 'three'
 import { map } from 'rxjs/operators'
 

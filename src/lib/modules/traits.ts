@@ -36,7 +36,7 @@ export interface Api$Trait<TInputs> {
         >
     }>
     outputSlots: Immutable<{
-        [k: string]: OutputSlot<unknown>
+        [k: string]: OutputSlot
     }>
 }
 
@@ -63,12 +63,3 @@ export type ImplementationTrait<
         state?: Immutable<TState>
         instancePool$?: BehaviorSubject<Immutable<Deployers.DeployerTrait>>
     }
-
-/**
- * Trait for objects with side effects.
- */
-export interface SideEffectsTrait {
-    apply()
-
-    dispose()
-}

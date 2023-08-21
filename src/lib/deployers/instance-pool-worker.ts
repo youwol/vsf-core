@@ -15,7 +15,6 @@ import {
     InstancePool,
     isProbe,
     ProbeMessageFromWorker,
-    ProbeMessageIdKeys,
     ReadyMessage,
     Probe,
 } from './'
@@ -148,10 +147,7 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
             environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
             customArgs: TArgs
-            probes: (
-                instancePool: InstancePool,
-                customArgs: TArgs,
-            ) => Probe<ProbeMessageIdKeys>[]
+            probes: (instancePool: InstancePool, customArgs: TArgs) => Probe[]
         },
         context: ContextLoggerTrait,
     ): Promise<InstancePoolWorker> {

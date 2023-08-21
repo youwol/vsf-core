@@ -110,7 +110,7 @@ export class Environment implements EnvironmentTrait {
                 pipes: [this.errorChannel$],
             }),
         ]
-        this.errorChannel$.subscribe((log: ErrorLog<Error, unknown>) => {
+        this.errorChannel$.subscribe((log: ErrorLog<Error>) => {
             console.error(log.error)
             console.error(log.data)
         })

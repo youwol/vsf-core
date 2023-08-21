@@ -181,9 +181,8 @@ export interface InnerMacrosOrchestrationTrait {
  */
 export class InnerMacrosPool {
     /**
-     * Parent id that will be used to create the children {@link InstancePool}, each one containing the macro
+     * Parent id that will be used to create the children {@link Deployers.InstancePool}, each one containing the macro
      * that has been created from an incoming {@link TriggerMessage}.
-     * Individual element are gathered in {@link instancePools}.
      */
     public readonly parentUid: string
     /**
@@ -262,7 +261,7 @@ export class InnerMacrosPool {
         outer$,
     }: {
         outer$: Observable<TriggerMessage>
-    }): Observable<Immutable<Modules.OutputMessage<unknown>>> {
+    }): Observable<Immutable<Modules.OutputMessage>> {
         return outer$.pipe(
             tap((m) => this.overallContext.info('message received', m)),
             finalize(() => this.outerObservableCompleted()),
@@ -273,7 +272,7 @@ export class InnerMacrosPool {
                     }),
                 )
             }),
-        ) as Observable<Immutable<Modules.OutputMessage<unknown>>>
+        ) as Observable<Immutable<Modules.OutputMessage>>
     }
 
     /**
@@ -285,7 +284,7 @@ export class InnerMacrosPool {
 
     private innerObservable(
         fromOuterMessage: TriggerMessage,
-    ): Observable<Immutable<Modules.OutputMessage<unknown>>> {
+    ): Observable<Immutable<Modules.OutputMessage>> {
         const onStart = this.orchestrator.onInnerMacroStarted || noOp
         return from(this.newMacroInstance(fromOuterMessage)).pipe(
             tap(() => {

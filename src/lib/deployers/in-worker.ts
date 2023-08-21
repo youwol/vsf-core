@@ -176,7 +176,7 @@ export async function startWorkerShadowPool({
             const probes = workerScope.deserializeFunction(data.probes)(
                 instancePool,
                 customArgs,
-            ) as Probe<ProbeMessageIdKeys>[]
+            ) as Probe[]
             probes.forEach(plugProb)
 
             const poolDescriber = {

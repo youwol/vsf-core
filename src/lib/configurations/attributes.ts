@@ -1,4 +1,4 @@
-import { Configurations } from '../..'
+import { Configurations } from '..'
 /**
  * Trait for object with attribute behavior.
  */
