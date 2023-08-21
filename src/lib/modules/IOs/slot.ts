@@ -1,5 +1,5 @@
 import { Observable, Subject } from 'rxjs'
-import { ExpectationTrait } from './contract'
+import { Contracts } from '../..'
 import { InputMessage, ProcessingMessage, OutputMessage } from '../module'
 import { SlotTrait } from '../traits'
 
@@ -18,7 +18,7 @@ export class InputSlot<T = unknown, TConfigInstance = unknown>
     /**
      * Contract
      */
-    public readonly contract: ExpectationTrait<unknown>
+    public readonly contract: Contracts.ExpectationTrait<unknown>
     /**
      * Prepared message: after configuration have been merged with module's default configuration.
      * See {@link ProcessingMessage}.
@@ -35,7 +35,7 @@ export class InputSlot<T = unknown, TConfigInstance = unknown>
         slotId: string
         moduleId: string
         description: string
-        contract: ExpectationTrait<unknown>
+        contract: Contracts.ExpectationTrait<unknown>
         rawMessage$: Subject<InputMessage<T>>
         preparedMessage$: Observable<ProcessingMessage<T>>
     }) {

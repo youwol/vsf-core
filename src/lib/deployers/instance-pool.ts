@@ -1,10 +1,8 @@
-import { extractConfigWith, Immutable, Immutables } from '../common'
-import { Modules, Projects } from '..'
-import { Connection, ConnectionTrait, ImplementationTrait } from '../modules'
-import { Environment } from './environment'
 import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { WorkflowModel } from './workflow'
+
+import { Immutable, Immutables, EnvironmentTrait } from '../common'
+import { Modules, Configurations, Connections, Workflows } from '..'
 
 /**
  * Specifies resources of a deployment.
@@ -15,13 +13,13 @@ export type Chart = {
      *
      * @group Immutable Properties
      */
-    modules: Immutables<Projects.ModuleModel>
+    modules: Immutables<Modules.ModuleModel>
     /**
      * Connections to deploy.
      *
      * @group Immutable Properties
      */
-    connections: Immutables<Projects.ConnectionModel>
+    connections: Immutables<Connections.ConnectionModel>
 
     /**
      * Optional metadata associated to the chart
@@ -29,7 +27,7 @@ export type Chart = {
     metadata?: Immutable<{ [k: string]: unknown }>
 }
 
-export interface InstancePoolTrait {
+export interface DeployerTrait {
     /**
      * Uid of entity ({@link Modules.Implementation} usually) owning this instance pool.
      */
@@ -50,7 +48,7 @@ export interface InstancePoolTrait {
     /**
      * connections instances
      */
-    connections: Immutables<Modules.ConnectionTrait>
+    connections: Immutables<Connections.ConnectionTrait>
 
     /**
      * Return an inspector object to retrieve/search objects from the pool.
@@ -60,7 +58,7 @@ export interface InstancePoolTrait {
     /**
      * Deploy a {@link Chart}.
      * Environment is kept unchanged: eventual dependencies should have been installed first (e.g. using
-     * {@link Environment.installDependencies}).
+     * {@link EnvironmentTrait}).
      *
      * @param params
      * @param params.chart chart to instantiate
@@ -71,25 +69,25 @@ export interface InstancePoolTrait {
     deploy(
         params: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait,
-    ): Promise<InstancePoolTrait>
+    ): Promise<DeployerTrait>
 
     /**
      * Stop the pool, eventually keeping alive elements from another {@link InstancePool}.
      * @param keepAlive if provided, keep the elements of this pool alive.
      */
-    stop({ keepAlive }: { keepAlive?: Immutable<InstancePoolTrait> })
+    stop({ keepAlive }: { keepAlive?: Immutable<DeployerTrait> })
 }
 
-export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
+export function implementsDeployerTrait(d: unknown): d is DeployerTrait {
     return (
         d != undefined &&
-        (d as InstancePoolTrait).deploy != undefined &&
-        (d as InstancePoolTrait).modules != undefined &&
-        (d as InstancePoolTrait).connections != undefined
+        (d as DeployerTrait).deploy != undefined &&
+        (d as DeployerTrait).modules != undefined &&
+        (d as DeployerTrait).connections != undefined
     )
 }
 
@@ -97,18 +95,18 @@ export function implementsDeployableTrait(d: unknown): d is InstancePoolTrait {
  * This class encapsulates running instances of modules as well as connections.
  *
  */
-export class InstancePool implements InstancePoolTrait {
+export class InstancePool implements DeployerTrait {
     public readonly parentUid: string
 
     terminated$: ReplaySubject<undefined>
 
     public readonly modules: Immutables<Modules.ImplementationTrait> = []
 
-    public readonly connections: Immutables<Modules.ConnectionTrait> = []
+    public readonly connections: Immutables<Connections.ConnectionTrait> = []
 
     constructor(params: {
         modules?: Immutables<Modules.ImplementationTrait>
-        connections?: Immutables<Modules.ConnectionTrait>
+        connections?: Immutables<Connections.ConnectionTrait>
         parentUid: string
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
@@ -122,7 +120,7 @@ export class InstancePool implements InstancePoolTrait {
             scope,
         }: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait = NoContext,
@@ -162,7 +160,7 @@ export class InstancePool implements InstancePoolTrait {
             const connections = chart.connections.map((connection) => {
                 const beforeModule = byUid[connection.start.moduleId]
                 const afterModule = byUid[connection.end.moduleId]
-                return new Connection({
+                return new Connections.Connection({
                     start: {
                         slotId: Object.values(beforeModule.outputSlots)[
                             connection.start.slotId
@@ -220,11 +218,11 @@ export class InstancePool implements InstancePoolTrait {
 }
 
 export class Inspector {
-    public readonly pool: Immutable<InstancePoolTrait>
-    public readonly modules: Immutables<ImplementationTrait>
-    public readonly connections: Immutables<ConnectionTrait>
+    public readonly pool: Immutable<DeployerTrait>
+    public readonly modules: Immutables<Modules.ImplementationTrait>
+    public readonly connections: Immutables<Connections.ConnectionTrait>
 
-    constructor(params: { pool: Immutable<InstancePoolTrait> }) {
+    constructor(params: { pool: Immutable<DeployerTrait> }) {
         Object.assign(this, params)
         this.modules = this.pool.modules
         this.connections = this.pool.connections
@@ -233,7 +231,7 @@ export class Inspector {
      * Get a module running instance.
      * @param moduleId UID of the module
      */
-    getModule(moduleId: string): Immutable<ImplementationTrait> {
+    getModule(moduleId: string): Immutable<Modules.ImplementationTrait> {
         return this.modules.find((m) => m.uid == moduleId)
     }
 
@@ -241,7 +239,9 @@ export class Inspector {
      * Get a connection running instance.
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<ConnectionTrait> {
+    getConnection(
+        connectionId: string,
+    ): Immutable<Connections.ConnectionTrait> {
         return this.connections.find((c) => c.uid == connectionId)
     }
 
@@ -249,7 +249,9 @@ export class Inspector {
      * Get a running instance, either module or connection
      * @param id id of the instance
      */
-    get(id: string): Immutable<ConnectionTrait | ImplementationTrait> {
+    get(
+        id: string,
+    ): Immutable<Connections.ConnectionTrait | Modules.ImplementationTrait> {
         return this.getModule(id) || this.getConnection(id)
     }
 
@@ -265,7 +267,7 @@ export class Inspector {
 
     flat(): {
         modules: Immutables<Modules.ImplementationTrait>
-        connections: Immutables<Modules.ConnectionTrait>
+        connections: Immutables<Connections.ConnectionTrait>
     } {
         return this.modules
             .filter((module) => module.instancePool$ != undefined)
@@ -285,7 +287,7 @@ export class Inspector {
             )
     }
 
-    toFlatWorkflowModel(): WorkflowModel {
+    toFlatWorkflowModel(): Workflows.WorkflowModel {
         const flattened = this.flat()
         return {
             uid: '',
@@ -298,13 +300,13 @@ export class Inspector {
             connections: flattened.connections.map((c) => {
                 return {
                     ...c,
-                    configuration: extractConfigWith({
+                    configuration: Configurations.extractConfigWith({
                         configuration: c.configuration,
                         values: {},
                     }),
                 }
             }),
-            rootLayer: new Projects.Layer({
+            rootLayer: new Workflows.Layer({
                 moduleIds: this.modules.map((m) => m.uid),
             }),
         }

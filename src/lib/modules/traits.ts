@@ -1,10 +1,16 @@
-import { ConfigurableTrait, Immutable, Schema, ToolboxObjectTrait } from '..'
-import { OutputSlot } from './IOs'
-import { Environment, InstancePoolTrait } from '../project'
-import { CanvasTrait, HtmlTrait, JournalTrait, UidTrait } from '../common'
-import { GetGenericInput, Module } from './module'
-import * as IOs from './IOs'
 import { BehaviorSubject } from 'rxjs'
+
+import {
+    EnvironmentTrait,
+    Immutable,
+    ToolboxObjectTrait,
+    CanvasTrait,
+    HtmlTrait,
+    JournalTrait,
+    UidTrait,
+} from '../common'
+import { Deployers, Configurations } from '..'
+import { OutputSlot, GetGenericInput, Module, Input, InputSlot } from './'
 
 /**
  * Trait for slot.
@@ -25,12 +31,12 @@ export interface SlotTrait {
  */
 export interface Api$Trait<TInputs> {
     inputSlots: Immutable<{
-        [Property in keyof TInputs]: IOs.InputSlot<
+        [Property in keyof TInputs]: InputSlot<
             GetGenericInput<TInputs[Property]>
         >
     }>
     outputSlots: Immutable<{
-        [k: string]: OutputSlot<unknown>
+        [k: string]: OutputSlot
     }>
 }
 
@@ -42,27 +48,18 @@ export interface Api$Trait<TInputs> {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type ImplementationTrait<
-    TSchema extends Schema = Schema,
-    TInputs = Record<string, IOs.Input>,
+    TSchema extends Configurations.Schema = Configurations.Schema,
+    TInputs = Record<string, Input>,
     TState = unknown,
 > = Api$Trait<TInputs> &
-    ConfigurableTrait<TSchema> &
+    Configurations.ConfigurableTrait<TSchema> &
     UidTrait &
     JournalTrait &
     ToolboxObjectTrait &
     Partial<HtmlTrait> &
     Partial<CanvasTrait> & {
         factory: Module
-        environment: Immutable<Environment>
+        environment: Immutable<EnvironmentTrait>
         state?: Immutable<TState>
-        instancePool$?: BehaviorSubject<Immutable<InstancePoolTrait>>
+        instancePool$?: BehaviorSubject<Immutable<Deployers.DeployerTrait>>
     }
-
-/**
- * Trait for objects with side effects.
- */
-export interface SideEffectsTrait {
-    apply()
-
-    dispose()
-}

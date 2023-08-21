@@ -1,16 +1,14 @@
-import { ofUnknown } from './IOs/contract'
 import {
     ExecutionJournal,
-    ConfigInstance,
-    Configuration,
-    extractConfigWith,
-    Schema,
+    Configurations,
+    Contracts,
     Immutable,
     mergeWith,
 } from '..'
 import { Context } from '@youwol/logging'
 import { Observable, of, ReplaySubject } from 'rxjs'
 import { catchError, filter, map } from 'rxjs/operators'
+
 import {
     GetGenericInput,
     GetGenericObservable,
@@ -19,8 +17,10 @@ import {
     OutputsReturn,
     ProcessingMessage,
     Scope,
-} from './module'
-import { Input, InputSlot, OutputSlot } from './IOs'
+    Input,
+    InputSlot,
+    OutputSlot,
+} from './'
 
 function prepareMessage(
     moduleId,
@@ -34,13 +34,12 @@ function prepareMessage(
 ): ProcessingMessage {
     const ctx = executionJournal.addPage({
         title: `Enter slot ${slotId}`,
-        userData: rawMessage.context,
     })
     ctx.info('Received message', rawMessage)
     const step1 = { ...rawMessage, context: ctx }
 
     if (!contract) {
-        contract = ofUnknown
+        contract = Contracts.ofUnknown
     }
     const resolution = contract.resolve(step1.data, step1.context)
     step1.context.info('Contract resolution done', resolution)
@@ -53,7 +52,7 @@ function prepareMessage(
     }
     const inputMessage = {
         data: resolution.value,
-        configuration: extractConfigWith(
+        configuration: Configurations.extractConfigWith(
             {
                 configuration: defaultConfiguration,
                 values: mergeWith(
@@ -76,7 +75,7 @@ function prepareMessage(
  * @ignore
  */
 export function moduleConnectors<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs,
     TState,
 >(params: {
@@ -86,7 +85,7 @@ export function moduleConnectors<
         [Property in keyof TInputs]: TInputs[Property]
     }>
     outputs?: OutputsMapper<TSchema, TInputs, TState>
-    defaultConfiguration: Immutable<Configuration<TSchema>>
+    defaultConfiguration: Immutable<Configurations.Configuration<TSchema>>
     scope: Scope
     staticConfiguration: { [_k: string]: unknown }
     executionJournal: ExecutionJournal
@@ -104,7 +103,7 @@ export function moduleConnectors<
     }
 } {
     const inputSlots = Object.entries(params.inputs || {}).map(
-        ([slotId, input]: [string, Input<unknown>]) => {
+        ([slotId, input]: [string, Input]) => {
             const rawMessage$ = new ReplaySubject<InputMessage>()
             const preparedMessage$ = rawMessage$.pipe(
                 map((rawMessage) => {
@@ -138,7 +137,7 @@ export function moduleConnectors<
         [Property in keyof TInputs]: Observable<
             ProcessingMessage<
                 GetGenericInput<TInputs[Property]>,
-                ConfigInstance<TSchema>
+                Configurations.ConfigInstance<TSchema>
             >
         >
     }
@@ -149,7 +148,7 @@ export function moduleConnectors<
             logContext: params.context,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- pass the ts compiler but IDE report an error
             // @ts-ignore
-            configuration: extractConfigWith(
+            configuration: Configurations.extractConfigWith(
                 {
                     configuration: params.defaultConfiguration,
                     values: {

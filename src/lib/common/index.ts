@@ -1,6 +1,5 @@
 export * from './traits'
 export * from './journal'
-export * from './configurations'
 export * from './types'
+export * from './types-domain'
 export * from './utils'
-export * as Attributes from './configurations/attributes'

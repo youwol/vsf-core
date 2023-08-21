@@ -1,6 +1,6 @@
-import { KeysAsUnion } from '../../common'
-import { ProcessingMessage, SlotTrait } from '../../modules'
-import { Chart } from '../instance-pool'
+import { KeysAsUnion } from '../common'
+import { Modules } from '..'
+import { Chart } from '.'
 
 /**
  * Type literals for id kind of probe messages.
@@ -39,7 +39,7 @@ export type ProbeMessageId = {
     }
     // noinspection JSValidateJSDoc -> Ok for typedoc
     /**
-     * Probe message bound to `status$` of a {@link Modules.Connection}.
+     * Probe message bound to `status$` of a {@link Connections.Connection}.
      */
     'connection.status$': {
         connectionId: string
@@ -165,12 +165,12 @@ export type ModuleDescriberFromWorker = {
 }
 // noinspection JSValidateJSDoc -> Ok for typedoc
 /**
- * Message sent from a worker to retrieve a {@link Modules.Connection} description in the main thread
+ * Message sent from a worker to retrieve a {@link Connections.Connection} description in the main thread
  */
 export type ConnectionDescriberFromWorker = {
     uid: string
-    start: SlotTrait
-    end: SlotTrait
+    start: Modules.SlotTrait
+    end: Modules.SlotTrait
 }
 /**
  * Message sent from a worker to retrieve an {@link InstancePool} description in the main thread.
@@ -201,7 +201,7 @@ export type InputMessage = {
     kind: 'InputMessage'
     slotId: string
     moduleId: string
-    message: ProcessingMessage
+    message: Modules.ProcessingMessage
 }
 
 /**

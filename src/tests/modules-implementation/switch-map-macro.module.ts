@@ -1,26 +1,25 @@
 // noinspection JSValidateJSDoc
 
 import { concatMap, exhaustMap, map, mergeMap, switchMap } from 'rxjs/operators'
-import { Attributes, extendConfig, extractConfigWith } from '../../lib/common'
-import { Modules } from '../../lib'
+import { Configurations, Modules, Contracts } from '../../lib'
 import {
     InnerMacrosOrchestrationTrait,
     InnerMacrosPool,
-} from '../../lib/project'
+} from '../../lib/macros'
 
 export type Policy = 'switch' | 'merge' | 'concat' | 'exhaust'
 export const partialConfiguration = {
     schema: {
         innerMacro: {
-            macroTypeId: new Attributes.String({ value: '' }),
+            macroTypeId: new Configurations.String({ value: '' }),
             configuration: {
-                workersPoolId: new Attributes.String({ value: '' }),
+                workersPoolId: new Configurations.String({ value: '' }),
             },
-            inputIndex: new Attributes.Integer({ value: 0 }),
-            outputIndex: new Attributes.Integer({ value: 0 }),
+            inputIndex: new Configurations.Integer({ value: 0 }),
+            outputIndex: new Configurations.Integer({ value: 0 }),
         },
-        purgeOnTerminated: new Attributes.Boolean({ value: true }),
-        policy: new Attributes.StringLiteral<Policy>({
+        purgeOnTerminated: new Configurations.Boolean({ value: true }),
+        policy: new Configurations.StringLiteral<Policy>({
             value: 'switch',
         }),
     },
@@ -29,7 +28,7 @@ export const partialConfiguration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 
@@ -56,12 +55,12 @@ export function module(fwdParams: Modules.ForwardArgs) {
             m.declaration.typeId ==
             fwdParams.configurationInstance.innerMacro['macroTypeId'],
     ).declaration['macroModel']
-    const configuration = extendConfig({
+    const configuration = Configurations.extendConfig({
         configuration: partialConfiguration,
         target: ['innerMacro', 'configuration'],
         with: model.configuration.schema,
     })
-    const configInstance = extractConfigWith({
+    const configInstance = Configurations.extractConfigWith({
         configuration,
         values: fwdParams.configurationInstance,
     })

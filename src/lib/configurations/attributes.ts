@@ -1,4 +1,4 @@
-import { Attributes } from '.'
+import { Configurations } from '..'
 /**
  * Trait for object with attribute behavior.
  */
@@ -80,7 +80,7 @@ export class String implements AttributeTrait<string> {
     }
 
     withValue(value: string) {
-        return new Attributes.String({ value })
+        return new Configurations.String({ value })
     }
 }
 
@@ -140,7 +140,7 @@ export class Boolean implements AttributeTrait<boolean> {
     }
 
     withValue(value: boolean) {
-        return new Attributes.Boolean({ value })
+        return new Configurations.Boolean({ value })
     }
 }
 

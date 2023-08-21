@@ -1,30 +1,21 @@
-import * as IOs from './IOs'
-import { InstallInputs } from '@youwol/cdn-client'
-import { BehaviorSubject, Observable } from 'rxjs'
-import {
-    Modules,
-    ExecutionJournal,
-    ConfigInstance,
-    extractConfigWith,
-    Configuration,
-    Schema,
-    Immutable,
-    DocumentationTrait,
-} from '..'
-import { ImplementationTrait } from './traits'
-import {
-    Environment,
-    implementsDeployableTrait,
-    InstancePool,
-    InstancePoolTrait,
-    ToolBox,
-} from '../project'
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
-import { moduleConnectors } from './connector'
-import { JsonMap } from './connection'
-import { mergeWith } from '../common'
-export * from './connection'
+import { InstallInputs } from '@youwol/cdn-client'
+import { BehaviorSubject, Observable } from 'rxjs'
+
+import {
+    ExecutionJournal,
+    Immutable,
+    DocumentationTrait,
+    ToolBox,
+    mergeWith,
+    EnvironmentTrait,
+    UidTrait,
+    ToolboxObjectTrait,
+} from '../common'
+import { Configurations, Deployers, Connections } from '..'
+import { ImplementationTrait, moduleConnectors } from './'
+import * as IOs from './IOs'
 
 /**
  * Helper function to generate uuidv4.
@@ -80,8 +71,8 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
  *
  * @typeParam TData the type of the data part of the message.
  */
-export type InputMessage<TData = unknown> = Modules.Message<TData> & {
-    configuration?: JsonMap
+export type InputMessage<TData = unknown> = Connections.Message<TData> & {
+    configuration?: Connections.JsonMap
 }
 
 /**
@@ -126,14 +117,14 @@ export type InputsMap<TInputs> = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type UserArgs<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > = {
     /**
      * Module's configuration model.
      */
-    configuration: Immutable<Configuration<TSchema>>
+    configuration: Immutable<Configurations.Configuration<TSchema>>
     /**
      * Module's inputs.
      */
@@ -170,12 +161,12 @@ export type UserArgs<
     state?: TState
 
     /**
-     * Eventual {@link Projects.InstancePool} associated to the module.
+     * Eventual {@link Deployers.InstancePool} associated to the module.
      * Relevant if for instance the module needs to deploy other children modules.
      */
     instancePool?:
-        | Immutable<InstancePool>
-        | BehaviorSubject<Immutable<InstancePool>>
+        | Immutable<Deployers.DeployerTrait>
+        | BehaviorSubject<Immutable<Deployers.DeployerTrait>>
 }
 
 /**
@@ -205,7 +196,7 @@ export type NoState = never
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type OutputMapperArg<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs,
     TState = NoState,
 > = {
@@ -217,7 +208,7 @@ export type OutputMapperArg<
         [Property in keyof TInputs]: Observable<
             ProcessingMessage<
                 GetGenericInput<TInputs[Property]>,
-                ConfigInstance<TSchema>
+                Configurations.ConfigInstance<TSchema>
             >
         >
     }
@@ -232,7 +223,7 @@ export type OutputMapperArg<
     /**
      * The static configuration: the module's configuration when loaded.
      */
-    configuration: Immutable<ConfigInstance<TSchema>>
+    configuration: Immutable<Configurations.ConfigInstance<TSchema>>
 }
 
 /**
@@ -247,7 +238,7 @@ export type OutputMapperArg<
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type OutputsMapper<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > = ({
@@ -263,13 +254,13 @@ export type OutputsMapper<
  * Shorthand notation of `ReturnType<OutputsMapper<TSchema, TInputs>>`
  */
 export type OutputsReturn<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
 > = ReturnType<OutputsMapper<TSchema, TInputs>>
 
 /**
  * A scope gathers immutable data related to the parent instance of modules.
- * It is used for instance when deploying using {@link Projects.InstancePool}.
+ * It is used for instance when deploying using {@link Deployers.InstancePool}.
  */
 export type Scope = Immutable<{ [k: string]: unknown }>
 
@@ -280,7 +271,7 @@ export type ForwardArgs = {
     /**
      * Module's factory
      */
-    factory: Modules.Module<Modules.ImplementationTrait>
+    factory: Module
 
     /**
      * Owning toolbox
@@ -299,7 +290,7 @@ export type ForwardArgs = {
     /**
      * Run time environment
      */
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
 
     /**
      * {@link Scope} associated to the module
@@ -320,7 +311,7 @@ export type ForwardArgs = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export class Implementation<
-    TSchema extends Schema,
+    TSchema extends Configurations.Schema,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > implements ImplementationTrait<TSchema, TInputs, TState>
@@ -330,7 +321,7 @@ export class Implementation<
      *
      * @group Immutable Properties
      */
-    public readonly factory: Modules.Module
+    public readonly factory: Module
 
     /**
      * `typeId` of the module within its toolbox.
@@ -358,20 +349,24 @@ export class Implementation<
      *
      * @group Immutable Properties
      */
-    public readonly environment: Immutable<Environment>
+    public readonly environment: Immutable<EnvironmentTrait>
     /**
      * Configuration of the module, as defined by the developer in {@link UserArgs}
      *
      * @group Immutable Properties
      */
-    public readonly configuration: Immutable<Configuration<TSchema>>
+    public readonly configuration: Immutable<
+        Configurations.Configuration<TSchema>
+    >
     /**
      * The static configuration instance. This is the model extracted from the declared module's configuration
      * and merged with eventual properties of `configurationInstance` of {@link ForwardArgs} at module's creation time.
      *
      * @group Immutable Properties
      */
-    public readonly configurationInstance: Immutable<ConfigInstance<TSchema>>
+    public readonly configurationInstance: Immutable<
+        Configurations.ConfigInstance<TSchema>
+    >
     /**
      * Inputs of the module as provided by the developer
      *
@@ -396,7 +391,7 @@ export class Implementation<
     public readonly inputSlots: Immutable<{
         [Property in keyof TInputs]: IOs.InputSlot<
             GetGenericInput<TInputs[Property]>,
-            ConfigInstance<TSchema>
+            Configurations.ConfigInstance<TSchema>
         >
     }>
 
@@ -436,7 +431,7 @@ export class Implementation<
      *
      */
     public readonly instancePool$?: BehaviorSubject<
-        Immutable<InstancePoolTrait>
+        Immutable<Deployers.DeployerTrait>
     >
 
     public readonly canvas?: (config?) => VirtualDOM
@@ -454,10 +449,10 @@ export class Implementation<
         Object.assign(this, params, fwdParameters)
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
-        if (implementsDeployableTrait(params.instancePool)) {
-            this.instancePool$ = new BehaviorSubject<Immutable<InstancePool>>(
-                params.instancePool,
-            )
+        if (Deployers.implementsDeployerTrait(params.instancePool)) {
+            this.instancePool$ = new BehaviorSubject<
+                Immutable<Deployers.DeployerTrait>
+            >(params.instancePool)
         }
         if (
             params.instancePool &&
@@ -486,7 +481,7 @@ export class Implementation<
         context.info('Parameters', { userParams: params, fwdParameters })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- pass the ts compiler but IDE report an error
         // @ts-ignore
-        this.configurationInstance = extractConfigWith(
+        this.configurationInstance = Configurations.extractConfigWith(
             {
                 configuration: this.configuration,
                 values: fwdParameters.configurationInstance,
@@ -525,7 +520,7 @@ export class Implementation<
  * @typeParam TImplementation the type of the module's created; usually {@link Implementation}.
  */
 export class Module<
-    TImplementation extends Modules.ImplementationTrait = Modules.ImplementationTrait,
+    TImplementation extends ImplementationTrait = ImplementationTrait,
     TDeclaration extends Declaration = Declaration,
 > {
     /**
@@ -563,7 +558,7 @@ export class Module<
     }
 
     /**
-     * Instantiate the module, usually called by {@link Projects.Environment} classes.
+     * Instantiate the module, usually called by {@link EnvironmentTrait} classes.
      * @param params.fwdParams 'System' argument
      */
     async getInstance(params: { fwdParams: ForwardArgs }) {
@@ -571,3 +566,11 @@ export class Module<
         return result instanceof Promise ? await result : result
     }
 }
+
+/**
+ * Specification of a module for latter instantiation using {@link ImplementationTrait}.
+ */
+export type ModuleModel = UidTrait &
+    ToolboxObjectTrait & {
+        readonly configuration?: Immutable<{ [k: string]: unknown }>
+    }

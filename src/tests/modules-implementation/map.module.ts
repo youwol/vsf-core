@@ -1,9 +1,9 @@
-import { Modules, Attributes } from '../../lib'
+import { Modules, Configurations, Contracts } from '../../lib'
 import { map } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        project: new Attributes.JsCode({
+        project: new Configurations.JsCode({
             value: (
                 message: Modules.ProcessingMessage,
                 // eslint-disable-next-line unused-imports/no-unused-vars -- for documentation purposes
@@ -16,7 +16,7 @@ export const configuration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 export const outputs = (

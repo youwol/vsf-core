@@ -1,28 +1,25 @@
-import {
-    Chart,
-    InstancePoolTrait,
-    Inspector,
-    InstancePool,
-} from '../instance-pool'
-import { Immutable, Immutables } from '../../common'
-import { Environment } from '../environment'
 import { ContextLoggerTrait } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
-import { Modules } from '../..'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { startWorkerShadowPool } from './in-worker'
-import { createInstancePoolProxy, serializeChart } from './utils'
 import { filter, map, shareReplay, take } from 'rxjs/operators'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+
+import { Immutable, Immutables, EnvironmentTrait } from '../common'
+import { Modules, Connections } from '..'
 import {
+    startWorkerShadowPool,
+    createInstancePoolProxy,
+    serializeChart,
+    Chart,
+    DeployerTrait,
+    Inspector,
+    InstancePool,
     isProbe,
     ProbeMessageFromWorker,
-    ProbeMessageIdKeys,
     ReadyMessage,
     Probe,
-} from './models'
-
+} from './'
 export type ImplementationProxy = Modules.ImplementationTrait
-export type ConnectionProxy = Modules.ConnectionTrait
+export type ConnectionProxy = Connections.ConnectionTrait
 
 /**
  * A trait for object related to a worker within a workers pool
@@ -64,9 +61,7 @@ export function implementWorkerProcessTrait(
     )
 }
 
-export class InstancePoolWorker
-    implements InstancePoolTrait, WorkerProcessTrait
-{
+export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
     public readonly parentUid: string
     public readonly modules: Immutables<ImplementationProxy>
     public readonly connections: Immutables<ConnectionProxy>
@@ -149,13 +144,10 @@ export class InstancePoolWorker
             probes,
         }: {
             chart: Immutable<Chart>
-            environment: Immutable<Environment>
+            environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
             customArgs: TArgs
-            probes: (
-                instancePool: InstancePool,
-                customArgs: TArgs,
-            ) => Probe<ProbeMessageIdKeys>[]
+            probes: (instancePool: InstancePool, customArgs: TArgs) => Probe[]
         },
         context: ContextLoggerTrait,
     ): Promise<InstancePoolWorker> {

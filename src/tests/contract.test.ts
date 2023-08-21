@@ -13,7 +13,7 @@ import {
     single,
     some,
     ofUnknown,
-} from '../lib/modules/IOs/contract'
+} from '../lib/contracts'
 
 class Material {}
 class Mesh {}

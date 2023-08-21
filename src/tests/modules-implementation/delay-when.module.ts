@@ -1,10 +1,10 @@
-import { Modules, Attributes } from '../../lib'
+import { Modules, Configurations, Contracts } from '../../lib'
 import { delayWhen } from 'rxjs/operators'
 import { interval } from 'rxjs'
 
 export const configuration = {
     schema: {
-        delayDurationSelector: new Attributes.JsCode({
+        delayDurationSelector: new Configurations.JsCode({
             value: (value, index) => interval(0),
         }),
     },
@@ -13,7 +13,7 @@ export const configuration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 

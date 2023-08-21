@@ -1,20 +1,5 @@
-import {
-    ConfigInstance,
-    ConfigurableTrait,
-    Immutable,
-    Immutables,
-    Schema,
-    ToolboxObjectTrait,
-    UidTrait,
-} from './..'
-import { uuidv4, Message, ImplementationTrait } from '../modules'
-import { VirtualDOM } from '@youwol/flux-view'
-
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { Observable } from 'rxjs'
-import { Version } from './workers/models'
-import { MacroSchema } from './macro'
-
+import { Immutable, Immutables, UidTrait } from '../common'
+import { Modules, Connections } from '..'
 /**
  * Layers specifies a hierarchical organization of a workflow.
  */
@@ -53,7 +38,7 @@ export class Layer implements UidTrait {
         } = {},
     ) {
         Object.assign(this, params)
-        this.uid = this.uid || uuidv4()
+        this.uid = this.uid || Modules.uuidv4()
     }
 
     /**
@@ -142,34 +127,11 @@ function merge({
 }
 
 /**
- * Specification of a module for latter instantiation in {@link Modules.ImplementationTrait}.
- */
-export type ModuleModel = UidTrait &
-    ToolboxObjectTrait & {
-        readonly configuration?: Immutable<{ [k: string]: unknown }>
-    }
-
-/**
- * Specification of a connection for latter instantiation in {@link Modules.Connection}.
- */
-export type ConnectionModel = UidTrait & {
-    start: Immutable<{
-        slotId: string | number
-        moduleId: string
-    }>
-    end: Immutable<{
-        slotId: string | number
-        moduleId: string
-    }>
-    configuration: Immutable<{ adaptor?: (Message) => Message }>
-}
-
-/**
  * Specification of a workflow for latter instantiation.
  */
 export type WorkflowModel = UidTrait & {
-    readonly modules: Immutables<ModuleModel>
-    readonly connections: Immutables<ConnectionModel>
+    readonly modules: Immutables<Modules.ModuleModel>
+    readonly connections: Immutables<Connections.ConnectionModel>
     readonly rootLayer: Immutable<Layer>
 }
 
@@ -178,59 +140,9 @@ export type WorkflowModel = UidTrait & {
  */
 export function emptyWorkflowModel(): WorkflowModel {
     return {
-        uid: uuidv4(),
+        uid: Modules.uuidv4(),
         modules: [],
         connections: [],
         rootLayer: new Layer({ uid: 'root' }),
     }
-}
-
-/**
- * Specification of a {@link MacroModel} API.
- */
-export type MacroApi = {
-    configMapper?: (configInstance: ConfigInstance<Schema>) => {
-        [k: string]: { [k: string]: unknown }
-    }
-    inputs?: {
-        slotId: number
-        moduleId: string
-    }[]
-    outputs?: {
-        slotId: number
-        moduleId: string
-    }[]
-    html: (instance: ImplementationTrait, config: unknown) => VirtualDOM
-}
-
-/**
- * Specification of a macro for latter instantiation.
- */
-export type MacroModel = WorkflowModel &
-    Partial<ConfigurableTrait<MacroSchema>> &
-    Partial<MacroApi> &
-    ToolboxObjectTrait
-
-/**
- * Provides information on a workers pool run-time
- */
-export type WorkersPoolRunTime = {
-    /**
-     * Keys are workers' id
-     */
-    [k: string]: {
-        importedBundles: { [k: string]: Version[] }
-        executingTaskName?: string
-    }
-}
-export type WorkersPoolModel = {
-    id: string
-    startAt?: number
-    stretchTo?: number
-}
-
-export type WorkersPoolInstance = {
-    model: WorkersPoolModel
-    instance: WorkersPoolTypes.WorkersPool
-    runtimes$: Observable<WorkersPoolRunTime>
 }

@@ -1,5 +1,5 @@
 import { Context } from '@youwol/logging'
-import { Immutable, Immutables } from '../../common'
+import { Immutable, Immutables } from '../common'
 
 /**
  * Return value of a {@link ExpectationTrait} resolution.

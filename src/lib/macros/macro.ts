@@ -1,40 +1,36 @@
-import { MacroModel, ModuleModel } from './workflow'
-import {
-    Declaration,
-    ImplementationTrait,
-    mergeMessagesContext,
-    Module,
-} from '../modules'
-import {
-    ConfigInstance,
-    extractConfigWith,
-    Immutable,
-    Immutables,
-    Modules,
-    Schema,
-} from '..'
-import { InstancePool, InstancePoolTrait } from './instance-pool'
-import { ofUnknown } from '../modules/IOs/contract'
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { deployMacroInWorker } from './workers/macro-workers'
-import * as Attributes from '../common/configurations/attributes'
+import { VirtualDOM } from '@youwol/flux-view'
 
-function gatherDependencies(_modules: Immutables<ModuleModel>) {
+import { Immutable, Immutables, ToolboxObjectTrait } from '../common'
+import { Configurations, Modules, Contracts, Deployers, Workflows } from '..'
+import { deployMacroInWorker } from './'
+
+export const macroToolbox = {
+    name: 'Macros',
+    uid: 'Macros',
+    origin: {
+        packageName: 'Macros',
+        version: 'NA',
+    },
+    modules: [],
+}
+
+function gatherDependencies(_modules: Immutables<Modules.ModuleModel>) {
     return {}
 }
 
-export type MacroDeclaration = Declaration & {
+export type MacroDeclaration = Modules.Declaration & {
     macroModel: Immutable<MacroModel>
 }
 
 export type MacroSchema = {
-    workersPoolId: Attributes.String
-} & Schema
+    workersPoolId: Configurations.String
+} & Configurations.Schema
 
 export const defaultMacroConfig = {
     schema: {
-        workersPoolId: new Attributes.String({ value: '' }),
+        workersPoolId: new Configurations.String({ value: '' }),
     },
 }
 
@@ -44,14 +40,14 @@ export function createMacroInputs(macro: Immutable<MacroModel>) {
             ...acc,
             [`input_${i}$`]: {
                 description: e,
-                contrat: ofUnknown,
+                contrat: Contracts.ofUnknown,
             },
         }
     }, {})
 }
 export function createMacroOutputs(
     macro: Immutable<MacroModel>,
-    instancePool: InstancePoolTrait,
+    instancePool: Deployers.DeployerTrait,
 ) {
     return () =>
         macro.outputs.reduce((acc, e, i) => {
@@ -75,7 +71,7 @@ export function createChart(
     context = NoContext,
 ) {
     return context.withChild('Create chart deployment model', (ctx) => {
-        const configInstance = extractConfigWith(
+        const configInstance = Configurations.extractConfigWith(
             {
                 configuration: macro.configuration || defaultMacroConfig,
                 values: dynamicConfig,
@@ -98,7 +94,8 @@ export function createChart(
                 configMap[c.uid] ? patchConf(c) : c,
             ),
             metadata: {
-                configInstance: configInstance as ConfigInstance<MacroSchema>,
+                configInstance:
+                    configInstance as Configurations.ConfigInstance<MacroSchema>,
             },
         }
         ctx.info('Chart created', chart)
@@ -108,8 +105,8 @@ export function createChart(
 
 export function macroInstance(
     macro: Immutable<MacroModel>,
-): Module<ImplementationTrait> {
-    return new Module<Modules.ImplementationTrait, MacroDeclaration>({
+): Modules.Module<Modules.ImplementationTrait> {
+    return new Modules.Module<Modules.ImplementationTrait, MacroDeclaration>({
         declaration: {
             typeId: macro.uid,
             dependencies: gatherDependencies(macro.modules),
@@ -173,7 +170,7 @@ async function deployMacroInMainThread(
             const { inputs, outputs, instancePool } = await ctx.withChildAsync(
                 'Preparation inner instance pool & IO',
                 async (ctxInner) => {
-                    let instancePool = new InstancePool({
+                    let instancePool = new Deployers.InstancePool({
                         parentUid: fwdParams.uid,
                     })
                     instancePool = await instancePool.deploy(
@@ -223,9 +220,12 @@ async function deployMacroInMainThread(
                                 targetSlot.rawMessage$.next({
                                     data,
                                     configuration: {},
-                                    context: mergeMessagesContext(context, {
-                                        macroConfig: configuration,
-                                    }),
+                                    context: Modules.mergeMessagesContext(
+                                        context,
+                                        {
+                                            macroConfig: configuration,
+                                        },
+                                    ),
                                 })
                             },
                             (e) => {
@@ -244,3 +244,31 @@ async function deployMacroInMainThread(
         },
     )
 }
+
+/**
+ * Specification of a {@link MacroModel} API.
+ */
+export type MacroApi = {
+    configMapper?: (
+        configInstance: Configurations.ConfigInstance<Configurations.Schema>,
+    ) => {
+        [k: string]: { [k: string]: unknown }
+    }
+    inputs?: {
+        slotId: number
+        moduleId: string
+    }[]
+    outputs?: {
+        slotId: number
+        moduleId: string
+    }[]
+    html: (instance: Modules.ImplementationTrait, config: unknown) => VirtualDOM
+}
+
+/**
+ * Specification of a macro for latter instantiation.
+ */
+export type MacroModel = Workflows.WorkflowModel &
+    Partial<Configurations.ConfigurableTrait<MacroSchema>> &
+    Partial<MacroApi> &
+    ToolboxObjectTrait

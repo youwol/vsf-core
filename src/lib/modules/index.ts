@@ -6,4 +6,4 @@
 export * from './IOs'
 export * from './module'
 export * from './traits'
-export * as expect from './IOs/contract'
+export * from './connector'

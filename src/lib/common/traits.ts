@@ -1,12 +1,15 @@
 import {
-    ConfigInstance,
-    Configuration,
+    Deployers,
     ExecutionJournal,
     Immutable,
-    Schema,
+    Immutables,
+    Modules,
+    ToolBox,
 } from '..'
 import { VirtualDOM } from '@youwol/flux-view'
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
+import { ContextLoggerTrait, LogChannel } from '@youwol/logging'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 /**
  * Trait for object with unique ID
@@ -66,31 +69,6 @@ export interface StatusTrait<TStatus> {
 }
 
 /**
- * Trait for object that can be configured.
- *
- * @typeParam TSchema The type of the schema associated to the configuration of the module.
- */
-export interface ConfigurableTrait<TSchema extends Schema> {
-    configuration: Immutable<Configuration<TSchema>>
-    configurationInstance: Immutable<ConfigInstance<TSchema>>
-}
-
-/**
- * Type guard on {@link ConfigurableTrait}.
- * @param object object to test
- */
-export function implementsConfigurableTrait(
-    object: unknown,
-): object is ConfigurableTrait<Schema> {
-    const maybeConf = object as ConfigurableTrait<Schema>
-    return (
-        maybeConf.configuration != undefined &&
-        maybeConf.configurationInstance != undefined &&
-        maybeConf.configuration.schema != undefined
-    )
-}
-
-/**
  * Trait for object documented.
  */
 export interface DocumentationTrait {
@@ -104,3 +82,78 @@ export function implementsDocumentationTrait(
 ): object is DocumentationTrait {
     return (object as DocumentationTrait).documentation != undefined
 }
+
+/**
+ * Trait for objects that logging runtime information.
+ */
+export interface LoggerTrait {
+    /**
+     * Broadcasting channels
+     */
+    logsChannels: Immutables<LogChannel>
+}
+
+/**
+ * Runtime environment.
+ */
+export interface InstallerTrait {
+    instantiateModule<T>(
+        {
+            typeId,
+            moduleId,
+            configuration,
+            scope,
+        }: {
+            typeId: string
+            moduleId?: string
+            configuration?: { [_k: string]: unknown }
+            scope: Immutable<{ [k: string]: unknown }>
+        },
+        context: ContextLoggerTrait,
+    ): Promise<T & Modules.ImplementationTrait>
+
+    installDependencies(
+        {
+            modules,
+        }: {
+            modules: Immutables<{ typeId: string }>
+        },
+        context: ContextLoggerTrait,
+    )
+
+    getFactory({ toolboxId, typeId }: { toolboxId?: string; typeId: string }): {
+        factory: Modules.Module<Modules.ImplementationTrait>
+        toolbox: ToolBox
+    }
+}
+
+/**
+ * Provides information on a workers pool run-time
+ */
+export type WorkersPoolRunTime = {
+    /**
+     * Keys are workers' id
+     */
+    [k: string]: {
+        importedBundles: { [k: string]: Deployers.Version[] }
+        executingTaskName?: string
+    }
+}
+export type WorkersPoolModel = {
+    id: string
+    startAt?: number
+    stretchTo?: number
+}
+
+export type WorkersPoolInstance = {
+    model: WorkersPoolModel
+    instance: WorkersPoolTypes.WorkersPool
+    runtimes$: Observable<WorkersPoolRunTime>
+}
+
+export type EnvironmentTrait = LoggerTrait &
+    InstallerTrait & {
+        workersPools: Immutables<WorkersPoolInstance>
+        toolboxes: Immutables<ToolBox>
+        macrosToolbox: Immutable<ToolBox>
+    }

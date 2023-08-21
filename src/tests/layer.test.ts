@@ -1,4 +1,4 @@
-import { Layer } from '../lib/project'
+import { Layer } from '../lib/workflows'
 
 const l = new Layer({
     uid: 'l0',

@@ -4,10 +4,10 @@
 import type { WorkersPoolTypes } from '@youwol/cdn-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
-import type { InstancePool } from '../instance-pool'
-import type { ImplementationTrait, ProcessingMessage } from '../../modules'
-import type { ProjectState } from '..'
+
+import type { Modules } from '..'
 import type {
+    InstancePool,
     DeployChart,
     InputClosed,
     InputMessage,
@@ -15,8 +15,9 @@ import type {
     ProbeMessageId,
     ProbeMessageIdKeys,
     StopSignal,
-} from './models'
-import type { emitRuntime } from './utils'
+    emitRuntime,
+} from './'
+import type { ProjectState } from '../project'
 
 type VsfCore = typeof import('../../index')
 
@@ -85,7 +86,7 @@ export async function startWorkerShadowPool({
     emitRuntime_(context)
 
     let project: ProjectState = new vsfCore.Projects.ProjectState()
-    let instancePool: InstancePool = new vsfCore.Projects.InstancePool({
+    let instancePool: InstancePool = new vsfCore.Deployers.InstancePool({
         parentUid: args.parentUid,
     })
 
@@ -134,7 +135,7 @@ export async function startWorkerShadowPool({
             const { moduleId, slotId, message } = data as unknown as {
                 moduleId: string
                 slotId: string
-                message: ProcessingMessage
+                message: Modules.ProcessingMessage
             }
             const instance = instancePool.inspector().getModule(moduleId)
             const targetSlot = Object.values(instance.inputSlots)[slotId]
@@ -175,17 +176,19 @@ export async function startWorkerShadowPool({
             const probes = workerScope.deserializeFunction(data.probes)(
                 instancePool,
                 customArgs,
-            ) as Probe<ProbeMessageIdKeys>[]
+            ) as Probe[]
             probes.forEach(plugProb)
 
             const poolDescriber = {
-                modules: instancePool.modules.map((m: ImplementationTrait) => ({
-                    uid: m.uid,
-                    typeId: m.typeId,
-                    toolboxId: m.toolboxId,
-                    inputSlots: Object.keys(m.inputSlots),
-                    outputSlots: Object.keys(m.outputSlots),
-                })),
+                modules: instancePool.modules.map(
+                    (m: Modules.ImplementationTrait) => ({
+                        uid: m.uid,
+                        typeId: m.typeId,
+                        toolboxId: m.toolboxId,
+                        inputSlots: Object.keys(m.inputSlots),
+                        outputSlots: Object.keys(m.outputSlots),
+                    }),
+                ),
                 connections: instancePool.connections.map(
                     ({ uid, start, end }) => ({
                         uid,

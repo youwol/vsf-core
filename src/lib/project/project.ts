@@ -1,32 +1,32 @@
 // noinspection JSValidateJSDoc
 
-import {
-    Environment,
-    Layer,
-    MacroModel,
-    InstancePool,
-    WorkflowModel,
-    parseMacroInput,
-    parseMacroOutput,
-    ToolBox,
-} from '../project'
-import { ConnectionTrait, ImplementationTrait } from '../modules'
 import { VirtualDOM } from '@youwol/flux-view'
-import { parseDag } from './parsing-utils'
+
 import {
-    ConfigInstance,
-    Configuration,
     Immutable,
     Immutables,
-    Projects,
-    Schema,
+    ToolBox,
     UidTrait,
+    WorkersPoolModel,
+} from '../common'
+import {
+    Modules,
+    Configurations,
+    Connections,
+    Macros,
+    Deployers,
+    Workflows,
 } from '..'
-import { defaultMacroConfig, macroInstance } from './macro'
-import { ProjectSummaryView } from './views'
-import { WorkersPoolModel } from './workflow'
-
-export type HtmlView = (instancePool: Immutable<InstancePool>) => VirtualDOM
+import {
+    Environment,
+    parseMacroInput,
+    parseMacroOutput,
+    parseDag,
+    ProjectSummaryView,
+} from './'
+export type HtmlView = (
+    instancePool: Immutable<Deployers.InstancePool>,
+) => VirtualDOM
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
 
@@ -36,20 +36,15 @@ export type HtmlViewsStore = { [k: string]: HtmlView }
 export type CanvasView = {
     /**
      * Specify on which elements the view apply.
-     * @param elem either {@link Modules.Implementation} or {@link Modules.Connection}
+     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
      */
     selector: (elem: Immutable<UidTrait>) => boolean
     /**
      * View factory.
-     * @param elem either {@link Modules.Implementation} or {@link Modules.Connection}
+     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
      */
     view: (elem: Immutable<unknown>) => VirtualDOM
 }
-
-/**
- * Store for canvas views.
- */
-export type CanvasViewsStore = CanvasView[]
 
 /**
  * State of a project.
@@ -66,14 +61,14 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly main: Immutable<WorkflowModel> =
-        Projects.emptyWorkflowModel()
+    public readonly main: Immutable<Workflows.WorkflowModel> =
+        Workflows.emptyWorkflowModel()
     /**
      * List of available macros
      *
      * @group Immutable Properties
      */
-    public readonly macros: Immutables<MacroModel> = []
+    public readonly macros: Immutables<Macros.MacroModel> = []
     /**
      * HTML views associated to the project
      *
@@ -99,15 +94,16 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly instancePool: Immutable<InstancePool> = new InstancePool({
-        parentUid: 'main',
-    })
+    public readonly instancePool: Immutable<Deployers.InstancePool> =
+        new Deployers.InstancePool({
+            parentUid: 'main',
+        })
 
     constructor(
         params: {
-            main?: Immutable<WorkflowModel>
-            macros?: Immutables<MacroModel>
-            instancePool?: Immutable<InstancePool>
+            main?: Immutable<Workflows.WorkflowModel>
+            macros?: Immutables<Macros.MacroModel>
+            instancePool?: Immutable<Deployers.InstancePool>
             views?: Immutable<HtmlViewsStore>
             environment?: Immutable<Environment>
         } = {},
@@ -138,7 +134,7 @@ export class ProjectState {
      * Get a module from the {@link main} workflow.
      * @param moduleId UID of the module
      */
-    getModule(moduleId): Immutable<ImplementationTrait> {
+    getModule(moduleId): Immutable<Modules.ImplementationTrait> {
         return this.instancePool.modules.find((m) => m.uid == moduleId)
     }
 
@@ -157,7 +153,9 @@ export class ProjectState {
      *
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<ConnectionTrait> {
+    getConnection(
+        connectionId: string,
+    ): Immutable<Connections.ConnectionTrait> {
         return this.instancePool.connections.find((c) => c.uid == connectionId)
     }
 
@@ -178,7 +176,7 @@ export class ProjectState {
                   uid: macroUid,
                   modules: [],
                   connections: [],
-                  rootLayer: new Layer(),
+                  rootLayer: new Workflows.Layer(),
               }
             : this.main
         const model = parseDag({
@@ -201,7 +199,7 @@ export class ProjectState {
             uid: wfBase.uid,
             modules: [...modulesSet],
             connections: [...connectionsSet],
-            rootLayer: new Layer({
+            rootLayer: new Workflows.Layer({
                 uid: wfBase.rootLayer.uid,
                 children: wfBase.rootLayer.children,
                 moduleIds: [...rootModuleIds],
@@ -230,13 +228,15 @@ export class ProjectState {
         })
     }
 
-    exposeMacro<TSchema extends Schema>(
+    exposeMacro<TSchema extends Configurations.Schema>(
         macroUid: string,
         definition: {
-            configuration?: Configuration<TSchema>
+            configuration?: Configurations.Configuration<TSchema>
             inputs: string[]
             outputs: string[]
-            configMapper?: (configInstance: ConfigInstance<TSchema>) => {
+            configMapper?: (
+                configInstance: Configurations.ConfigInstance<TSchema>,
+            ) => {
                 [k: string]: { [k: string]: unknown }
             }
             workerPool?: {
@@ -244,7 +244,7 @@ export class ProjectState {
                 stretchTo?: number
             }
             html?: (
-                instance: ImplementationTrait,
+                instance: Modules.ImplementationTrait,
                 config?: unknown,
             ) => VirtualDOM
         },
@@ -252,11 +252,11 @@ export class ProjectState {
         const macro = this.macros.find((m) => m.uid == macroUid)
         const configuration = {
             schema: {
-                ...defaultMacroConfig.schema,
+                ...Macros.defaultMacroConfig.schema,
                 ...(definition.configuration?.schema || {}),
             },
         }
-        const newMacro: MacroModel = {
+        const newMacro: Macros.MacroModel = {
             ...macro,
             ...definition,
             configuration,
@@ -277,7 +277,7 @@ export class ProjectState {
                 }),
             ),
         }
-        const module = macroInstance(newMacro)
+        const module = Macros.macroInstance(newMacro)
 
         return new ProjectState({
             ...this,
@@ -315,7 +315,7 @@ export class ProjectState {
         )
         const layers = workflow.rootLayer.filter((l) => uids.includes(l.uid))
 
-        const layer = new Layer({
+        const layer = new Workflows.Layer({
             uid: layerId,
             moduleIds: moduleIds,
             children: layers,
@@ -365,11 +365,11 @@ export class ProjectState {
      * Add an HTML view to the project.
      *
      * @param viewId UID of the view
-     * @param vDOM Virtual DOM generator, takes the {@link InstancePool} as argument.
+     * @param vDOM Virtual DOM generator, takes the {@link Deployers.InstancePool} as argument.
      */
     addHtml(
         viewId: string,
-        vDOM: (instances: InstancePool) => VirtualDOM,
+        vDOM: (instances: Deployers.InstancePool) => VirtualDOM,
     ): ProjectState {
         return new ProjectState({
             ...this,
@@ -393,7 +393,7 @@ export class ProjectState {
      *      view: (elem: HtmlTrait) => elem.html()
      * })
      * ```
-     * Below is an example displaying the data part of a message reaching the end of a {@link Modules.Connection} with `uid='c'`:
+     * Below is an example displaying the data part of a message reaching the end of a {@link Connections.Connection} with `uid='c'`:
      *
      * ```
      * project = project.addToCanvas({

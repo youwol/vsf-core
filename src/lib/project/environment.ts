@@ -1,12 +1,4 @@
 import {
-    DocumentationTrait,
-    Immutable,
-    Immutables,
-    Modules,
-    UidTrait,
-} from '..'
-import { ImplementationTrait } from '../modules'
-import {
     Journal,
     LogChannel,
     Log,
@@ -14,63 +6,29 @@ import {
     NoContext,
     ContextLoggerTrait,
 } from '@youwol/logging'
-
-import * as vsf from '..'
 import { Observable, ReplaySubject } from 'rxjs'
 import * as rxjs from 'rxjs'
-import { defaultViewsFactory } from './views'
+import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
-import { ProjectState } from './project'
+
+import { setup } from '../../auto-generated'
+import * as vsf from '..'
 import {
+    EnvironmentTrait,
+    Immutable,
+    Immutables,
+    ToolBox,
     WorkersPoolInstance,
     WorkersPoolModel,
     WorkersPoolRunTime,
-} from './workflow'
-import { setup } from '../../auto-generated'
-import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { transmitProbeToMainThread } from './workers/in-worker'
-import { emitRuntime } from './workers/utils'
-
-/**
- * Gathers related modules.
- */
-export type ToolBox = UidTrait &
-    Partial<DocumentationTrait> & {
-        /**
-         *
-         */
-        origin: {
-            packageName: string
-            version: string
-        }
-        /**
-         * list of included modules
-         */
-        modules: Immutables<Modules.Module<ImplementationTrait>>
-        /**
-         * name of the toolbox
-         */
-        name: string
-
-        icon?: {
-            svgString?: string
-        }
-    }
-
-const macroToolbox = {
-    name: 'Macros',
-    uid: ProjectState.macrosToolbox,
-    origin: {
-        packageName: 'Macros',
-        version: 'NA',
-    },
-    modules: [],
-}
+} from '../common'
+import { Modules, Deployers, Macros } from '..'
+import { defaultViewsFactory } from './'
 
 /**
  * Runtime environment.
  */
-export class Environment {
+export class Environment implements EnvironmentTrait {
     /**
      * Standard toolboxes are toolboxes provided at construction
      * and already instantiated. They can be imported without download step.
@@ -90,7 +48,7 @@ export class Environment {
      *
      * @group Immutable Properties
      */
-    public readonly macrosToolbox: Immutable<ToolBox> = macroToolbox
+    public readonly macrosToolbox: Immutable<ToolBox> = Macros.macroToolbox
 
     /**
      * Gather all kind of toolboxes.
@@ -152,7 +110,7 @@ export class Environment {
                 pipes: [this.errorChannel$],
             }),
         ]
-        this.errorChannel$.subscribe((log: ErrorLog<Error, unknown>) => {
+        this.errorChannel$.subscribe((log: ErrorLog<Error>) => {
             console.error(log.error)
             console.error(log.data)
         })
@@ -320,8 +278,9 @@ export class Environment {
                         },
                     },
                     globals: {
-                        transmitProbeToMainThread,
-                        emitRuntime,
+                        transmitProbeToMainThread:
+                            Deployers.transmitProbeToMainThread,
+                        emitRuntime: Deployers.emitRuntime,
                     },
                     pool,
                 })

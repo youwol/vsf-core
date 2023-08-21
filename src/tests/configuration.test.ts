@@ -1,4 +1,4 @@
-import { Attributes, extractConfigWith } from '../lib'
+import { Configurations } from '../lib'
 import { Context } from '@youwol/logging'
 import { ObservableInput } from 'rxjs'
 
@@ -6,26 +6,28 @@ test('configuration', async () => {
     const context = new Context('conf-test', {})
     const conf = {
         schema: {
-            name: new Attributes.String({ value: 'test-conf' }),
-            radius: new Attributes.Float({ value: 0, min: 0 }),
+            name: new Configurations.String({ value: 'test-conf' }),
+            radius: new Configurations.Float({ value: 0, min: 0 }),
             transform: {
                 translation: {
-                    x: new Attributes.Float({ value: 0 }),
-                    y: new Attributes.Float({ value: 0 }),
-                    z: new Attributes.Float({ value: 0 }),
+                    x: new Configurations.Float({ value: 0 }),
+                    y: new Configurations.Float({ value: 0 }),
+                    z: new Configurations.Float({ value: 0 }),
                 },
             },
-            object: new Attributes.AnyObject({
+            object: new Configurations.AnyObject({
                 value: { name: 'foo', id: 'bar' },
             }),
-            custom: new Attributes.CustomAttribute<ObservableInput<unknown>>({
+            custom: new Configurations.CustomAttribute<
+                ObservableInput<unknown>
+            >({
                 value: [{}],
             }),
         },
     }
 
     expect(conf).toBeTruthy()
-    const values = extractConfigWith(
+    const values = Configurations.extractConfigWith(
         {
             configuration: conf,
             values: {
@@ -62,15 +64,17 @@ test('jsCode', async () => {
     const context = new Context('conf-test', {})
     const conf = {
         schema: {
-            fct1: new Attributes.JsCode({ value: () => 42 }),
-            fct2: new Attributes.JsCode({ value: '() => 42' }),
-            fct3: new Attributes.JsCode({ value: 'return () => 42' }),
-            fct4: new Attributes.JsCode({ value: ' \n \t return () => 42' }),
-            fct5: new Attributes.JsCode({ value: () => 42 }),
-            fct6: new Attributes.JsCode({ value: () => 42 }),
+            fct1: new Configurations.JsCode({ value: () => 42 }),
+            fct2: new Configurations.JsCode({ value: '() => 42' }),
+            fct3: new Configurations.JsCode({ value: 'return () => 42' }),
+            fct4: new Configurations.JsCode({
+                value: ' \n \t return () => 42',
+            }),
+            fct5: new Configurations.JsCode({ value: () => 42 }),
+            fct6: new Configurations.JsCode({ value: () => 42 }),
         },
     }
-    const values = extractConfigWith(
+    const values = Configurations.extractConfigWith(
         {
             configuration: conf,
             values: {

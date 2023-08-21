@@ -1,9 +1,9 @@
-import { Modules, Attributes } from '../../lib'
+import { Modules, Configurations, Contracts } from '../../lib'
 import { delay } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        due: new Attributes.Float({
+        due: new Configurations.Float({
             value: 0,
         }),
     },
@@ -12,7 +12,7 @@ export const configuration = {
 export const inputs = {
     input$: {
         description: 'the input stream',
-        contract: Modules.expect.ofUnknown,
+        contract: Contracts.ofUnknown,
     },
 }
 

@@ -1,14 +1,13 @@
-import { Chart, InstancePool } from '../instance-pool'
 import { filter, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
+import * as CdnClient from '@youwol/cdn-client'
+
+import { EnvironmentTrait, Immutable } from '../common'
+import { Modules, Connections } from '..'
 import {
-    ConnectionStatus,
-    ConnectionTrait,
-    ImplementationTrait,
-} from '../../modules'
-import { Environment } from '../environment'
-import { Immutable } from '../../common'
-import {
+    Chart,
+    InstancePool,
     ConnectionDescriberFromWorker,
     InstancePoolDescriberFromWorker,
     isConnectionMessageProbe,
@@ -17,9 +16,7 @@ import {
     ModuleDescriberFromWorker,
     ProbeMessageFromWorker,
     RuntimeNotification,
-} from './models'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import * as CdnClient from '@youwol/cdn-client'
+} from './'
 
 const noOp = () => {
     /*No op*/
@@ -79,7 +76,7 @@ export function createInstancePoolProxy({
 }: {
     instancePool: InstancePoolDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
     parentUid: string
 }) {
     return new InstancePool({
@@ -103,9 +100,9 @@ function toModuleProxy({
     probe$,
 }: {
     description: Immutable<ModuleDescriberFromWorker>
-    environment: Immutable<Environment>
+    environment: Immutable<EnvironmentTrait>
     probe$: Observable<ProbeMessageFromWorker>
-}): ImplementationTrait {
+}): Modules.ImplementationTrait {
     const guards = {
         in: isInputRawMessageProbe,
         out: isOutputObservableProbe,
@@ -187,8 +184,10 @@ function toConnectionProxy({
 }: {
     description: ConnectionDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
-}): ConnectionTrait {
-    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
+}): Connections.ConnectionTrait {
+    const status$ = new BehaviorSubject<Connections.ConnectionStatus>(
+        'connected',
+    )
     probe$
         .pipe(
             filter(
@@ -197,7 +196,9 @@ function toConnectionProxy({
                     m.id.connectionId == description.uid,
             ),
         )
-        .subscribe((m) => status$.next(m.message as ConnectionStatus))
+        .subscribe((m) =>
+            status$.next(m.message as Connections.ConnectionStatus),
+        )
 
     return {
         ...description,

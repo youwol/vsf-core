@@ -1,15 +1,11 @@
-import { Chart, InstancePool } from '../instance-pool'
 import { NoContext } from '@youwol/logging'
-import { MacroModel } from '../workflow'
-import { ForwardArgs, Implementation, ImplementationTrait } from '../../modules'
 import { takeUntil } from 'rxjs/operators'
 import { Observable } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { createMacroInputs, createMacroOutputs } from '../macro'
-import { Immutable } from '../../common'
 
-import { InstancePoolWorker } from './instance-pool-worker'
-import { Probe } from './models'
+import { Immutable } from '../common'
+import { Deployers, Modules } from '..'
+import { createMacroInputs, createMacroOutputs, MacroModel } from './'
 
 function transmitInputMessage(
     macroUid: string,
@@ -39,7 +35,7 @@ function transmitInputMessage(
         },
     )
 }
-export function getProbes(instancePool: InstancePool, customArgs) {
+export function getProbes(instancePool: Deployers.InstancePool, customArgs) {
     const notForwarded = () => {
         return {
             data: 'Data not forwarded',
@@ -56,7 +52,7 @@ export function getProbes(instancePool: InstancePool, customArgs) {
                         slotId: inputSlot.slotId,
                     },
                     message: notForwarded,
-                } as Probe<'module.inputSlot.rawMessage$'>
+                } as Deployers.Probe<'module.inputSlot.rawMessage$'>
             }),
         ...instancePool.modules
             .flatMap((m) =>
@@ -83,14 +79,14 @@ export function getProbes(instancePool: InstancePool, customArgs) {
                     message: isMacroOutputs
                         ? (inWorkerMessage) => inWorkerMessage
                         : notForwarded,
-                } as Probe<'module.outputSlot.observable$'>
+                } as Deployers.Probe<'module.outputSlot.observable$'>
             }),
         ...instancePool.connections.map((connection) => {
             return {
                 kind: 'connection.status$',
                 id: { connectionId: connection.uid },
                 message: (inWorkerMessage) => inWorkerMessage,
-            } as Probe<'connection.status$'>
+            } as Deployers.Probe<'connection.status$'>
         }),
     ]
 }
@@ -102,16 +98,16 @@ export async function deployMacroInWorker(
         fwdParams,
     }: {
         macro: Immutable<MacroModel>
-        chart: Chart
+        chart: Deployers.Chart
         workersPool: Immutable<WorkersPoolTypes.WorkersPool>
-        fwdParams: ForwardArgs
+        fwdParams: Modules.ForwardArgs
     },
     context = NoContext,
-): Promise<ImplementationTrait> {
+): Promise<Modules.ImplementationTrait> {
     return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
         ctx.info('Workers pool', workersPool)
 
-        let instancePoolWorker = await InstancePoolWorker.empty({
+        let instancePoolWorker = await Deployers.InstancePoolWorker.empty({
             processName: fwdParams.uid,
             workersPool,
             parentUid: fwdParams.uid,
@@ -129,7 +125,7 @@ export async function deployMacroInWorker(
         const inputs = createMacroInputs(macro)
         const outputs = createMacroOutputs(macro, instancePoolWorker)
 
-        const implementation = new Implementation(
+        const implementation = new Modules.Implementation(
             {
                 configuration: macro.configuration,
                 inputs,
