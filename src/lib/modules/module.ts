@@ -11,7 +11,7 @@ import {
     mergeWith,
     EnvironmentTrait,
 } from '../common'
-import { Configurations, Deployers } from '..'
+import { Configurations, Deployers, Connections } from '..'
 import { ImplementationTrait, moduleConnectors } from './'
 import * as IOs from './IOs'
 
@@ -69,8 +69,8 @@ export function mergeMessagesContext(...ctx: MessageContext[]) {
  *
  * @typeParam TData the type of the data part of the message.
  */
-export type InputMessage<TData = unknown> = Deployers.Message<TData> & {
-    configuration?: Deployers.JsonMap
+export type InputMessage<TData = unknown> = Connections.Message<TData> & {
+    configuration?: Connections.JsonMap
 }
 
 /**

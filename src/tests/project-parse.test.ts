@@ -1,6 +1,6 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
-import { Connection } from '../lib/deployers'
+import { Connection } from '../lib/connections'
 import { Configurations } from '../lib'
 setupCdnHttpConnection()
 

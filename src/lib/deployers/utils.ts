@@ -4,12 +4,10 @@ import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
 import { EnvironmentTrait, Immutable } from '../common'
-import { Modules } from '..'
+import { Modules, Connections } from '..'
 import {
     Chart,
     InstancePool,
-    ConnectionStatus,
-    ConnectionTrait,
     ConnectionDescriberFromWorker,
     InstancePoolDescriberFromWorker,
     isConnectionMessageProbe,
@@ -186,8 +184,10 @@ function toConnectionProxy({
 }: {
     description: ConnectionDescriberFromWorker
     probe$: Observable<ProbeMessageFromWorker>
-}): ConnectionTrait {
-    const status$ = new BehaviorSubject<ConnectionStatus>('connected')
+}): Connections.ConnectionTrait {
+    const status$ = new BehaviorSubject<Connections.ConnectionStatus>(
+        'connected',
+    )
     probe$
         .pipe(
             filter(
@@ -196,7 +196,9 @@ function toConnectionProxy({
                     m.id.connectionId == description.uid,
             ),
         )
-        .subscribe((m) => status$.next(m.message as ConnectionStatus))
+        .subscribe((m) =>
+            status$.next(m.message as Connections.ConnectionStatus),
+        )
 
     return {
         ...description,

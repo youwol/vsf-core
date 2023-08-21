@@ -2,8 +2,7 @@ import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 
 import { Immutable, Immutables, EnvironmentTrait } from '../common'
-import { Modules, Projects, Configurations } from '..'
-import { Connection, ConnectionTrait } from './'
+import { Modules, Projects, Configurations, Connections } from '..'
 import { WorkflowModel } from '../project'
 
 /**
@@ -50,7 +49,7 @@ export interface DeployerTrait {
     /**
      * connections instances
      */
-    connections: Immutables<ConnectionTrait>
+    connections: Immutables<Connections.ConnectionTrait>
 
     /**
      * Return an inspector object to retrieve/search objects from the pool.
@@ -104,11 +103,11 @@ export class InstancePool implements DeployerTrait {
 
     public readonly modules: Immutables<Modules.ImplementationTrait> = []
 
-    public readonly connections: Immutables<ConnectionTrait> = []
+    public readonly connections: Immutables<Connections.ConnectionTrait> = []
 
     constructor(params: {
         modules?: Immutables<Modules.ImplementationTrait>
-        connections?: Immutables<ConnectionTrait>
+        connections?: Immutables<Connections.ConnectionTrait>
         parentUid: string
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
@@ -162,7 +161,7 @@ export class InstancePool implements DeployerTrait {
             const connections = chart.connections.map((connection) => {
                 const beforeModule = byUid[connection.start.moduleId]
                 const afterModule = byUid[connection.end.moduleId]
-                return new Connection({
+                return new Connections.Connection({
                     start: {
                         slotId: Object.values(beforeModule.outputSlots)[
                             connection.start.slotId
@@ -222,7 +221,7 @@ export class InstancePool implements DeployerTrait {
 export class Inspector {
     public readonly pool: Immutable<DeployerTrait>
     public readonly modules: Immutables<Modules.ImplementationTrait>
-    public readonly connections: Immutables<ConnectionTrait>
+    public readonly connections: Immutables<Connections.ConnectionTrait>
 
     constructor(params: { pool: Immutable<DeployerTrait> }) {
         Object.assign(this, params)
@@ -241,7 +240,9 @@ export class Inspector {
      * Get a connection running instance.
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<ConnectionTrait> {
+    getConnection(
+        connectionId: string,
+    ): Immutable<Connections.ConnectionTrait> {
         return this.connections.find((c) => c.uid == connectionId)
     }
 
@@ -249,7 +250,9 @@ export class Inspector {
      * Get a running instance, either module or connection
      * @param id id of the instance
      */
-    get(id: string): Immutable<ConnectionTrait | Modules.ImplementationTrait> {
+    get(
+        id: string,
+    ): Immutable<Connections.ConnectionTrait | Modules.ImplementationTrait> {
         return this.getModule(id) || this.getConnection(id)
     }
 
@@ -265,7 +268,7 @@ export class Inspector {
 
     flat(): {
         modules: Immutables<Modules.ImplementationTrait>
-        connections: Immutables<ConnectionTrait>
+        connections: Immutables<Connections.ConnectionTrait>
     } {
         return this.modules
             .filter((module) => module.instancePool$ != undefined)

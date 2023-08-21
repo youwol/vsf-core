@@ -4,12 +4,11 @@ import { filter, map, shareReplay, take } from 'rxjs/operators'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 import { Immutable, Immutables, EnvironmentTrait } from '../common'
-import { Modules } from '..'
+import { Modules, Connections } from '..'
 import {
     startWorkerShadowPool,
     createInstancePoolProxy,
     serializeChart,
-    ConnectionTrait,
     Chart,
     DeployerTrait,
     Inspector,
@@ -21,7 +20,7 @@ import {
     Probe,
 } from './'
 export type ImplementationProxy = Modules.ImplementationTrait
-export type ConnectionProxy = ConnectionTrait
+export type ConnectionProxy = Connections.ConnectionTrait
 
 /**
  * A trait for object related to a worker within a workers pool

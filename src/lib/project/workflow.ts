@@ -3,7 +3,7 @@ import { WorkersPoolTypes } from '@youwol/cdn-client'
 import { Observable } from 'rxjs'
 
 import { Immutable, Immutables, ToolboxObjectTrait, UidTrait } from '../common'
-import { Configurations, Deployers, Modules, Macros } from '..'
+import { Configurations, Deployers, Modules, Macros, Connections } from '..'
 /**
  * Layers specifies a hierarchical organization of a workflow.
  */
@@ -150,7 +150,7 @@ export type ConnectionModel = UidTrait & {
         slotId: string | number
         moduleId: string
     }>
-    configuration: Immutable<{ adaptor?: (Message) => Deployers.Message }>
+    configuration: Immutable<{ adaptor?: (Message) => Connections.Message }>
 }
 
 /**

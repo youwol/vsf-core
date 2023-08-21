@@ -3,7 +3,7 @@
 import { VirtualDOM } from '@youwol/flux-view'
 
 import { Immutable, Immutables, ToolBox, UidTrait } from '../common'
-import { Modules, Configurations, Macros, Deployers } from '..'
+import { Modules, Configurations, Connections, Macros, Deployers } from '..'
 import {
     Environment,
     Layer,
@@ -149,7 +149,9 @@ export class ProjectState {
      *
      * @param connectionId UID of the connection
      */
-    getConnection(connectionId: string): Immutable<Deployers.ConnectionTrait> {
+    getConnection(
+        connectionId: string,
+    ): Immutable<Connections.ConnectionTrait> {
         return this.instancePool.connections.find((c) => c.uid == connectionId)
     }
 
