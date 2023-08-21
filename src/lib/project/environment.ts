@@ -13,14 +13,17 @@ import { install, installWorkersPoolModule } from '@youwol/cdn-client'
 
 import { setup } from '../../auto-generated'
 import * as vsf from '..'
-import { EnvironmentTrait, Immutable, Immutables, ToolBox } from '../common'
-import { Modules, Deployers, Macros } from '..'
 import {
-    defaultViewsFactory,
+    EnvironmentTrait,
+    Immutable,
+    Immutables,
+    ToolBox,
     WorkersPoolInstance,
     WorkersPoolModel,
     WorkersPoolRunTime,
-} from './'
+} from '../common'
+import { Modules, Deployers, Macros } from '..'
+import { defaultViewsFactory } from './'
 
 /**
  * Runtime environment.

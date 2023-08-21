@@ -1,8 +1,15 @@
-import { ExecutionJournal, Immutable, Immutables, Modules, ToolBox } from '..'
+import {
+    Deployers,
+    ExecutionJournal,
+    Immutable,
+    Immutables,
+    Modules,
+    ToolBox,
+} from '..'
 import { VirtualDOM } from '@youwol/flux-view'
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, Observable } from 'rxjs'
 import { ContextLoggerTrait, LogChannel } from '@youwol/logging'
-import { WorkersPoolInstance } from '../project'
+import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 /**
  * Trait for object with unique ID
@@ -118,6 +125,30 @@ export interface InstallerTrait {
         factory: Modules.Module<Modules.ImplementationTrait>
         toolbox: ToolBox
     }
+}
+
+/**
+ * Provides information on a workers pool run-time
+ */
+export type WorkersPoolRunTime = {
+    /**
+     * Keys are workers' id
+     */
+    [k: string]: {
+        importedBundles: { [k: string]: Deployers.Version[] }
+        executingTaskName?: string
+    }
+}
+export type WorkersPoolModel = {
+    id: string
+    startAt?: number
+    stretchTo?: number
+}
+
+export type WorkersPoolInstance = {
+    model: WorkersPoolModel
+    instance: WorkersPoolTypes.WorkersPool
+    runtimes$: Observable<WorkersPoolRunTime>
 }
 
 export type EnvironmentTrait = LoggerTrait &

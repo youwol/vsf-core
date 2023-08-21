@@ -2,7 +2,13 @@
 
 import { VirtualDOM } from '@youwol/flux-view'
 
-import { Immutable, Immutables, ToolBox, UidTrait } from '../common'
+import {
+    Immutable,
+    Immutables,
+    ToolBox,
+    UidTrait,
+    WorkersPoolModel,
+} from '../common'
 import { Modules, Configurations, Connections, Macros, Deployers } from '..'
 import {
     Environment,
@@ -14,7 +20,6 @@ import {
     parseDag,
     emptyWorkflowModel,
     ProjectSummaryView,
-    WorkersPoolModel,
 } from './'
 export type HtmlView = (
     instancePool: Immutable<Deployers.InstancePool>,

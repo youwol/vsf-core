@@ -1,9 +1,7 @@
 import { VirtualDOM } from '@youwol/flux-view'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import { Observable } from 'rxjs'
 
 import { Immutable, Immutables, ToolboxObjectTrait, UidTrait } from '../common'
-import { Configurations, Deployers, Modules, Macros, Connections } from '..'
+import { Configurations, Modules, Macros, Connections } from '..'
 /**
  * Layers specifies a hierarchical organization of a workflow.
  */
@@ -178,27 +176,3 @@ export type MacroModel = WorkflowModel &
     Partial<Configurations.ConfigurableTrait<Macros.MacroSchema>> &
     Partial<MacroApi> &
     ToolboxObjectTrait
-
-/**
- * Provides information on a workers pool run-time
- */
-export type WorkersPoolRunTime = {
-    /**
-     * Keys are workers' id
-     */
-    [k: string]: {
-        importedBundles: { [k: string]: Deployers.Version[] }
-        executingTaskName?: string
-    }
-}
-export type WorkersPoolModel = {
-    id: string
-    startAt?: number
-    stretchTo?: number
-}
-
-export type WorkersPoolInstance = {
-    model: WorkersPoolModel
-    instance: WorkersPoolTypes.WorkersPool
-    runtimes$: Observable<WorkersPoolRunTime>
-}
