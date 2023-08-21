@@ -20,7 +20,7 @@ export type Chart = {
      *
      * @group Immutable Properties
      */
-    connections: Immutables<Projects.ConnectionModel>
+    connections: Immutables<Connections.ConnectionModel>
 
     /**
      * Optional metadata associated to the chart

@@ -1,6 +1,6 @@
 import { Immutables, ToolBox, UidTrait } from '../common'
-import { Modules } from '..'
-import { ConnectionModel, ModuleModel } from '../project'
+import { Modules, Connections } from '..'
+import { ModuleModel } from '../project'
 
 /**
  * Parse a string representation of a DAG into {@link ModuleModel} & {@link ConnectionModel}.
@@ -24,7 +24,7 @@ export function parseDag({
     configs: { [_k: string]: unknown }
     toolboxes: Immutables<ToolBox>
     availableModules: Immutables<ModuleModel>
-}): { modules: ModuleModel[]; connections: ConnectionModel[] } {
+}): { modules: ModuleModel[]; connections: Connections.ConnectionModel[] } {
     const sanitizedFlows: string[] = Array.isArray(flows) ? flows : [flows]
 
     const { modules, connections } = sanitizedFlows.reduce(
@@ -40,7 +40,10 @@ export function parseDag({
                 connections: [...acc.connections, ...connections],
             }
         },
-        { modules: [] as ModuleModel[], connections: [] as ConnectionModel[] },
+        {
+            modules: [] as ModuleModel[],
+            connections: [] as Connections.ConnectionModel[],
+        },
     )
     const removeDuplicates = (
         modules: Immutables<ModuleModel>,
@@ -182,7 +185,7 @@ function parseConnection({
         },
         configuration: uid && configs[uid] ? configs[uid] : {},
         uid: uid,
-    } as ConnectionModel
+    } as Connections.ConnectionModel
 }
 
 export function parseMacroInput({

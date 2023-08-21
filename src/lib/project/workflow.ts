@@ -139,26 +139,11 @@ export type ModuleModel = UidTrait &
     }
 
 /**
- * Specification of a connection for latter instantiation in {@link Modules.Connection}.
- */
-export type ConnectionModel = UidTrait & {
-    start: Immutable<{
-        slotId: string | number
-        moduleId: string
-    }>
-    end: Immutable<{
-        slotId: string | number
-        moduleId: string
-    }>
-    configuration: Immutable<{ adaptor?: (Message) => Connections.Message }>
-}
-
-/**
  * Specification of a workflow for latter instantiation.
  */
 export type WorkflowModel = UidTrait & {
     readonly modules: Immutables<ModuleModel>
-    readonly connections: Immutables<ConnectionModel>
+    readonly connections: Immutables<Connections.ConnectionModel>
     readonly rootLayer: Immutable<Layer>
 }
 

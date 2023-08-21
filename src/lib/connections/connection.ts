@@ -286,3 +286,18 @@ export class Connection implements ConnectionTrait {
         return this.configurationInstance.adaptor(d)
     }
 }
+
+/**
+ * Specification of a connection for latter instantiation in {@link Modules.Connection}.
+ */
+export type ConnectionModel = UidTrait & {
+    start: Immutable<{
+        slotId: string | number
+        moduleId: string
+    }>
+    end: Immutable<{
+        slotId: string | number
+        moduleId: string
+    }>
+    configuration: Immutable<{ adaptor?: (Message) => Message }>
+}
