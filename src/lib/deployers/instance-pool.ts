@@ -98,7 +98,7 @@ export function implementsDeployerTrait(d: unknown): d is DeployerTrait {
 export class InstancePool implements DeployerTrait {
     public readonly parentUid: string
 
-    terminated$: ReplaySubject<undefined>
+    public readonly terminated$: ReplaySubject<undefined>
 
     public readonly modules: Immutables<Modules.ImplementationTrait> = []
 
