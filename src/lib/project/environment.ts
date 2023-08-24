@@ -247,6 +247,14 @@ export class Environment implements EnvironmentTrait {
                     modules,
                     withDependencies,
                 })
+                if (
+                    withDependencies.modules.length +
+                        withDependencies.scripts.length +
+                        withDependencies.css.length ==
+                    0
+                ) {
+                    return
+                }
                 await install({
                     modules: [...new Set(withDependencies.modules)],
                     scripts: [...new Set(withDependencies.scripts)],
