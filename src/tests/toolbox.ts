@@ -9,7 +9,8 @@ import { module as mergeMapModule } from './modules-implementation/merge-map.mod
 import { module as consoleModule } from './modules-implementation/console.module'
 import { module as timerModule } from './modules-implementation/timer.module'
 import { module as sphereModule } from './modules-implementation/sphere.module'
-import { module as switchMapMacroModule } from './modules-implementation/switch-map-macro.module'
+import { module as takeModule } from './modules-implementation/take.module'
+import { module as combineLatestModule } from './modules-implementation/combine-latest.module'
 
 export const toolbox = {
     name: 'test-toolbox',
@@ -69,6 +70,22 @@ export const toolbox = {
         }),
         new Modules.Module({
             declaration: {
+                typeId: 'take',
+            },
+            implementation: ({ fwdParams }) => {
+                return takeModule(fwdParams)
+            },
+        }),
+        new Modules.Module({
+            declaration: {
+                typeId: 'combineLatest',
+            },
+            implementation: ({ fwdParams }) => {
+                return combineLatestModule(fwdParams)
+            },
+        }),
+        new Modules.Module({
+            declaration: {
                 typeId: 'console',
             },
             implementation: ({ fwdParams }) => {
@@ -106,14 +123,6 @@ export const toolbox = {
             },
             implementation: ({ fwdParams }) => {
                 return plotModule(fwdParams)
-            },
-        }),
-        new Modules.Module({
-            declaration: {
-                typeId: 'switchMapMacroTest',
-            },
-            implementation: ({ fwdParams }) => {
-                return switchMapMacroModule(fwdParams)
             },
         }),
     ],

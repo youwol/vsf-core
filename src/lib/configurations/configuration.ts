@@ -1,6 +1,6 @@
 import * as Attributes from './attributes'
 import { NoContext } from '@youwol/logging'
-import { Immutable, mergeWith } from '../common'
+import { Immutable } from '../common'
 
 /**
  * Formalize a JSON-like data-structure in terms of attributes.
@@ -33,26 +33,6 @@ export type Configuration<TSchema extends Schema> = {
     schema: TSchema
 }
 
-export function extendConfig<
-    TSchema extends Schema,
-    TPath extends ReadonlyArray<unknown>,
->(p: {
-    configuration: Immutable<Configuration<TSchema>>
-    target: TPath
-    with: Schema
-}): Configuration<TSchema> {
-    const obj = p.target.reduce(
-        ([all, leaf], e: string, i) => {
-            leaf = leaf == undefined ? all : leaf
-            leaf[e] = i == p.target.length - 1 ? p.with : {}
-            return [all, leaf[e]]
-        },
-        [{}, undefined],
-    )
-    return mergeWith({}, p.configuration, {
-        schema: obj[0],
-    })
-}
 /**
  * @ignore
  */
