@@ -34,6 +34,14 @@ export interface DeployerTrait {
     parentUid: string
 
     /**
+     * Hint regarding connections of some of the included modules with respect to the parent
+     * entity ({@link Modules.Implementation} usually) - if any.
+     *
+     * Keys are uid of included modules in the pool.
+     */
+    connectionsHint?: Record<string, Immutable<ConnectionsHint>>
+
+    /**
      * Emit when the pool is {@link stop}.
      *
      * @group Observable
@@ -63,7 +71,10 @@ export interface DeployerTrait {
      * @param params
      * @param params.chart chart to instantiate
      * @param params.environment running environment
-     * @param params.scope Scope bounded to the modules deployed
+     * @param params.scope scope bounded to the modules deployed
+     * @param params.connectionsHint hint regarding connections of some of the included modules with respect to
+     * the parent entity ({@link Modules.Implementation} usually) - if any.
+     * Keys are uid of included modules in the pool.
      * @param context context for logging purposes
      */
     deploy(
@@ -71,6 +82,7 @@ export interface DeployerTrait {
             chart: Immutable<Chart>
             environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
+            connectionsHint?: Record<string, Immutable<ConnectionsHint>>
         },
         context: ContextLoggerTrait,
     ): Promise<DeployerTrait>
@@ -91,6 +103,11 @@ export function implementsDeployerTrait(d: unknown): d is DeployerTrait {
     )
 }
 
+export type ConnectionsHint = {
+    parent: { from: string; to: string }
+    inputSlot: number | string
+    outputSlot: number | string
+}
 /**
  * This class encapsulates running instances of modules as well as connections.
  *
@@ -104,10 +121,16 @@ export class InstancePool implements DeployerTrait {
 
     public readonly connections: Immutables<Connections.ConnectionTrait> = []
 
+    public readonly connectionsHint?: Record<
+        string,
+        Immutable<ConnectionsHint>
+    > = {}
+
     constructor(params: {
         modules?: Immutables<Modules.ImplementationTrait>
         connections?: Immutables<Connections.ConnectionTrait>
         parentUid: string
+        connectionsHint?: Record<string, Immutable<ConnectionsHint>>
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
         this.terminated$ = new ReplaySubject(1)
@@ -116,10 +139,12 @@ export class InstancePool implements DeployerTrait {
     async deploy(
         {
             chart,
+            connectionsHint,
             environment,
             scope,
         }: {
             chart: Immutable<Chart>
+            connectionsHint?: Record<string, Immutable<ConnectionsHint>>
             environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
@@ -190,6 +215,10 @@ export class InstancePool implements DeployerTrait {
                 modules: [...modules, ...this.modules],
                 connections: [...connections, ...this.connections],
                 parentUid: this.parentUid,
+                connectionsHint: {
+                    ...this.connectionsHint,
+                    ...connectionsHint,
+                },
             })
         })
     }

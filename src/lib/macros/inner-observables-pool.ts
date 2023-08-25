@@ -11,6 +11,7 @@ import {
 import { Modules, Deployers, Connections } from '..'
 import { macroToolbox } from './'
 import { JsonMap } from '../connections'
+import { ConnectionsHint } from '../deployers'
 
 function mergeInstancePools(
     uid: string,
@@ -18,10 +19,15 @@ function mergeInstancePools(
 ) {
     const modules = pools.reduce((acc, e) => [...acc, ...e.modules], [])
     const connections = pools.reduce((acc, e) => [...acc, ...e.connections], [])
+    const connectionsHint: Record<
+        string,
+        Immutable<ConnectionsHint>
+    > = pools.reduce((acc, e) => ({ ...acc, ...e.connectionsHint }), {})
     return new Deployers.InstancePool({
         parentUid: uid,
         modules,
         connections,
+        connectionsHint,
     })
 }
 
@@ -81,11 +87,6 @@ export type MacroAsObservableSpec = {
     configuration: JsonMap
 }
 
-export type OuterConnectionsHint = {
-    from: string
-    to: string
-}
-
 /**
  * `MacrosPoolState` represents a pool of macro, each one serving as defining an observables.
  */
@@ -131,17 +132,6 @@ export class InnerObservablesPool {
         Promise<Immutable<Deployers.InstancePool>>
     > = new Map()
 
-    /**
-     * Connections hints for macro instances if available.
-     */
-    public readonly connectionsHints: Map<
-        Immutable<Immutable<Modules.ImplementationTrait>>,
-        {
-            macroInputSlot?: number
-            macroOutputSlot: number
-            outer: OuterConnectionsHint
-        }
-    > = new Map()
     /**
      * Callback called when a macro has been created.
      */
@@ -213,10 +203,19 @@ export class InnerObservablesPool {
             configuration,
             macroTypeId,
         }: MacroAsObservableSpec,
-        connectionsHint?: OuterConnectionsHint,
+        connectionsHint?: { from: string; to: string },
     ): Observable<Immutable<Modules.OutputMessage>> {
         return from(
-            this.newMacroInstance({ macroTypeId, message, configuration }),
+            this.newMacroInstance(
+                {
+                    macroTypeId,
+                    message,
+                    configuration,
+                    inputSlot,
+                    outputSlot,
+                },
+                connectionsHint,
+            ),
         ).pipe(
             tap(() => {
                 this.onStarted({ fromMessage: message, state: this })
@@ -224,11 +223,6 @@ export class InnerObservablesPool {
             tap(({ macro, context }) => {
                 context.info('Macro instance created', macro)
 
-                this.connectionsHints.set(macro, {
-                    outer: connectionsHint,
-                    macroInputSlot: inputSlot,
-                    macroOutputSlot: outputSlot,
-                })
                 if (inputSlot == undefined) {
                     return
                 }
@@ -290,15 +284,22 @@ export class InnerObservablesPool {
         )
     }
 
-    private async newMacroInstance({
-        macroTypeId,
-        message,
-        configuration,
-    }: {
-        macroTypeId: string
-        message
-        configuration: Connections.JsonMap
-    }): Promise<{
+    private async newMacroInstance(
+        {
+            macroTypeId,
+            message,
+            configuration,
+            inputSlot,
+            outputSlot,
+        }: {
+            macroTypeId: string
+            message
+            configuration: Connections.JsonMap
+            inputSlot: number
+            outputSlot: number
+        },
+        connectionsHint?: { from: string; to: string },
+    ): Promise<{
         macro: Immutable<Modules.ImplementationTrait>
         context: Context
     }> {
@@ -329,6 +330,13 @@ export class InnerObservablesPool {
                         },
                     ],
                     connections: [],
+                },
+                connectionsHint: {
+                    [uid]: {
+                        parent: connectionsHint,
+                        inputSlot: inputSlot,
+                        outputSlot: outputSlot,
+                    },
                 },
             }
             this.instancePools.set(
@@ -386,7 +394,6 @@ export class InnerObservablesPool {
                 const ctx = this.instanceContext.get(message)
                 ctx.info('Teardown macro')
                 ctx.end()
-                this.connectionsHints.delete(macroModule)
                 this.instancePools.delete(message)
                 this.instancePool$.next(
                     new Deployers.InstancePool({
