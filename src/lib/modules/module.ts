@@ -574,3 +574,21 @@ export type ModuleModel = UidTrait &
     ToolboxObjectTrait & {
         readonly configuration?: Immutable<{ [k: string]: unknown }>
     }
+
+export function getInputSlot(
+    module: Immutable<ImplementationTrait>,
+    id: string | number,
+) {
+    return typeof id == 'string'
+        ? module.inputSlots[id]
+        : Object.values(module.inputSlots)[id]
+}
+
+export function getOutputSlot(
+    module: Immutable<ImplementationTrait>,
+    id: string | number,
+) {
+    return typeof id == 'string'
+        ? module.outputSlots[id]
+        : Object.values(module.outputSlots)[id]
+}

@@ -1,6 +1,7 @@
 import { toolbox } from './toolbox'
 import { Environment } from '../lib/project'
 import { setup } from '../auto-generated'
+import { Modules } from '../lib'
 import * as SphereModule from './modules-implementation/sphere.module'
 
 test('filter module', async () => {
@@ -19,6 +20,14 @@ test('mergeMap module', async () => {
         scope: {},
     })
     expect(module).toBeTruthy()
+    const inputSlotIndex = Modules.getInputSlot(module, 0)
+    expect(inputSlotIndex).toBeTruthy()
+    const inputSlotName = Modules.getInputSlot(module, 'input$')
+    expect(inputSlotIndex).toEqual(inputSlotName)
+    const outputSlotIndex = Modules.getOutputSlot(module, 0)
+    expect(outputSlotIndex).toBeTruthy()
+    const outputSlotName = Modules.getOutputSlot(module, 'output$')
+    expect(outputSlotIndex).toEqual(outputSlotName)
 })
 
 test('sphere module', async () => {
