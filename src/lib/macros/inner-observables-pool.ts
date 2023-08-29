@@ -392,9 +392,13 @@ export class InnerObservablesPool {
                     // This branch is executed if 'completed' already reached here and cleanup has been done
                     return
                 }
-                const modules = this.instancePool$.value.modules.filter(
+                const instancePool = this.instancePool$.value
+                const modules = instancePool.modules.filter(
                     (m) => m != macroModule,
                 )
+                const hints = Object.entries(instancePool.connectionsHint)
+                    .filter(([k, _]) => k != macroModule.uid)
+                    .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
                 const ctx = this.instanceContext.get(message)
                 ctx.info('Teardown macro')
                 ctx.end()
@@ -404,6 +408,7 @@ export class InnerObservablesPool {
                         parentUid: this.parentUid,
                         modules,
                         connections: [],
+                        connectionsHint: hints,
                     }),
                 )
             })
