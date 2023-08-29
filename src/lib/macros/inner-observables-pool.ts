@@ -388,6 +388,10 @@ export class InnerObservablesPool {
                     )
                     return
                 }
+                if (!this.instancePools.has(message)) {
+                    // This branch is executed if 'completed' already reached here and cleanup has been done
+                    return
+                }
                 const modules = this.instancePool$.value.modules.filter(
                     (m) => m != macroModule,
                 )
