@@ -203,12 +203,8 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
         })
     }
 
-    stop({ keepAlive }: { keepAlive?: Immutable<InstancePoolWorker> }) {
-        if (keepAlive) {
-            throw Error(
-                "The 'keepAlive' option is not available in 'InstancePoolWorker'",
-            )
-        }
+    stop() {
+        // keep alive optimization is not implemented for workers
         this.workersPool.sendData({
             taskId: this.processId,
             data: { kind: 'StopSignal' },
