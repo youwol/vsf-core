@@ -25,6 +25,16 @@ import {
 import { Modules, Deployers, Macros } from '..'
 import { defaultViewsFactory } from './'
 
+export const customModulesToolbox = {
+    name: 'Custom Modules',
+    uid: 'CustomModules',
+    origin: {
+        packageName: 'CustomModules',
+        version: 'NA',
+    },
+    modules: [],
+}
+
 /**
  * Runtime environment.
  */
@@ -49,6 +59,14 @@ export class Environment implements EnvironmentTrait {
      * @group Immutable Properties
      */
     public readonly macrosToolbox: Immutable<ToolBox> = Macros.macroToolbox
+
+    /**
+     * Toolbox gathering Macros modules.
+     *
+     * @group Immutable Properties
+     */
+    public readonly customModulesToolbox: Immutable<ToolBox> =
+        customModulesToolbox
 
     /**
      * Gather all kind of toolboxes.
@@ -96,6 +114,7 @@ export class Environment implements EnvironmentTrait {
     constructor(
         params: {
             macrosToolbox?: Immutable<ToolBox>
+            customModulesToolbox?: Immutable<ToolBox>
             toolboxes?: Immutables<ToolBox>
             viewsFactory?: Immutable<Journal.DataViewsFactory>
             stdToolboxes?: Immutables<ToolBox>
@@ -103,7 +122,11 @@ export class Environment implements EnvironmentTrait {
         } = {},
     ) {
         Object.assign(this, params)
-        this.allToolboxes = [...this.toolboxes, this.macrosToolbox]
+        this.allToolboxes = [
+            ...this.toolboxes,
+            this.macrosToolbox,
+            this.customModulesToolbox,
+        ]
         this.logsChannels = [
             new LogChannel({
                 filter: (log) => log instanceof ErrorLog,
@@ -327,6 +350,22 @@ export class Environment implements EnvironmentTrait {
                 })
             },
         )
+    }
+
+    /**
+     * Add a custom module to the project, it will be available in the toolbox {@link customModulesToolbox}.
+     *
+     * @param module Declaration & implementation of the module
+     */
+    async addCustomModule(module: Immutable<Modules.Module>) {
+        const tb = {
+            ...this.customModulesToolbox,
+            modules: [...this.customModulesToolbox.modules, module],
+        }
+        return new Environment({
+            ...this,
+            customModulesToolbox: tb,
+        })
     }
 
     /**

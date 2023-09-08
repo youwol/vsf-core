@@ -362,6 +362,15 @@ export class ProjectState {
     }
 
     /**
+     * Add a custom module to the project, see {@link Environment.addCustomModule}
+     * @param module Declaration & implementation of the module
+     */
+    async addCustomModule(module: Immutable<Modules.Module>) {
+        const newEnv = await this.environment.addCustomModule(module)
+        return new ProjectState({ ...this, environment: newEnv })
+    }
+
+    /**
      * Add an HTML view to the project.
      *
      * @param viewId UID of the view
