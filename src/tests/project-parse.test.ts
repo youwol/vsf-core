@@ -1,7 +1,8 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
 import { Connection } from '../lib/connections'
-import { Configurations } from '../lib'
+import { Configurations, Modules, Contracts } from '../lib'
+import { map } from 'rxjs/operators'
 setupCdnHttpConnection()
 
 test('one module', async () => {
@@ -197,4 +198,54 @@ test('repl misc 1', async () => {
     expect(instance.configurationInstance.adaptor).toBeTruthy()
     const r = instance.adapt({ data: 5 })
     expect(r).toEqual({ data: 5, configuration: {} })
+})
+
+test('custom module', async () => {
+    const module = new Modules.Module({
+        declaration: {
+            typeId: 'custom',
+        },
+        implementation: ({ fwdParams }) => {
+            return new Modules.Implementation(
+                {
+                    configuration: {
+                        schema: {
+                            coefficient: new Configurations.Float({ value: 1 }),
+                        },
+                    },
+                    inputs: {
+                        data$: {
+                            description: 'the input stream',
+                            contract: Contracts.of<number>({
+                                description: 'number',
+                                when: () => true,
+                            }),
+                        },
+                    },
+                    outputs: (arg) => ({
+                        value$: arg.inputs.data$.pipe(
+                            map(({ data, configuration, context }) => ({
+                                data: configuration.coefficient * data,
+                                context,
+                            })),
+                        ),
+                    }),
+                },
+                fwdParams,
+            )
+        },
+    })
+    let project = await emptyProject().addCustomModule(module)
+    project = await project.parseDag('(custom#m)', {
+        m: {
+            coefficient: 2,
+        },
+    })
+
+    const instance = project.instancePool.inspector().getModule('m')
+
+    expect(instance).toBeTruthy()
+    expect(instance.inputSlots.data$).toBeTruthy()
+    expect(instance.outputSlots.value$).toBeTruthy()
+    expect(instance.configurationInstance.coefficient).toBe(2)
 })
