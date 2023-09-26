@@ -24,6 +24,8 @@ import {
     parseDag,
     ProjectSummaryView,
 } from './'
+import { WorkflowModel } from '../workflows'
+import { uuidv4 } from '../modules'
 export type HtmlView = (
     instancePool: Immutable<Deployers.InstancePool>,
 ) => VirtualDOM
@@ -46,6 +48,17 @@ export type CanvasView = {
     view: (elem: Immutable<unknown>) => VirtualDOM
 }
 
+export type Worksheet = {
+    name: string
+    dag: { branches: string[]; configurations?: { [k: string]: unknown } }
+    views?: HtmlViewsStore
+}
+
+export type RunningWorksheet = {
+    name: string
+    instancePool: Deployers.InstancePool
+    workflow: WorkflowModel
+} & UidTrait
 /**
  * State of a project.
  * It is immutable : each modification applied on the state actually create a new one.
@@ -99,6 +112,20 @@ export class ProjectState {
             parentUid: 'main',
         })
 
+    /**
+     * List of instantiable worksheets.
+     *
+     * @group Immutable Properties
+     */
+    public readonly worksheets: Immutables<Worksheet> = []
+
+    /**
+     * List of instantiated worksheets.
+     *
+     * @group Immutable Properties
+     */
+    public readonly runningWorksheets: Immutables<RunningWorksheet> = []
+
     constructor(
         params: {
             main?: Immutable<Workflows.WorkflowModel>
@@ -106,6 +133,8 @@ export class ProjectState {
             instancePool?: Immutable<Deployers.InstancePool>
             views?: Immutable<HtmlViewsStore>
             environment?: Immutable<Environment>
+            worksheets?: Immutables<Worksheet>
+            runningWorksheets?: Immutables<RunningWorksheet>
         } = {},
     ) {
         Object.assign(this, params)
@@ -368,6 +397,65 @@ export class ProjectState {
     async addCustomModule(module: Immutable<Modules.Module>) {
         const newEnv = await this.environment.addCustomModule(module)
         return new ProjectState({ ...this, environment: newEnv })
+    }
+
+    /**
+     * Add a worksheet to the project
+     * @param worksheet worksheet to add
+     */
+    addWorksheet(worksheet: Worksheet): ProjectState {
+        const worksheets = [...this.worksheets, worksheet]
+        return new ProjectState({ ...this, worksheets })
+    }
+
+    async runWorksheet(name: string) {
+        if (this.runningWorksheets.find((ws) => ws.name === name)) {
+            return this
+        }
+        const ws = this.worksheets.find((ws) => ws.name === name)
+        const model = parseDag({
+            flows: ws.dag.branches,
+            configs: ws.dag.configurations,
+            toolboxes: this.environment.allToolboxes,
+            availableModules: [],
+        })
+        const uid = uuidv4()
+        const workflow = {
+            uid,
+            modules: model.modules,
+            connections: model.connections,
+            rootLayer: new Workflows.Layer({
+                uid: `root_${uid}`,
+                children: [],
+                moduleIds: model.modules.map((m) => m.uid),
+            }),
+        }
+        const instancePool = await new Deployers.InstancePool({
+            parentUid: uid,
+        }).deploy({
+            environment: this.environment,
+            chart: {
+                modules: model.modules,
+                connections: model.connections,
+            },
+            scope: {},
+        })
+        const runningWorksheets = [
+            ...this.runningWorksheets,
+            { name, uid, instancePool, workflow },
+        ]
+        return new ProjectState({ ...this, runningWorksheets })
+    }
+
+    stopWorksheets(uids: Immutables<string>) {
+        uids.forEach((uid) => {
+            const ws = this.runningWorksheets.find((ws) => ws.uid === uid)
+            ws?.instancePool.stop()
+        })
+        const runningWorksheets = this.runningWorksheets.filter(
+            (ws) => !uids.includes(ws.uid),
+        )
+        return new ProjectState({ ...this, runningWorksheets })
     }
 
     /**
