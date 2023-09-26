@@ -19,8 +19,8 @@ export function parseDag({
     toolboxes,
     availableModules,
 }: {
-    flows: string | string[]
-    configs: { [_k: string]: unknown }
+    flows: string | Immutables<string>
+    configs?: { [_k: string]: unknown }
     toolboxes: Immutables<ToolBox>
     availableModules: Immutables<Modules.ModuleModel>
 }): {
@@ -28,7 +28,7 @@ export function parseDag({
     connections: Connections.ConnectionModel[]
 } {
     const sanitizedFlows: string[] = Array.isArray(flows) ? flows : [flows]
-
+    configs = configs || {}
     const { modules, connections } = sanitizedFlows.reduce(
         (acc, branch) => {
             const { modules, connections } = parseBranch({
