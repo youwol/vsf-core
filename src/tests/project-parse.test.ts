@@ -249,3 +249,37 @@ test('custom module', async () => {
     expect(instance.outputSlots.value$).toBeTruthy()
     expect(instance.configurationInstance.coefficient).toBe(2)
 })
+
+test('worksheets', async () => {
+    let project = emptyProject()
+    const received = []
+    const stdLog = console.log
+    console.log = (_, d) => received.push(d)
+    project = project.addWorksheet({
+        name: 'test-ws',
+        dag: {
+            branches: ['(of#of)>>(map#map)>>(console)'],
+        },
+    })
+
+    expect(project.worksheets).toHaveLength(1)
+    expect(project.runningWorksheets).toHaveLength(0)
+    project = await project.runWorksheet('test-ws')
+    expect(project.runningWorksheets).toHaveLength(1)
+    expect(project.runningWorksheets[0].name).toBe('test-ws')
+    const instancePool = project.runningWorksheets[0].instancePool
+    expect(instancePool.modules).toHaveLength(3)
+    expect(instancePool.connections).toHaveLength(2)
+    expect(instancePool.connections[0].status$.value).toBe('completed')
+    expect(instancePool.connections[1].status$.value).toBe('completed')
+    expect(received).toHaveLength(1)
+    const project2 = await project.runWorksheet('test-ws')
+    expect(project).toBe(project2)
+    const uid = project.runningWorksheets[0].uid
+    project = project.stopWorksheets([uid])
+    expect(project.worksheets).toHaveLength(1)
+    expect(project.runningWorksheets).toHaveLength(0)
+    expect(instancePool.connections[0].status$.value).toBe('disconnected')
+    expect(instancePool.connections[1].status$.value).toBe('disconnected')
+    console.log = stdLog
+})

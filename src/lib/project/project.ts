@@ -120,7 +120,7 @@ export class ProjectState {
     public readonly worksheets: Immutables<Worksheet> = []
 
     /**
-     * List of instantiated worksheets.
+     * List of instantiated (running) worksheets.
      *
      * @group Immutable Properties
      */
@@ -408,6 +408,15 @@ export class ProjectState {
         return new ProjectState({ ...this, worksheets })
     }
 
+    /**
+     * Run a particular worksheet.
+     * If the worksheet is already running, this function does nothing.
+     *
+     * To retrieve the instance of the running worksheet, the property {@link runningWorksheets} of the returned project
+     * has to be traversed to look for the provided name.
+     *
+     * @param name name of the worksheet
+     */
     async runWorksheet(name: string) {
         if (this.runningWorksheets.find((ws) => ws.name === name)) {
             return this
@@ -447,6 +456,12 @@ export class ProjectState {
         return new ProjectState({ ...this, runningWorksheets })
     }
 
+    /**
+     * Stop some running worksheets.
+     * The `uid` of the running worksheets are stored in {@link runningWorksheets}.
+     *
+     * @param uids uid of the worksheets to stop
+     */
     stopWorksheets(uids: Immutables<string>) {
         uids.forEach((uid) => {
             const ws = this.runningWorksheets.find((ws) => ws.uid === uid)
