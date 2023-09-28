@@ -191,16 +191,17 @@ export class BatchCells implements CellTrait {
      *
      * @group Observables
      */
-    public readonly projectsStore$: BehaviorSubject<ProjectsStore<CellTrait>>
+    public readonly projectsStore$: BehaviorSubject<ProjectsStore<CellTrait>> =
+        new BehaviorSubject(new Map<CellTrait, Immutable<ProjectState>>())
 
     /**
      *
      * @param params.cells cells of the batch
-     * @param params.projectsStore$ initial {@link projectsStore$}
+     * @param params.projectsStore$ initial {@link projectsStore$}. If no instance provided, create an empty store.
      */
     constructor(params: {
         cells: CellTrait[]
-        projectsStore$: BehaviorSubject<Immutable<ProjectsStore<CellTrait>>>
+        projectsStore$?: BehaviorSubject<Immutable<ProjectsStore<CellTrait>>>
     }) {
         Object.assign(this, params)
     }
