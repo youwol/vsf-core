@@ -536,8 +536,8 @@ export class ProjectState {
      *
      * It can then be used to populate project's HTML views:
      * ```
-     * const summary =  project.summaryHtml()
-     * project = project.addHtml("View", summary)
+     * const html =  project.summaryHtml()
+     * project = await project.with({views:[{name:"Summary", html})
      * ```
      */
     summaryHtml() {
