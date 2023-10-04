@@ -330,10 +330,6 @@ export class ProjectState {
             ) => {
                 [k: string]: { [k: string]: unknown }
             }
-            workerPool?: {
-                startAt?: number
-                stretchTo?: number
-            }
             html?: (
                 instance: Modules.ImplementationTrait,
                 config?: unknown,
@@ -427,19 +423,6 @@ export class ProjectState {
                 : this.macros,
             environment: this.environment,
         })
-    }
-
-    /**
-     * Add multiple layers in a row, see {@link addLayer}.
-     *
-     * @param data each elements of data will be forwarded to {@link addLayer}.
-     */
-    organize(
-        data: [{ layerId: string; parentLayerId?: string; uids: string[] }],
-    ): ProjectState {
-        return data.reduce((acc, e) => {
-            return acc.addLayer(e)
-        }, this)
     }
 
     /**
