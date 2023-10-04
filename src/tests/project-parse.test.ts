@@ -256,8 +256,8 @@ test('worksheets', async () => {
     const stdLog = console.log
     console.log = (_, d) => received.push(d)
     project = project.addWorksheet({
-        name: 'test-ws',
-        dag: {
+        id: 'test-ws',
+        flowchart: {
             branches: ['(of#of)>>(map#map)>>(console)'],
         },
     })
@@ -266,7 +266,7 @@ test('worksheets', async () => {
     expect(project.runningWorksheets).toHaveLength(0)
     project = await project.runWorksheet('test-ws')
     expect(project.runningWorksheets).toHaveLength(1)
-    expect(project.runningWorksheets[0].name).toBe('test-ws')
+    expect(project.runningWorksheets[0].worksheetId).toBe('test-ws')
     const instancePool = project.runningWorksheets[0].instancePool
     expect(instancePool.modules).toHaveLength(3)
     expect(instancePool.connections).toHaveLength(2)
