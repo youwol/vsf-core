@@ -17,63 +17,74 @@ function addMacro() {
         return project$.pipe(
             mergeMap((project) =>
                 from(
-                    project.parseDag(
-                        [
-                            '(map#map)>>(combineLatest#comb)>#c>(delay)>>(take#take)',
-                            '(timer#timer)>>1(#comb)',
+                    project.with({
+                        macros: [
+                            {
+                                typeId: 'test-macro',
+                                flowchart: {
+                                    branches: [
+                                        '(map#map)>>(combineLatest#comb)>#c>(delay)>>(take#take)',
+                                        '(timer#timer)>>1(#comb)',
+                                    ],
+                                    configurations: {
+                                        comb: {
+                                            inputsCount: 2,
+                                        },
+                                        c: {
+                                            adaptor: ({ data }) => {
+                                                return {
+                                                    data: data[0],
+                                                    context: {},
+                                                }
+                                            },
+                                        },
+                                        map: {
+                                            project: ({ data }) => {
+                                                return { data: 2 * data }
+                                            },
+                                        },
+                                        take: {
+                                            count: 1,
+                                        },
+                                        timer: {
+                                            dueTime: 0,
+                                            interval: 100,
+                                        },
+                                    },
+                                },
+                                API: {
+                                    inputs: ['0(#map)'],
+                                    outputs: ['(#take)0'],
+                                    configuration: {
+                                        schema: {
+                                            takeCount:
+                                                new Configurations.Integer({
+                                                    value: 1,
+                                                }),
+                                            dueTime: new Configurations.Float({
+                                                value: 0,
+                                            }),
+                                            interval: new Configurations.Float({
+                                                value: 100,
+                                            }),
+                                        },
+                                        mapper: (instance) => {
+                                            return {
+                                                take: {
+                                                    count: instance.takeCount,
+                                                },
+                                                timer: {
+                                                    dueTime: instance.dueTime,
+                                                    interval: instance.interval,
+                                                },
+                                            }
+                                        },
+                                    },
+                                },
+                            },
                         ],
-                        {
-                            comb: {
-                                inputsCount: 2,
-                            },
-                            c: {
-                                adaptor: ({ data }) => {
-                                    return {
-                                        data: data[0],
-                                        context: {},
-                                    }
-                                },
-                            },
-                            map: {
-                                project: ({ data }) => {
-                                    return { data: 2 * data }
-                                },
-                            },
-                            take: {
-                                count: 1,
-                            },
-                            timer: {
-                                dueTime: 0,
-                                interval: 100,
-                            },
-                        },
-                        'test-macro',
-                    ),
+                    }),
                 ),
-            ),
-            map((project) =>
-                project.exposeMacro('test-macro', {
-                    inputs: ['0(#map)'],
-                    outputs: ['(#take)0'],
-                    configuration: {
-                        schema: {
-                            takeCount: new Configurations.Integer({ value: 1 }),
-                            dueTime: new Configurations.Float({ value: 0 }),
-                            interval: new Configurations.Float({ value: 100 }),
-                        },
-                    },
-                    configMapper: (instance) => {
-                        return {
-                            take: {
-                                count: instance.takeCount,
-                            },
-                            timer: {
-                                dueTime: instance.dueTime,
-                                interval: instance.interval,
-                            },
-                        }
-                    },
-                }),
             ),
         )
     }

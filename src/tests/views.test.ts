@@ -39,9 +39,11 @@ test('ViewsFactory#documentation', async () => {
 
 test('ViewsFactory#project', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)',
-    ])
+    project = await project.with({
+        flowchart: {
+            branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
+        },
+    })
     const factories = defaultViewsFactory.filter((f) => f.isCompatible(project))
     const view = await factories.reverse()[0].view(project)
     expect(view).toBeTruthy()
@@ -49,9 +51,11 @@ test('ViewsFactory#project', async () => {
 
 test('Project.summaryHtml', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)',
-    ])
+    project = await project.with({
+        flowchart: {
+            branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
+        },
+    })
     await installFluxView()
     const view = project.summaryHtml()
     expect(view).toBeTruthy()

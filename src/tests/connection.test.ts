@@ -25,14 +25,19 @@ test('merge context message', () => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('start$ & end$', (done) => {
     from(
-        emptyProject().parseDag(['(of#of)>>(delay#delay)>#a0>(sphere#s0)'], {
-            a0: {
-                adaptor: ({ context }) => {
-                    return { data: new MeshStandardMaterial(), context }
+        emptyProject().with({
+            flowchart: {
+                branches: ['(of#of)>>(delay#delay)>#a0>(sphere#s0)'],
+                configurations: {
+                    a0: {
+                        adaptor: ({ context }) => {
+                            return { data: new MeshStandardMaterial(), context }
+                        },
+                    },
+                    debounce: {
+                        due: 10,
+                    },
                 },
-            },
-            debounce: {
-                due: 10,
             },
         }),
     )
@@ -54,13 +59,18 @@ test('start$ & end$', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('transmission delay', (done) => {
     from(
-        emptyProject().parseDag(['(of#of)>#a0>(map#map)'], {
-            a0: {
-                transmissionDelay: 50,
-            },
-            of: {
-                args: [10, 20, 30],
-                spread: true,
+        emptyProject().with({
+            flowchart: {
+                branches: ['(of#of)>#a0>(map#map)'],
+                configurations: {
+                    a0: {
+                        transmissionDelay: 50,
+                    },
+                    of: {
+                        args: [10, 20, 30],
+                        spread: true,
+                    },
+                },
             },
         }),
     )

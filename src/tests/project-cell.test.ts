@@ -16,7 +16,9 @@ test('JsCell no view', async () => {
     let project = emptyProject()
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState }) => {
-            return await project.parseDag('(map#map)')
+            return await project.with({
+                flowchart: { branches: ['(map#map)'] },
+            })
         },
     })
     const cell = new JsCell({
@@ -32,7 +34,9 @@ test('JsCell with display', (done) => {
     const project = emptyProject()
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(map#map)')
+            project = await project.with({
+                flowchart: { branches: ['(map#map)'] },
+            })
             cell.display('a test', { innerText: 'test' })
             return project
         },
@@ -66,7 +70,9 @@ test('JsCell with log', (done) => {
     const project = emptyProject()
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(map#map)')
+            project = await project.with({
+                flowchart: { branches: ['(map#map)'] },
+            })
             cell.log('a test', { value: 42 })
             cell.log('a second test', { value: 84 })
             return project
@@ -136,13 +142,17 @@ test('BatchCells', async () => {
     )
     const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(map#map)')
+            project = await project.with({
+                flowchart: { branches: ['(map#map)'] },
+            })
             return project
         },
     })
     const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(#map)>>(filter#filter)')
+            project = await project.with({
+                flowchart: { branches: ['(#map)>>(filter#filter)'] },
+            })
             return project
         },
     })
@@ -182,13 +192,17 @@ test('insert cell', async () => {
     )
     const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(map#map)')
+            project = await project.with({
+                flowchart: { branches: ['(map#map)'] },
+            })
             return project
         },
     })
     const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(#map)>>(filter#filter)')
+            project = await project.with({
+                flowchart: { branches: ['(map#map)>>(filter#filter)'] },
+            })
             return project
         },
     })
@@ -202,7 +216,9 @@ test('insert cell', async () => {
     await batch.execute(project)
     const source2 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
-            project = await project.parseDag('(of#of)>>(#map)')
+            project = await project.with({
+                flowchart: { branches: ['(of#of)>>(#map)'] },
+            })
             return project
         },
     })
