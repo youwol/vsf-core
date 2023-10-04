@@ -11,10 +11,15 @@ console.error = () => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('error in adaptor', (done) => {
     from(
-        emptyProject().parseDag(['(of#of)>#a0>(sphere#s0)'], {
-            a0: {
-                adaptor: ({ data, context }) => {
-                    return { data: data.a.b, context }
+        emptyProject().with({
+            flowchart: {
+                branches: ['(of#of)>#a0>(sphere#s0)'],
+                configurations: {
+                    a0: {
+                        adaptor: ({ data, context }) => {
+                            return { data: data.a.b, context }
+                        },
+                    },
                 },
             },
         }),
@@ -35,7 +40,11 @@ test('error in adaptor', (done) => {
 
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('error in contract', (done) => {
-    from(emptyProject().parseDag(['(of#of)>>(sphere#s0)>>(console)'], {}))
+    from(
+        emptyProject().with({
+            flowchart: { branches: ['(of#of)>>(sphere#s0)>>(console)'] },
+        }),
+    )
         .pipe(
             mergeMap((project) => {
                 return project.environment.errorChannel$
@@ -51,9 +60,14 @@ test('error in contract', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('error in module', (done) => {
     from(
-        emptyProject().parseDag(['(of#of)>>(map#map)>>(console)'], {
-            map: {
-                project: ({ data }) => data.a.b,
+        emptyProject().with({
+            flowchart: {
+                branches: ['(of#of)>>(map#map)>>(console)'],
+                configurations: {
+                    map: {
+                        project: ({ data }) => data.a.b,
+                    },
+                },
             },
         }),
     )

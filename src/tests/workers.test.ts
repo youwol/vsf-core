@@ -45,37 +45,43 @@ function addMapTakeMacro() {
     return (project$: Observable<ProjectState>) => {
         return project$.pipe(
             mergeMap((project) =>
-                from(
-                    project.parseDag(
-                        '(map#map)>>(take#take)',
+                project.with({
+                    macros: [
                         {
-                            map: {
-                                project: ({ data }) => ({ data: 2 * data }),
+                            typeId: 'test-macro',
+                            flowchart: {
+                                branches: ['(map#map)>>(take#take)'],
+                                configurations: {
+                                    map: {
+                                        project: ({ data }) => ({
+                                            data: 2 * data,
+                                        }),
+                                    },
+                                    take: {
+                                        count: 1,
+                                    },
+                                },
                             },
-                            take: {
-                                count: 1,
+                            API: {
+                                inputs: ['0(#map)'],
+                                outputs: ['(#take)0'],
+                                configuration: {
+                                    schema: {
+                                        takeCount: new Configurations.Integer({
+                                            value: 1,
+                                        }),
+                                    },
+                                    mapper: (instance) => {
+                                        return {
+                                            take: {
+                                                count: instance.takeCount,
+                                            },
+                                        }
+                                    },
+                                },
                             },
                         },
-                        'test-macro',
-                    ),
-                ),
-            ),
-            map((project) =>
-                project.exposeMacro('test-macro', {
-                    inputs: ['0(#map)'],
-                    outputs: ['(#take)0'],
-                    configuration: {
-                        schema: {
-                            takeCount: new Configurations.Integer({ value: 1 }),
-                        },
-                    },
-                    configMapper: (instance) => {
-                        return {
-                            take: {
-                                count: instance.takeCount,
-                            },
-                        }
-                    },
+                    ],
                 }),
             ),
         )
@@ -87,10 +93,14 @@ function addWorkerPool(id: string) {
         return project$.pipe(
             mergeMap((project) =>
                 from(
-                    project.addWorkersPool({
-                        id,
-                        startAt: 1,
-                        stretchTo: 1,
+                    project.with({
+                        workersPools: [
+                            {
+                                id,
+                                startAt: 1,
+                                stretchTo: 1,
+                            },
+                        ],
                     }),
                 ),
             ),
@@ -122,7 +132,7 @@ test('to clonable', () => {
 test('InstancePoolWorker.empty', (done) => {
     const uid = 'test'
     const project = new ProjectState()
-    from(project.import('@youwol/vsf-rxjs'))
+    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
         .pipe(
             addWorkerPool('A'),
             mergeMap((project) => {
@@ -176,7 +186,7 @@ test('InstancePoolWorker.empty', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('deployMacroInWorker', (done) => {
     const project = new ProjectState()
-    from(project.import('@youwol/vsf-rxjs'))
+    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
         .pipe(
             addWorkerPool('A'),
             addMapTakeMacro(),
@@ -244,23 +254,27 @@ test('deployMacroInWorker', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('simple project with workers pool', (done) => {
     const project = new ProjectState()
-    from(project.import('@youwol/vsf-rxjs'))
+    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
         .pipe(
             addWorkerPool('A'),
             addMapTakeMacro(),
             mergeMap((project) =>
                 from(
-                    project.parseDag(
-                        '(of#of)>>(test-macro#macro)>>(reduce#reduce)',
-                        {
-                            of: {
-                                args: 42,
-                            },
-                            macro: {
-                                workersPoolId: 'A',
+                    project.with({
+                        flowchart: {
+                            branches: [
+                                '(of#of)>>(test-macro#macro)>>(reduce#reduce)',
+                            ],
+                            configurations: {
+                                of: {
+                                    args: 42,
+                                },
+                                macro: {
+                                    workersPoolId: 'A',
+                                },
                             },
                         },
-                    ),
+                    }),
                 ),
             ),
             mergeMap((project) => {
@@ -283,24 +297,28 @@ test('simple project with workers pool', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('simple project with workers pool + stop', (done) => {
     const project = new ProjectState()
-    from(project.import('@youwol/vsf-rxjs'))
+    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
         .pipe(
             addWorkerPool('A'),
             addMapTakeMacro(),
             mergeMap((project) =>
                 from(
-                    project.parseDag(
-                        '(timer#timer)>>(test-macro#macro)>>(reduce#reduce)',
-                        {
-                            timer: {
-                                interval: 150,
-                            },
-                            macro: {
-                                workersPoolId: 'A',
-                                takeCount: 4,
+                    project.with({
+                        flowchart: {
+                            branches: [
+                                '(timer#timer)>>(test-macro#macro)>>(reduce#reduce)',
+                            ],
+                            configurations: {
+                                timer: {
+                                    interval: 150,
+                                },
+                                macro: {
+                                    workersPoolId: 'A',
+                                    takeCount: 4,
+                                },
                             },
                         },
-                    ),
+                    }),
                 ),
             ),
             mergeMap((project) => {

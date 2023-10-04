@@ -23,42 +23,20 @@ import {
     parseMacroOutput,
     parseDag,
     ProjectSummaryView,
+    HtmlView,
 } from './'
-import { WorkflowModel } from '../workflows'
 import { uuidv4 } from '../modules'
-export type HtmlView = (
-    instancePool: Immutable<Deployers.InstancePool>,
-) => VirtualDOM
+import { CanvasView, ProjectElements, Worksheet } from './models'
+import { WorkflowModel } from '../workflows'
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
 
-/**
- * Define a canvas view.
- */
-export type CanvasView = {
-    /**
-     * Specify on which elements the view apply.
-     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
-     */
-    selector: (elem: Immutable<UidTrait>) => boolean
-    /**
-     * View factory.
-     * @param elem either {@link Modules.Implementation} or {@link Connections.Connection}
-     */
-    view: (elem: Immutable<unknown>) => VirtualDOM
-}
-
-export type Worksheet = {
-    name: string
-    dag: { branches: string[]; configurations?: { [k: string]: unknown } }
-    views?: HtmlViewsStore
-}
-
 export type RunningWorksheet = {
-    name: string
+    worksheetId: string
     instancePool: Deployers.InstancePool
     workflow: WorkflowModel
 } & UidTrait
+
 /**
  * State of a project.
  * It is immutable : each modification applied on the state actually create a new one.
@@ -189,6 +167,90 @@ export class ProjectState {
     }
 
     /**
+     * Return a new instance of {@link ProjectState} from this instance extended with various elements.
+     *
+     * Please refer to the documentation of {@link ProjectElements}.
+     *
+     * @param elements
+     */
+    async with(elements: Immutable<ProjectElements>) {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias -- It makes things simple I guess
+        let project: ProjectState = this
+        if (elements.toolboxes) {
+            project = await project.import(...elements.toolboxes)
+        }
+        if (elements.workersPools) {
+            project = await elements.workersPools.reduce(
+                async (acc, workerPool) => {
+                    const p = await acc
+                    return p.addWorkersPool({
+                        ...workerPool,
+                        id: workerPool.id,
+                    })
+                },
+                Promise.resolve(project),
+            )
+        }
+        if (elements.customModules) {
+            project = await elements.customModules.reduce(
+                async (acc, module) => {
+                    return (await acc).addCustomModule(module)
+                },
+                Promise.resolve(project),
+            )
+        }
+        if (elements.macros) {
+            project = await elements.macros.reduce(async (acc, macro) => {
+                let p = await acc
+                p = await p.parseDag(
+                    macro.flowchart.branches,
+                    macro.flowchart.configurations,
+                    macro.typeId,
+                )
+                p = p.exposeMacro(macro.typeId, {
+                    configuration: {
+                        schema: macro.API?.configuration?.schema || {},
+                    },
+                    configMapper:
+                        macro.API?.configuration?.mapper || (() => ({})),
+                    inputs: macro.API?.inputs || [],
+                    outputs: macro.API?.outputs || [],
+                    html: macro.html,
+                })
+                return p
+            }, Promise.resolve(project))
+        }
+        if (elements.flowchart) {
+            project = await project.parseDag(
+                elements.flowchart.branches || [],
+                elements.flowchart.configurations,
+            )
+        }
+        if (elements.views) {
+            project = elements.views.reduce(
+                (acc, { id, html }) => acc.addHtml(id, html),
+                project,
+            )
+        }
+        if (elements.worksheets) {
+            project = elements.worksheets.reduce(
+                (acc, e) => project.addWorksheet(e),
+                project,
+            )
+        }
+        if (elements.canvas?.views) {
+            project = project.addToCanvas(...elements.canvas.views)
+        }
+        if (elements.canvas?.layers) {
+            project = elements.canvas.layers.reduce(
+                (acc, layer) =>
+                    acc.addLayer({ ...layer, uids: layer.moduleIds }),
+                project,
+            )
+        }
+        return project
+    }
+    /**
      * Parse a DAG, see {@link parseDag}.
      *
      * @param flows string representation of one or multiple branches
@@ -196,7 +258,7 @@ export class ProjectState {
      * @param macroUid includes the parsed DAG in the workflow with this UID if provided, otherwise in main
      */
     async parseDag(
-        flows: string | string[],
+        flows: Immutable<string> | Immutables<string>,
         configs: { [k: string]: unknown } = {},
         macroUid?: string,
     ) {
@@ -260,17 +322,13 @@ export class ProjectState {
     exposeMacro<TSchema extends Configurations.Schema>(
         macroUid: string,
         definition: {
-            configuration?: Configurations.Configuration<TSchema>
-            inputs: string[]
-            outputs: string[]
+            configuration?: Immutable<Configurations.Configuration<TSchema>>
+            inputs: Immutables<string>
+            outputs: Immutables<string>
             configMapper?: (
                 configInstance: Configurations.ConfigInstance<TSchema>,
             ) => {
                 [k: string]: { [k: string]: unknown }
-            }
-            workerPool?: {
-                startAt?: number
-                stretchTo?: number
             }
             html?: (
                 instance: Modules.ImplementationTrait,
@@ -331,10 +389,10 @@ export class ProjectState {
         macroId,
         uids,
     }: {
-        parentLayerId?: string
-        layerId?: string
-        macroId?: string
-        uids: string[]
+        parentLayerId?: Immutable<string>
+        layerId?: Immutable<string>
+        macroId?: Immutable<string>
+        uids: Immutables<string>
     }): ProjectState {
         const workflow = macroId
             ? this.macros.find((m) => m.uid == macroId)
@@ -368,19 +426,6 @@ export class ProjectState {
     }
 
     /**
-     * Add multiple layers in a row, see {@link addLayer}.
-     *
-     * @param data each elements of data will be forwarded to {@link addLayer}.
-     */
-    organize(
-        data: [{ layerId: string; parentLayerId?: string; uids: string[] }],
-    ): ProjectState {
-        return data.reduce((acc, e) => {
-            return acc.addLayer(e)
-        }, this)
-    }
-
-    /**
      * Add a worker pool to the project.
      *
      * @param pool worker pool characteristics
@@ -403,7 +448,7 @@ export class ProjectState {
      * Add a worksheet to the project
      * @param worksheet worksheet to add
      */
-    addWorksheet(worksheet: Worksheet): ProjectState {
+    addWorksheet(worksheet: Immutable<Worksheet>): ProjectState {
         const worksheets = [...this.worksheets, worksheet]
         return new ProjectState({ ...this, worksheets })
     }
@@ -415,16 +460,18 @@ export class ProjectState {
      * To retrieve the instance of the running worksheet, the property {@link runningWorksheets} of the returned project
      * has to be traversed to look for the provided name.
      *
-     * @param name name of the worksheet
+     * @param worksheetId id of the worksheet
      */
-    async runWorksheet(name: string) {
-        if (this.runningWorksheets.find((ws) => ws.name === name)) {
+    async runWorksheet(worksheetId: string) {
+        if (
+            this.runningWorksheets.find((ws) => ws.worksheetId === worksheetId)
+        ) {
             return this
         }
-        const ws = this.worksheets.find((ws) => ws.name === name)
+        const ws = this.worksheets.find((ws) => ws.id === worksheetId)
         const model = parseDag({
-            flows: ws.dag.branches,
-            configs: ws.dag.configurations,
+            flows: ws.flowchart.branches,
+            configs: ws.flowchart.configurations,
             toolboxes: this.environment.allToolboxes,
             availableModules: [],
         })
@@ -451,7 +498,7 @@ export class ProjectState {
         })
         const runningWorksheets = [
             ...this.runningWorksheets,
-            { name, uid, instancePool, workflow },
+            { worksheetId, uid, instancePool, workflow },
         ]
         return new ProjectState({ ...this, runningWorksheets })
     }
@@ -536,8 +583,8 @@ export class ProjectState {
      *
      * It can then be used to populate project's HTML views:
      * ```
-     * const summary =  project.summaryHtml()
-     * project = project.addHtml("View", summary)
+     * const html =  project.summaryHtml()
+     * project = await project.with({views:[{name:"Summary", html})
      * ```
      */
     summaryHtml() {

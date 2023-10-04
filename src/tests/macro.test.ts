@@ -1,21 +1,30 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { from, Observable, of } from 'rxjs'
-import { map, mergeMap, tap } from 'rxjs/operators'
+import { mergeMap, tap } from 'rxjs/operators'
 import { Configurations } from '../lib'
-import { ProjectState } from '../lib/project'
+import { MacroConfiguration, ProjectState } from '../lib/project'
 setupCdnHttpConnection()
 
 test('add a macro - no instance', async () => {
     let project = emptyProject()
-    project = await project.parseDag(
-        '(map#map)',
-        {
-            c0: {
-                adaptor: ({ data }) => ({ data, configuration: {} }),
+    project = await project.with({
+        macros: [
+            {
+                typeId: 'test-macro',
+                flowchart: {
+                    branches: ['(map#map)'],
+                    configurations: {
+                        c0: {
+                            adaptor: ({ data }) => ({
+                                data,
+                                configuration: {},
+                            }),
+                        },
+                    },
+                },
             },
-        },
-        'test-macro',
-    )
+        ],
+    })
     expect(project.macros).toHaveLength(1)
     expect(project.macros[0].uid).toBe('test-macro')
     const { modules, connections } = project.instancePool
@@ -25,15 +34,17 @@ test('add a macro - no instance', async () => {
 
 test('add a macro & layer - no instance', async () => {
     let project = emptyProject()
-    project = await project.parseDag(
-        '(map#map)>>(map#map2)',
-        {
-            c0: {
-                adaptor: ({ data }) => ({ data, configuration: {} }),
+    project = await project.with({
+        macros: [
+            {
+                typeId: 'test-macro',
+                flowchart: {
+                    branches: ['(map#map)>>(map#map2)'],
+                },
             },
-        },
-        'test-macro',
-    )
+        ],
+    })
+
     project = project.addLayer({
         layerId: 'layer',
         macroId: 'test-macro',
@@ -51,27 +62,36 @@ test('add a macro & layer - no instance', async () => {
 
 test('add a macro + API (index) + instance', async () => {
     let project = emptyProject()
-    project = await project.parseDag(
-        '(map#map0)>#c0>(map#map1)',
-        {
-            c0: {
-                adaptor: ({ data }) => ({ data, configuration: {} }),
+    project = await project.with({
+        macros: [
+            {
+                typeId: 'test-macro',
+                flowchart: {
+                    branches: ['(map#map0)>#c0>(map#map1)'],
+                    configurations: {
+                        c0: {
+                            adaptor: ({ data }) => ({
+                                data,
+                                configuration: {},
+                            }),
+                        },
+                    },
+                },
+                API: {
+                    inputs: ['0(#map0)'],
+                    outputs: ['(#map1)0'],
+                },
+                html: (instance, config: { prefix: string }) => {
+                    const pool = instance.instancePool$.value
+                    const [m0, c0, m1] = ['map0', 'c0', 'map1'].map((e) =>
+                        pool.inspector().get(e),
+                    )
+                    return {
+                        innerText: `${config.prefix}: ${m0.uid}>${c0.uid}>${m1.uid}`,
+                    }
+                },
             },
-        },
-        'test-macro',
-    )
-    project = await project.exposeMacro('test-macro', {
-        inputs: ['0(#map0)'],
-        outputs: ['(#map1)0'],
-        html: (instance, config: { prefix: string }) => {
-            const pool = instance.instancePool$.value
-            const [m0, c0, m1] = ['map0', 'c0', 'map1'].map((e) =>
-                pool.inspector().get(e),
-            )
-            return {
-                innerText: `${config.prefix}: ${m0.uid}>${c0.uid}>${m1.uid}`,
-            }
-        },
+        ],
     })
     project = await project.parseDag('(test-macro#macro)')
     const { modules, connections } = project.instancePool
@@ -99,29 +119,30 @@ test('add 2 macros & play', (done) => {
         .pipe(
             mergeMap(() => {
                 return from(
-                    project.parseDag('(of#of)-(map#map)', {}, 'test-macro0'),
-                )
-            }),
-            map((project) => {
-                return project.exposeMacro('test-macro0', {
-                    inputs: [],
-                    outputs: ['(#of)0'],
-                })
-            }),
-            mergeMap((project) => {
-                return from(project.parseDag('(map#map)', {}, 'test-macro1'))
-            }),
-            map((project) => {
-                return project.exposeMacro('test-macro1', {
-                    inputs: ['0(#map)'],
-                    outputs: ['(#map)0'],
-                })
-            }),
-            mergeMap((project) => {
-                return from(
-                    project.parseDag(
-                        '(test-macro0#macroOf)>>(test-macro1#macroMap)',
-                    ),
+                    project.with({
+                        flowchart: {
+                            branches: [
+                                '(test-macro0#macroOf)>>(test-macro1#macroMap)',
+                            ],
+                        },
+                        macros: [
+                            {
+                                typeId: 'test-macro0',
+                                flowchart: { branches: ['(of#of)>>(map#map)'] },
+                                API: {
+                                    outputs: ['(#map)0'],
+                                },
+                            },
+                            {
+                                typeId: 'test-macro1',
+                                flowchart: { branches: ['(map#map)'] },
+                                API: {
+                                    inputs: ['0(#map)'],
+                                    outputs: ['(#map)0'],
+                                },
+                            },
+                        ],
+                    }),
                 )
             }),
             tap((project) => {
@@ -150,48 +171,58 @@ test('add 2 macros & play', (done) => {
 
 function createMacro() {
     return (obs: Observable<ProjectState>) => {
+        const schema = {
+            value: new Configurations.Float({
+                value: 42,
+            }),
+            factor: new Configurations.Float({
+                value: 1,
+            }),
+        }
         return obs.pipe(
             mergeMap((project) => {
                 return from(
-                    project.parseDag(
-                        '(of#of)>#c>(map#map)',
-                        {
-                            c: {
-                                adaptor: (d) => d,
+                    project.with({
+                        macros: [
+                            {
+                                typeId: 'test-macro0',
+                                flowchart: {
+                                    branches: ['(of#of)>#c>(map#map)'],
+                                    configurations: {
+                                        c: {
+                                            adaptor: (d) => d,
+                                        },
+                                    },
+                                },
+                                API: {
+                                    inputs: [],
+                                    outputs: ['(#map)0'],
+                                    configuration: {
+                                        schema,
+                                        mapper: (config) => ({
+                                            of: {
+                                                args: config.value,
+                                            },
+                                            c: {
+                                                adaptor: ({
+                                                    data,
+                                                    context,
+                                                }) => {
+                                                    return {
+                                                        data:
+                                                            data *
+                                                            config.factor,
+                                                        context,
+                                                    }
+                                                },
+                                            },
+                                        }),
+                                    } as MacroConfiguration<typeof schema>,
+                                },
                             },
-                        },
-                        'test-macro0',
-                    ),
-                )
-            }),
-            map((project) => {
-                return project.exposeMacro('test-macro0', {
-                    configuration: {
-                        schema: {
-                            value: new Configurations.Float({
-                                value: 42,
-                            }),
-                            factor: new Configurations.Float({
-                                value: 1,
-                            }),
-                        },
-                    },
-                    configMapper: (config) => ({
-                        of: {
-                            args: config.value,
-                        },
-                        c: {
-                            adaptor: ({ data, context }) => {
-                                return {
-                                    data: data * config.factor,
-                                    context,
-                                }
-                            },
-                        },
+                        ],
                     }),
-                    inputs: [],
-                    outputs: ['(#map)0'],
-                })
+                )
             }),
         )
     }
@@ -203,7 +234,11 @@ test('add 2 macros + default config & play', (done) => {
         .pipe(
             createMacro(),
             mergeMap((project) => {
-                return from(project.parseDag('(test-macro0#macro)', {}))
+                return from(
+                    project.with({
+                        flowchart: { branches: ['(test-macro0#macro)'] },
+                    }),
+                )
             }),
             mergeMap((project) => {
                 return project.instancePool.inspector().getObservable({
@@ -226,10 +261,15 @@ test('add 2 macros + dyn. config & play', (done) => {
             createMacro(),
             mergeMap((project) => {
                 return from(
-                    project.parseDag('(test-macro0#macro)', {
-                        macro: {
-                            value: 1,
-                            factor: 10,
+                    project.with({
+                        flowchart: {
+                            branches: ['(test-macro0#macro)'],
+                            configurations: {
+                                macro: {
+                                    value: 1,
+                                    factor: 10,
+                                },
+                            },
                         },
                     }),
                 )

@@ -7,10 +7,15 @@ setupCdnHttpConnection()
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('execution', (done) => {
     from(
-        emptyProject().parseDag(['(of#of)>>(filter#filter)>#a0>(sphere#s0)'], {
-            a0: {
-                adaptor: ({ context }) => {
-                    return { data: new MeshStandardMaterial(), context }
+        emptyProject().with({
+            flowchart: {
+                branches: ['(of#of)>>(filter#filter)>#a0>(sphere#s0)'],
+                configurations: {
+                    a0: {
+                        adaptor: ({ context }) => {
+                            return { data: new MeshStandardMaterial(), context }
+                        },
+                    },
                 },
             },
         }),

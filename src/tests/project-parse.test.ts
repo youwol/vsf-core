@@ -9,7 +9,9 @@ test('one module', async () => {
     let project = emptyProject()
     const tb = project.getToolbox('@youwol/vs-flow-core/test-toolbox')
     expect(tb.name).toBe('test-toolbox')
-    project = await project.parseDag(['(filter#filter)'])
+    project = await project.with({
+        flowchart: { branches: ['(filter#filter)'] },
+    })
     const [modules, connections] = [
         project.main.modules,
         project.main.connections,
@@ -21,7 +23,9 @@ test('one module', async () => {
 
 test('only modules, canvas & html', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(filter)>#c0>(sphere#sphere)')
+    project = await project.with({
+        flowchart: { branches: ['(filter)>#c0>(sphere#sphere)'] },
+    })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(2)
 
@@ -48,7 +52,9 @@ test('only modules, canvas & html', async () => {
 
 test('modules with IO', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(filter)0>>0(sphere)')
+    project = await project.with({
+        flowchart: { branches: ['(filter)0>>0(sphere)'] },
+    })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(2)
     expect(connections).toHaveLength(1)
@@ -56,11 +62,17 @@ test('modules with IO', async () => {
 
 test('repl modules with IO & adaptor', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(filter)0>#c0>0(sphere)', {
-        c0: {
-            adaptor: ({ data }) => ({ data, configuration: {} }),
+    project = await project.with({
+        flowchart: {
+            branches: ['(filter)0>#c0>0(sphere)'],
+            configurations: {
+                c0: {
+                    adaptor: ({ data }) => ({ data, configuration: {} }),
+                },
+            },
         },
     })
+
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(2)
 
@@ -75,10 +87,11 @@ test('repl modules with IO & adaptor', async () => {
 
 test('repl modules with IO & name', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(filter)0>>0(sphere#s0)>0',
-        '(filter)0>>0(#s0)',
-    ])
+    project = await project.with({
+        flowchart: {
+            branches: ['(filter)0>>0(sphere#s0)>0', '(filter)0>>0(#s0)'],
+        },
+    })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(3)
     expect(modules[1].uid).toBe('s0')
@@ -91,9 +104,15 @@ test('repl modules with IO & name', async () => {
 
 test('repl modules with config', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(sphere#s0)', {
-        s0: { transform: { translation: { x: 4 } } },
+    project = await project.with({
+        flowchart: {
+            branches: ['(sphere#s0)'],
+            configurations: {
+                s0: { transform: { translation: { x: 4 } } },
+            },
+        },
     })
+
     const { modules } = project.instancePool
     expect(modules).toHaveLength(1)
     const instance = project.instancePool.inspector().getModule('s0')
@@ -106,11 +125,17 @@ test('repl modules with config', async () => {
 
 test('repl organize', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(filter#filter)>>(map#map)>>(mergeMap#m2)',
-        '(of#of)>>#m2',
-    ])
-    project = project.organize([{ layerId: 'foo', uids: ['filter', 'map'] }])
+    project = await project.with({
+        flowchart: {
+            branches: [
+                '(filter#filter)>>(map#map)>>(mergeMap#m2)',
+                '(of#of)>>#m2',
+            ],
+        },
+        canvas: {
+            layers: [{ layerId: 'foo', moduleIds: ['filter', 'map'] }],
+        },
+    })
     expect(project.main.rootLayer.moduleIds).toEqual(['m2', 'of'])
     expect(project.main.rootLayer.children).toHaveLength(1)
     expect(project.main.rootLayer.children[0].moduleIds).toEqual([
@@ -122,40 +147,59 @@ test('repl organize', async () => {
 
 test('repl with view & canvas', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(timer#t0)>>(filter#f0)>>(map#m0)', {
-        t0: { name: '1s' },
-        f0: {
-            function: ({ data }) => data % 2 == 0,
+    project = await project.with({
+        flowchart: {
+            branches: ['(timer#t0)>>(filter#f0)>>(map#m0)'],
+            configurations: {
+                t0: { name: '1s' },
+                f0: {
+                    function: ({ data }) => data % 2 == 0,
+                },
+            },
         },
-    })
-    project = project.addHtml('Test', (project) => {
-        const obs = project.inspector().getObservable({
-            moduleId: 'm0',
-            slotId: 'output$',
-        })
+        views: [
+            {
+                id: 'Test',
+                html: (project) => {
+                    const obs = project.inspector().getObservable({
+                        moduleId: 'm0',
+                        slotId: 'output$',
+                    })
 
-        return {
-            innerText: attr$(obs, () => new Date().toTimeString()),
-        }
-    })
-    expect(project.views.Test).toBeTruthy()
-    project = project.addToCanvas({
-        selector: (elem) => elem.uid == 'm0',
-        view: () => {
-            return {
-                innerText: 'custom canvas element',
-            }
+                    return {
+                        innerText: attr$(obs, () => new Date().toTimeString()),
+                    }
+                },
+            },
+        ],
+        canvas: {
+            views: [
+                {
+                    selector: (elem) => elem.uid === 'm0',
+                    view: () => {
+                        return {
+                            innerText: 'custom canvas element',
+                        }
+                    },
+                },
+            ],
         },
     })
+
+    expect(project.views.Test).toBeTruthy()
     expect(project.canvasViews).toHaveLength(1)
 })
 
 test('repl misc 0', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(filter#filter)>>(map#map)>>(mergeMap#m2)',
-        '(of#of)>>(#m2)',
-    ])
+    project = await project.with({
+        flowchart: {
+            branches: [
+                '(filter#filter)>>(map#map)>>(mergeMap#m2)',
+                '(of#of)>>(#m2)',
+            ],
+        },
+    })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(4)
     expect(connections).toHaveLength(3)
@@ -163,12 +207,23 @@ test('repl misc 0', async () => {
 
 test('multiple steps', async () => {
     let project = emptyProject()
-    project = await project.parseDag([
-        '(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)',
-    ])
+    project = await project.with({
+        flowchart: {
+            branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
+        },
+    })
+
     const project0 = project
-    project = await project.parseDag('(of#of)')
-    project = await project.parseDag('(#of)>>(#m1)')
+    project = await project.with({
+        flowchart: {
+            branches: ['(of#of)'],
+        },
+    })
+    project = await project.with({
+        flowchart: {
+            branches: ['(#of)>>(#m1)'],
+        },
+    })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(5)
     expect(connections).toHaveLength(4)
@@ -183,9 +238,14 @@ test('multiple steps', async () => {
 
 test('repl misc 1', async () => {
     let project = emptyProject()
-    project = await project.parseDag('(filter)0>#c0>(sphere)', {
-        c0: {
-            adaptor: ({ data }) => ({ data, configuration: {} }),
+    project = await project.with({
+        flowchart: {
+            branches: ['(filter)0>#c0>(sphere)'],
+            configurations: {
+                c0: {
+                    adaptor: ({ data }) => ({ data, configuration: {} }),
+                },
+            },
         },
     })
     const { connections } = project.instancePool
@@ -235,13 +295,17 @@ test('custom module', async () => {
             )
         },
     })
-    let project = await emptyProject().addCustomModule(module)
-    project = await project.parseDag('(custom#m)', {
-        m: {
-            coefficient: 2,
+    const project = await emptyProject().with({
+        customModules: [module],
+        flowchart: {
+            branches: ['(custom#m)'],
+            configurations: {
+                m: {
+                    coefficient: 2,
+                },
+            },
         },
     })
-
     const instance = project.instancePool.inspector().getModule('m')
 
     expect(instance).toBeTruthy()
@@ -255,18 +319,22 @@ test('worksheets', async () => {
     const received = []
     const stdLog = console.log
     console.log = (_, d) => received.push(d)
-    project = project.addWorksheet({
-        name: 'test-ws',
-        dag: {
-            branches: ['(of#of)>>(map#map)>>(console)'],
-        },
+    project = await project.with({
+        worksheets: [
+            {
+                id: 'test-ws',
+                flowchart: {
+                    branches: ['(of#of)>>(map#map)>>(console)'],
+                },
+            },
+        ],
     })
 
     expect(project.worksheets).toHaveLength(1)
     expect(project.runningWorksheets).toHaveLength(0)
     project = await project.runWorksheet('test-ws')
     expect(project.runningWorksheets).toHaveLength(1)
-    expect(project.runningWorksheets[0].name).toBe('test-ws')
+    expect(project.runningWorksheets[0].worksheetId).toBe('test-ws')
     const instancePool = project.runningWorksheets[0].instancePool
     expect(instancePool.modules).toHaveLength(3)
     expect(instancePool.connections).toHaveLength(2)
