@@ -196,7 +196,7 @@ export class ProjectState {
      * @param macroUid includes the parsed DAG in the workflow with this UID if provided, otherwise in main
      */
     async parseDag(
-        flows: string | string[],
+        flows: Immutable<string> | Immutables<string>,
         configs: { [k: string]: unknown } = {},
         macroUid?: string,
     ) {
@@ -260,9 +260,9 @@ export class ProjectState {
     exposeMacro<TSchema extends Configurations.Schema>(
         macroUid: string,
         definition: {
-            configuration?: Configurations.Configuration<TSchema>
-            inputs: string[]
-            outputs: string[]
+            configuration?: Immutable<Configurations.Configuration<TSchema>>
+            inputs: Immutables<string>
+            outputs: Immutables<string>
             configMapper?: (
                 configInstance: Configurations.ConfigInstance<TSchema>,
             ) => {
@@ -331,10 +331,10 @@ export class ProjectState {
         macroId,
         uids,
     }: {
-        parentLayerId?: string
-        layerId?: string
-        macroId?: string
-        uids: string[]
+        parentLayerId?: Immutable<string>
+        layerId?: Immutable<string>
+        macroId?: Immutable<string>
+        uids: Immutables<string>
     }): ProjectState {
         const workflow = macroId
             ? this.macros.find((m) => m.uid == macroId)
@@ -403,7 +403,7 @@ export class ProjectState {
      * Add a worksheet to the project
      * @param worksheet worksheet to add
      */
-    addWorksheet(worksheet: Worksheet): ProjectState {
+    addWorksheet(worksheet: Immutable<Worksheet>): ProjectState {
         const worksheets = [...this.worksheets, worksheet]
         return new ProjectState({ ...this, worksheets })
     }
