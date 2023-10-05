@@ -34,7 +34,7 @@ export type HtmlView = (
  * (such as modules or connections) and a view function to provide associated graphical elements for
  * the selected elements.
  */
-export type CanvasView = {
+export type CanvasAnnotation = {
     /**
      * A selector function that determines whether an element should be associated with this view.
      *
@@ -48,9 +48,9 @@ export type CanvasView = {
     selector: (elem: Immutable<UidTrait>) => boolean
 
     /**
-     * A view function that generates a graphical representation for the associated elements.
+     * A function that generates a graphical representation for the associated elements.
      *
-     * The `view` function takes an `elem` parameter, which is an immutable representation of the
+     * The `html` function takes an `elem` parameter, which is an immutable representation of the
      * associated element. It is responsible for creating and returning a virtual DOM (VirtualDOM)
      * representation of the graphical element that should be displayed on the flowchart canvas for
      * the associated element.
@@ -58,7 +58,7 @@ export type CanvasView = {
      * @param elem An immutable representation of the associated element.
      * @returns A virtual DOM (VirtualDOM) representation of the graphical element.
      */
-    view: (
+    html: (
         elem: Immutable<
             Modules.ImplementationTrait | Connections.ConnectionTrait
         >,
@@ -198,11 +198,10 @@ export type Canvas = {
     layers?: FlowchartLayer[]
 
     /**
-     * Canvas views are graphical elements that can be added to the flowchart canvas to enhance its
-     * visual representation. These views can include additional graphics, annotations, or
-     * any other elements designed to provide context or information about the flowchart.
+     * Canvas annotations are graphical elements that can be added to the flowchart to enhance its
+     * visual representation. These views elements designed to provide context or information about the flowchart.
      */
-    views?: CanvasView[]
+    annotations?: CanvasAnnotation[]
 }
 /**
  * Represents a collection of the values of module configuration's attributes with string keys.
@@ -618,9 +617,9 @@ export type ProjectElements = {
      *                  uids: ['A', 'B']
      *              }],
      *              // This creates a custom module's view within the flowchart canvas associated to module `A`.
-     *              views: [{
+     *              annotations: [{
      *                  selector: ({uid}) => uid === 'A',
-     *                  view: (module) => {
+     *                  html: (module) => {
      *                      // module can be used to retrieve input/output observables and create reactive element here.
      *                      // Not done here for the sake of simplicity.
      *                      // Please refer to the @youwol/flux-view (https://l.youwol.com/doc/@youwol/flux-view)

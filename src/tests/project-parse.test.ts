@@ -173,10 +173,10 @@ test('repl with view & canvas', async () => {
             },
         ],
         canvas: {
-            views: [
+            annotations: [
                 {
                     selector: (elem) => elem.uid === 'm0',
-                    view: () => {
+                    html: () => {
                         return {
                             innerText: 'custom canvas element',
                         }

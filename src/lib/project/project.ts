@@ -26,7 +26,7 @@ import {
     HtmlView,
 } from './'
 import { uuidv4 } from '../modules'
-import { CanvasView, ProjectElements, Worksheet } from './models'
+import { CanvasAnnotation, ProjectElements, Worksheet } from './models'
 import { WorkflowModel } from '../workflows'
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
@@ -71,7 +71,7 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly canvasViews: Immutables<CanvasView> = []
+    public readonly canvasViews: Immutables<CanvasAnnotation> = []
 
     /**
      * Supporting environment
@@ -238,8 +238,8 @@ export class ProjectState {
                 project,
             )
         }
-        if (elements.canvas?.views) {
-            project = project.addToCanvas(...elements.canvas.views)
+        if (elements.canvas?.annotations) {
+            project = project.addToCanvas(...elements.canvas.annotations)
         }
         if (elements.canvas?.layers) {
             project = elements.canvas.layers.reduce(
@@ -540,9 +540,9 @@ export class ProjectState {
     }
 
     /**
-     * Register {@link CanvasView} elements in the project.
+     * Register {@link CanvasAnnotation} elements in the project.
      * Any element of the workflow rendered in the canvas (e.g. modules, connections, layers) matching
-     * the {@link CanvasView}'s selector will have their corresponding view displayed.
+     * the {@link CanvasAnnotation}'s selector will have their corresponding view displayed.
      *
      * Below is an example displaying the html view of a module with `uid='view'` & implementing {@link HtmlTrait}:
      *
@@ -562,9 +562,9 @@ export class ProjectState {
      *      })
      * })
      * ```
-     * @param elements List of {@link CanvasView}
+     * @param elements List of {@link CanvasAnnotation}
      */
-    addToCanvas(...elements: CanvasView[]) {
+    addToCanvas(...elements: CanvasAnnotation[]) {
         return new ProjectState({
             ...this,
             canvasViews: [...this.canvasViews, ...elements],
