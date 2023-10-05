@@ -77,7 +77,7 @@ test('add a macro + API (index) + instance', async () => {
                         },
                     },
                 },
-                API: {
+                api: {
                     inputs: ['0(#map0)'],
                     outputs: ['(#map1)0'],
                 },
@@ -129,14 +129,14 @@ test('add 2 macros & play', (done) => {
                             {
                                 typeId: 'test-macro0',
                                 flowchart: { branches: ['(of#of)>>(map#map)'] },
-                                API: {
+                                api: {
                                     outputs: ['(#map)0'],
                                 },
                             },
                             {
                                 typeId: 'test-macro1',
                                 flowchart: { branches: ['(map#map)'] },
-                                API: {
+                                api: {
                                     inputs: ['0(#map)'],
                                     outputs: ['(#map)0'],
                                 },
@@ -194,7 +194,7 @@ function createMacro() {
                                         },
                                     },
                                 },
-                                API: {
+                                api: {
                                     inputs: [],
                                     outputs: ['(#map)0'],
                                     configuration: {

@@ -357,7 +357,7 @@ export type MacroAPI<TSchema extends Configurations.Schema> = {
  *              pointLight: { position: {x:10, y:10, z:10} }
  *          }
  *      },
- *      API:{
+ *      api:{
  *          inputs:[],
  *          outputs: ['(#grpLights)0'],
  *          configuration: {
@@ -390,7 +390,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
      * *  the exposed inputs
      * *  the exposed outputs
      */
-    API?: MacroAPI<TSchema>
+    api?: MacroAPI<TSchema>
 
     /**
      * This property defines the structure and appearance of the macro when it is executed. A view is typically used
@@ -437,7 +437,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
  *                  }
  *              }
  *          },
- *          API:{ inputs: ['0(#map)'], outputs:['(#map)0'] }
+ *          api:{ inputs: ['0(#map)'], outputs:['(#map)0'] }
  *      }],
  *      flowchart: {
  *          branches: ['(of#of)>>(factorial#factorial)>>(console)'],
@@ -699,7 +699,7 @@ export type ProjectElements = {
      *                      take:{ count: 3 }
      *                  }
      *              },
-     *              API:{
+     *              api:{
      *                  // the macro has no inputs
      *                  inputs:[],
      *                  // the macro has one output: the first (and only) output of the `take` module

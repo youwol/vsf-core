@@ -209,12 +209,12 @@ export class ProjectState {
                 )
                 p = p.exposeMacro(macro.typeId, {
                     configuration: {
-                        schema: macro.API?.configuration?.schema || {},
+                        schema: macro.api?.configuration?.schema || {},
                     },
                     configMapper:
-                        macro.API?.configuration?.mapper || (() => ({})),
-                    inputs: macro.API?.inputs || [],
-                    outputs: macro.API?.outputs || [],
+                        macro.api?.configuration?.mapper || (() => ({})),
+                    inputs: macro.api?.inputs || [],
+                    outputs: macro.api?.outputs || [],
                     html: macro.html,
                 })
                 return p

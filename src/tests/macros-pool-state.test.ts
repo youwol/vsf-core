@@ -52,7 +52,7 @@ function addMacro() {
                                         },
                                     },
                                 },
-                                API: {
+                                api: {
                                     inputs: ['0(#map)'],
                                     outputs: ['(#take)0'],
                                     configuration: {
