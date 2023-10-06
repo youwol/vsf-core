@@ -18,10 +18,10 @@ function mergeInstancePools(
 ) {
     const modules = pools.reduce((acc, e) => [...acc, ...e.modules], [])
     const connections = pools.reduce((acc, e) => [...acc, ...e.connections], [])
-    const connectionsHint: Record<
-        string,
-        Immutable<ConnectionsHint>
-    > = pools.reduce((acc, e) => ({ ...acc, ...e.connectionsHint }), {})
+    const connectionsHint = pools.reduce(
+        (acc, e) => [...acc, ...e.connectionsHint],
+        [],
+    )
     return new Deployers.InstancePool({
         parentUid: uid,
         modules,

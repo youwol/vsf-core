@@ -39,7 +39,7 @@ export interface DeployerTrait {
      *
      * Keys are uid of included modules in the pool.
      */
-    connectionsHint?: Record<string, Immutable<ConnectionsHint>>
+    connectionsHint?: Immutables<ConnectionsHint>
 
     /**
      * Emit when the pool is {@link stop}.
@@ -82,7 +82,7 @@ export interface DeployerTrait {
             chart: Immutable<Chart>
             environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
-            connectionsHint?: Record<string, Immutable<ConnectionsHint>>
+            connectionsHint?: Immutables<ConnectionsHint>
         },
         context: ContextLoggerTrait,
     ): Promise<DeployerTrait>
@@ -104,9 +104,9 @@ export function implementsDeployerTrait(d: unknown): d is DeployerTrait {
 }
 
 export type ConnectionsHint = {
-    parent: { from: string; to: string }
-    inputSlot: number | string
-    outputSlot: number | string
+    type: 'input' | 'output'
+    parent: string
+    child: { moduleId: string; slotId: number }
 }
 /**
  * This class encapsulates running instances of modules as well as connections.
@@ -121,16 +121,13 @@ export class InstancePool implements DeployerTrait {
 
     public readonly connections: Immutables<Connections.ConnectionTrait> = []
 
-    public readonly connectionsHint?: Record<
-        string,
-        Immutable<ConnectionsHint>
-    > = {}
+    public readonly connectionsHint?: Immutables<ConnectionsHint> = []
 
     constructor(params: {
         modules?: Immutables<Modules.ImplementationTrait>
         connections?: Immutables<Connections.ConnectionTrait>
         parentUid: string
-        connectionsHint?: Record<string, Immutable<ConnectionsHint>>
+        connectionsHint?: Immutables<ConnectionsHint>
     }) {
         Object.assign(this, { modules: [], connections: [] }, params)
         this.terminated$ = new ReplaySubject(1)
@@ -144,7 +141,7 @@ export class InstancePool implements DeployerTrait {
             scope,
         }: {
             chart: Immutable<Chart>
-            connectionsHint?: Record<string, Immutable<ConnectionsHint>>
+            connectionsHint?: Immutables<ConnectionsHint>
             environment: Immutable<EnvironmentTrait>
             scope: Immutable<{ [k: string]: unknown }>
         },
@@ -215,10 +212,10 @@ export class InstancePool implements DeployerTrait {
                 modules: [...modules, ...this.modules],
                 connections: [...connections, ...this.connections],
                 parentUid: this.parentUid,
-                connectionsHint: {
+                connectionsHint: [
                     ...this.connectionsHint,
-                    ...connectionsHint,
-                },
+                    ...(connectionsHint || []),
+                ],
             })
         })
     }
