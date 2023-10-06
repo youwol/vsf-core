@@ -31,7 +31,7 @@ function mergeInstancePools(
 }
 
 /**
- * Type factorization for arguments of callbacks related to inner macro lifecycle events, gathered in
+ * Type factorization for arguments of callbacks related to inner instance pool lifecycle events, gathered in
  * {@link InnerObservablesPool}.
  */
 export type OnInnerPoolEventArgs = {
@@ -40,34 +40,34 @@ export type OnInnerPoolEventArgs = {
      */
     state: Immutable<InnerObservablesPool>
     /**
-     * The {@link Connections.Message} that initiated the macro creation.
+     * The {@link Connections.Message} that initiated the instance pool creation.
      */
     fromMessage: Connections.Message
 }
 
 /**
- * Type factorization for arguments of callbacks related to inner macro lifecycle end events, gathered in
+ * Type factorization for arguments of callbacks related to inner instance pool lifecycle end events, gathered in
  * {@link InnerObservablesPool}.
  */
 export type OnInnerPoolEventEndArgs = OnInnerPoolEventArgs & {
     /**
-     * Instance of the macro.
+     * Instance pool to end.
      */
     macroModule: Immutable<Modules.ImplementationTrait>
 }
 
 /**
- * `MacrosPoolState` represents a pool of macro, each one serving as defining an observables.
+ * Represents a pool of {@link Projects.VsfInnerObservable}, each one serving as defining an observables.
  */
 export class InnerObservablesPool {
     /**
-     * Parent id that will be used to create the children {@link Deployers.InstancePool}, each one containing the macro
-     * that has been created from an incoming {@link Connections.Message}.
+     * Parent id that will be used to create the children {@link Deployers.InstancePool} from an
+     * incoming {@link Connections.Message}.
      */
     public readonly parentUid: string
     /**
-     * `instancePool$` gather the 'global' instance pool of macro.
-     * It includes all the macros that are running at a particular point in time.
+     * `instancePool$` gather the 'global' (merged from {@link instancePools}) instance pools of the deployed
+     * flowcharts running at a particular point in time.
      */
     public readonly instancePool$: BehaviorSubject<
         Immutable<Deployers.InstancePool>
@@ -86,7 +86,7 @@ export class InnerObservablesPool {
      */
     public readonly overallContext: Context
     /**
-     * Individual context used by each child macro (generated from a {@link Connections.Message}) to log information.
+     * Individual context used by each child (generated from a {@link Connections.Message}) to log information.
      */
     public readonly instanceContext: Map<
         Immutable<Connections.Message>,
@@ -94,7 +94,7 @@ export class InnerObservablesPool {
     > = new Map()
 
     /**
-     * Individual instance pool containing the macro generated from a {@link Connections.Message}.
+     * Individual instance pool created from a {@link Connections.Message}.
      */
     public readonly instancePools: Map<
         Immutable<Connections.Message>,
@@ -102,16 +102,16 @@ export class InnerObservablesPool {
     > = new Map()
 
     /**
-     * Callback called when a macro has been created.
+     * Callback called when a flowchart has been deployed.
      */
     onStarted?: (args: OnInnerPoolEventArgs) => void
     /**
-     * Callback called when the observable from a macro has been completed.
-     * Note: if the observable complete, the macro is also consider `terminated`.
+     * Callback called when the observable from a flowchart has been completed.
+     * Note: if the observable complete, the flowchart is also consider `terminated`.
      */
     onCompleted?: (args: OnInnerPoolEventEndArgs) => void
     /**
-     * Callback called when the observable from a macro has been terminated.
+     * Callback called when the observable from a flowchart has been terminated.
      * If can be either: (i) the observable as completed, or (ii) the observable has been terminated
      * (e.g. because of a switch from a `switchMap`).
      */
@@ -150,11 +150,10 @@ export class InnerObservablesPool {
     }
 
     /**
-     * Create an inner observable from a macro by specifying the macro's IO to use, the message used as
-     * trigger (used only if `inputSlot` is provided).
+     * Create an inner observable from a {@link Projects.VsfInnerObservable}.
      *
      * @param innerObservable specification of the inner observable
-     * @param connectionsHint connections hints to establish the connection between the inner macro IO
+     * @param connectionsHint connections hints to establish the connection between the inner modules
      * and the parent module (mostly graphical when rendering workflows).
      */
     inner$(
