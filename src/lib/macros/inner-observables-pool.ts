@@ -169,22 +169,23 @@ export class InnerObservablesPool {
                     state: this,
                 })
             }),
-            tap(({ instancePool, context }) => {
+            tap(({ instancePool, suffix, context }) => {
                 context.info('Instance pool deployed', instancePool)
 
                 if (innerObservable.input == undefined) {
                     return
                 }
-                const { moduleId, slot } = parseIO(
+                const { moduleId, slotId } = parseIO(
                     innerObservable.input,
+                    suffix,
                     'input',
                 )
                 const inputModule = instancePool.inspector().getModule(moduleId)
-                const input$ = Object.values(inputModule.inputSlots)[slot]
+                const input$ = Object.values(inputModule.inputSlots)[slotId]
                     ?.rawMessage$
                 if (input$) {
                     context.info(
-                        "Send input to macro's input slot.",
+                        "Send input to flowchart's input slot.",
                         innerObservable.message,
                     )
                     input$.next({
@@ -195,12 +196,13 @@ export class InnerObservablesPool {
                     return
                 }
                 throw Error(
-                    `The innerObservable ${innerObservable.id} do not feature an input slot ${innerObservable.input}`,
+                    `The flowchart do not feature an input slot ${innerObservable.input}`,
                 )
             }),
-            mergeMap(({ instancePool, context }) => {
-                const { moduleId, slot } = parseIO(
+            mergeMap(({ instancePool, suffix, context }) => {
+                const { moduleId, slotId } = parseIO(
                     innerObservable.output,
+                    suffix,
                     'output',
                 )
 
@@ -211,7 +213,7 @@ export class InnerObservablesPool {
                 const outputModule = instancePool
                     .inspector()
                     .getModule(moduleId)
-                const output$ = Object.values(outputModule.outputSlots)[slot]
+                const output$ = Object.values(outputModule.outputSlots)[slotId]
                     ?.observable$
 
                 return output$.pipe(
@@ -253,12 +255,14 @@ export class InnerObservablesPool {
     ): Promise<{
         instancePool: Immutable<Deployers.DeployerTrait>
         context: Context
+        suffix: string
     }> {
         // Do not be tempted to use this.instancePool$.value as initial pool to avoid the latter 'reduce':
         // this code is executed in parallel and this.instancePool$.value is likely to return the empty InstancePool
-        // even if it is not the first call to `newMacroInstance`.
+        // even if it is not the first call to `newFlowchartInstance`.
         this.index += 1
-        const uid = `${innerObservable.id}#${this.index}`
+        const suffix = `#${this.index}`
+        const uid = `flowchart${suffix}`
         return await this.overallContext.withChildAsync(uid, async (ctx) => {
             const instanceCtx = this.journal.addPage({
                 title: uid,
@@ -271,22 +275,34 @@ export class InnerObservablesPool {
                 toolboxes: this.environment.allToolboxes,
                 availableModules: [],
             })
+            const { modules, connections } = suffixFlowchart(parsed, suffix)
+            const input = parseIO(innerObservable.input, suffix, 'input')
+            const output = parseIO(innerObservable.output, suffix, 'output')
+            const connectionsHints = [
+                input
+                    ? ({
+                          type: 'input',
+                          parent: connectionsHint.from,
+                          child: input,
+                      } as ConnectionsHint)
+                    : undefined,
+                {
+                    type: 'output',
+                    parent: connectionsHint.to,
+                    child: output,
+                } as ConnectionsHint,
+            ].filter((d) => d !== undefined)
+
             const deployment = {
                 environment: this.environment,
                 scope: {
                     uid,
                 },
                 chart: {
-                    modules: parsed.modules,
-                    connections: parsed.connections,
+                    modules,
+                    connections,
                 },
-                connectionsHint: {
-                    [uid]: {
-                        parent: connectionsHint,
-                        inputSlot: innerObservable.input,
-                        outputSlot: innerObservable.output,
-                    },
-                },
+                connectionsHint: connectionsHints,
             }
             this.instancePools.set(
                 innerObservable.message,
@@ -306,6 +322,7 @@ export class InnerObservablesPool {
             return {
                 instancePool,
                 context: instanceCtx,
+                suffix: suffix,
             }
         })
     }
@@ -373,13 +390,42 @@ const noOp = () => {
     /*no op*/
 }
 
-function parseIO(input: string, type: 'input' | 'output') {
-    const indexOpen = input.indexOf('(')
-    const indexClose = input.indexOf(')')
+function parseIO(io: string, suffix: string, type: 'input' | 'output') {
+    if (!io) {
+        return
+    }
+    const indexOpen = io.indexOf('(')
+    const indexClose = io.indexOf(')')
     const slot =
         type == 'input'
-            ? input.substring(0, indexOpen)
-            : input.substring(indexClose + 1)
-    const moduleId = input.substring(indexOpen + 2, indexClose)
-    return { slot: parseInt(slot), moduleId }
+            ? io.substring(0, indexOpen)
+            : io.substring(indexClose + 1)
+    const moduleId = io.substring(indexOpen + 2, indexClose)
+    return { slotId: parseInt(slot), moduleId: moduleId + suffix }
+}
+
+function suffixFlowchart(
+    parsed: {
+        modules: Modules.ModuleModel[]
+        connections: Connections.ConnectionModel[]
+    },
+    suffix: string,
+) {
+    const modules = parsed.modules.map((module) => {
+        return { ...module, uid: module.uid + suffix }
+    })
+    const connections = parsed.connections.map((connection) => {
+        return {
+            configuration: connection.configuration,
+            start: {
+                slotId: connection.start.slotId,
+                moduleId: connection.start.moduleId + suffix,
+            },
+            end: {
+                slotId: connection.end.slotId,
+                moduleId: connection.end.moduleId + suffix,
+            },
+        } as Connections.ConnectionModel
+    })
+    return { modules, connections }
 }

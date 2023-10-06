@@ -817,10 +817,6 @@ export type ProjectElements = {
  */
 export type VsfInnerObservable = {
     /**
-     * id of the inner observable
-     */
-    id: string
-    /**
      * flowchart definition
      */
     flowchart: Flowchart
