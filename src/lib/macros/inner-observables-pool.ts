@@ -53,7 +53,7 @@ export type OnInnerPoolEventEndArgs = OnInnerPoolEventArgs & {
     /**
      * Instance pool to end.
      */
-    macroModule: Immutable<Modules.ImplementationTrait>
+    instancePool: Immutable<Deployers.DeployerTrait>
 }
 
 /**
@@ -224,7 +224,7 @@ export class InnerObservablesPool {
                         },
                         () => {
                             context.info('Inner observable completed')
-                            this.clearMacroInstance({
+                            this.clearFlowchartInstance({
                                 message: innerObservable.message,
                                 status: 'completed',
                                 purgeOnDone: innerObservable.purgeOnDone,
@@ -236,7 +236,7 @@ export class InnerObservablesPool {
                         },
                     ),
                     finalize(() => {
-                        this.clearMacroInstance({
+                        this.clearFlowchartInstance({
                             message: innerObservable.message,
                             status: 'terminated',
                             purgeOnDone: innerObservable.purgeOnDone,
@@ -310,7 +310,7 @@ export class InnerObservablesPool {
         })
     }
 
-    private clearMacroInstance({
+    private clearFlowchartInstance({
         message,
         status,
         purgeOnDone,
@@ -319,15 +319,14 @@ export class InnerObservablesPool {
         status: 'completed' | 'terminated'
         purgeOnDone: boolean
     }) {
-        this.overallContext.info('Trigger teardown of macro')
+        this.overallContext.info('Trigger teardown of flowchart')
 
         if (this.instancePools.has(message)) {
             this.instancePools.get(message).then((pool) => {
                 pool.stop()
-                const macroModule = pool.modules[0]
                 const argsCb = {
                     fromMessage: message,
-                    macroModule,
+                    instancePool: pool,
                     state: this,
                 }
                 status == 'completed' && this.onCompleted(argsCb)
@@ -335,7 +334,7 @@ export class InnerObservablesPool {
 
                 if (!purgeOnDone) {
                     this.overallContext.info(
-                        'Purge on done disable, no macro instance deletion',
+                        'Purge on done disable, no flowchart instance deletion',
                     )
                     return
                 }
@@ -345,13 +344,16 @@ export class InnerObservablesPool {
                 }
                 const instancePool = this.instancePool$.value
                 const modules = instancePool.modules.filter(
-                    (m) => m != macroModule,
+                    (m) => !pool.modules.includes(m),
                 )
-                const hints = Object.entries(instancePool.connectionsHint)
-                    .filter(([k, _]) => k != macroModule.uid)
-                    .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {})
+                const hints = instancePool.connectionsHint.filter((hint) => {
+                    return (
+                        modules.find((m) => m.uid === hint.child.moduleId) !=
+                        undefined
+                    )
+                })
                 const ctx = this.instanceContext.get(message)
-                ctx.info('Teardown macro')
+                ctx.info('Teardown instance pool')
                 ctx.end()
                 this.instancePools.delete(message)
                 this.instancePool$.next(
