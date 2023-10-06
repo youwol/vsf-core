@@ -312,18 +312,20 @@ export class InnerObservablesPool {
             const input = parseIO(innerObservable.input, suffix, 'input')
             const output = parseIO(innerObservable.output, suffix, 'output')
             const connectionsHints = [
-                input
+                input && connectionsHint
                     ? ({
                           type: 'input',
                           parent: connectionsHint.from,
                           child: input,
                       } as ConnectionsHint)
                     : undefined,
-                {
-                    type: 'output',
-                    parent: connectionsHint.to,
-                    child: output,
-                } as ConnectionsHint,
+                connectionsHint
+                    ? ({
+                          type: 'output',
+                          parent: connectionsHint.to,
+                          child: output,
+                      } as ConnectionsHint)
+                    : undefined,
             ].filter((d) => d !== undefined)
 
             const deployment = {
