@@ -8,10 +8,9 @@ import {
     Immutables,
     EnvironmentTrait,
 } from '../common'
-import { Modules, Deployers, Connections } from '..'
-import { macroToolbox } from './'
-import { JsonMap } from '../connections'
+import { Modules, Deployers, Connections, Projects } from '..'
 import { ConnectionsHint } from '../deployers'
+import { parseDag } from '../project'
 
 function mergeInstancePools(
     uid: string,
@@ -58,21 +57,31 @@ export type OnInnerPoolEventEndArgs = OnInnerPoolEventArgs & {
 }
 
 /**
- * Type structure allowing to convert a macro into an observable from a message.
+ * Type structure allowing to convert a flowchart into an inner observable from a message.
  */
-export type MacroAsObservableSpec = {
+export type VsfInnerObservable = {
     /**
-     * Type id of the macro
+     * id of the inner observable
      */
-    macroTypeId: string
+    id: string
     /**
-     * If provided, the message is sent to macro's input slot with this index.
+     * flowchart definition
      */
-    inputSlot?: number
+    flowchart: Projects.Flowchart
     /**
-     * The output slot that serves as defining the observable
+     * If provided, the message is sent this input.
+     *
+     * Format is e.g. `0(#moduleId)`, where `0` is the index of the input slot & `moduleId`
+     * the target module ID in the flowchart.
      */
-    outputSlot: number
+    input?: string
+    /**
+     * The output slot that serves as defining the observable.
+     *
+     * Format is e.g. `(#moduleId)0`, where `0` is the index of the output slot & `moduleId`
+     * the target module ID in the flowchart.
+     */
+    output: string
     /**
      * Initiating message
      */
@@ -81,10 +90,6 @@ export type MacroAsObservableSpec = {
      * If true, the associated macro of an observable is removed when the observable is either completed or terminated.
      */
     purgeOnDone: boolean
-    /**
-     * The configuration to apply on the macro.
-     */
-    configuration: JsonMap
 }
 
 /**
@@ -184,74 +189,69 @@ export class InnerObservablesPool {
      * Create an inner observable from a macro by specifying the macro's IO to use, the message used as
      * trigger (used only if `inputSlot` is provided).
      *
-     * @param inputSlot index of the input slot of the macro to send the `message`
-     * @param outputSlot index of the output slot to use as observable
-     * @param message message to forward
-     * @param purgeOnDone if true, various data associated to a macro for which the observable complete are deleted.
-     * @param configuration macro's configuration
-     * @param macroTypeId macro's type id. Should be available in the macro toolbox of the environment provided in the
-     * constructor
+     * @param innerObservable specification of the inner observable
      * @param connectionsHint connections hints to establish the connection between the inner macro IO
      * and the parent module (mostly graphical when rendering workflows).
      */
     inner$(
-        {
-            inputSlot,
-            outputSlot,
-            message,
-            purgeOnDone,
-            configuration,
-            macroTypeId,
-        }: MacroAsObservableSpec,
+        innerObservable: VsfInnerObservable,
         connectionsHint?: { from: string; to: string },
     ): Observable<Immutable<Modules.OutputMessage>> {
         return from(
-            this.newMacroInstance(
-                {
-                    macroTypeId,
-                    message,
-                    configuration,
-                    inputSlot,
-                    outputSlot,
-                },
-                connectionsHint,
-            ),
+            this.newFlowchartInstance(innerObservable, connectionsHint),
         ).pipe(
             tap(() => {
-                this.onStarted({ fromMessage: message, state: this })
+                this.onStarted({
+                    fromMessage: innerObservable.message,
+                    state: this,
+                })
             }),
-            tap(({ macro, context }) => {
-                context.info('Macro instance created', macro)
+            tap(({ instancePool, context }) => {
+                context.info('Instance pool deployed', instancePool)
 
-                if (inputSlot == undefined) {
+                if (innerObservable.input == undefined) {
                     return
                 }
-                const inputs: Immutables<Modules.InputSlot> = Object.values(
-                    macro.inputSlots,
+                const { moduleId, slot } = parseIO(
+                    innerObservable.input,
+                    'input',
                 )
-                if (inputSlot < inputs.length) {
-                    context.info("Send input to macro's input slot.", message)
-                    inputs[inputSlot].rawMessage$.next({
-                        data: message.data,
-                        context: message.context,
+                const inputModule = instancePool.inspector().getModule(moduleId)
+                const input$ = Object.values(inputModule.inputSlots)[slot]
+                    ?.rawMessage$
+                if (input$) {
+                    context.info(
+                        "Send input to macro's input slot.",
+                        innerObservable.message,
+                    )
+                    input$.next({
+                        data: innerObservable.message.data,
+                        context: innerObservable.message.context,
                     })
-                    inputs[inputSlot].rawMessage$.complete()
+                    input$.complete()
                     return
                 }
                 throw Error(
-                    `The macro ${macroTypeId} do not feature an input slot #${inputSlot}`,
+                    `The innerObservable ${innerObservable.id} do not feature an input slot ${innerObservable.input}`,
                 )
             }),
-            mergeMap(({ macro, context }) => {
-                const outputs: Immutables<Modules.OutputSlot> = Object.values(
-                    macro.outputSlots,
-                )
-                context.info(
-                    `Stream from macro's output '${outputs[outputSlot].slotId}'.`,
-                    message,
+            mergeMap(({ instancePool, context }) => {
+                const { moduleId, slot } = parseIO(
+                    innerObservable.output,
+                    'output',
                 )
 
-                return outputs[outputSlot].observable$.pipe(
+                context.info(
+                    `Stream from flowchart output '${innerObservable.output}'.`,
+                    innerObservable.message,
+                )
+                const outputModule = instancePool
+                    .inspector()
+                    .getModule(moduleId)
+                const output$ = Object.values(outputModule.outputSlots)[slot]
+                    ?.observable$
+
+                return output$.pipe(
                     tap(
                         (m) => {
                             context.info('Send output', m)
@@ -262,9 +262,9 @@ export class InnerObservablesPool {
                         () => {
                             context.info('Inner observable completed')
                             this.clearMacroInstance({
-                                message,
+                                message: innerObservable.message,
                                 status: 'completed',
-                                purgeOnDone,
+                                purgeOnDone: innerObservable.purgeOnDone,
                             })
                             context.end()
                             // if (this.isOuterObservableCompleted()) {
@@ -274,9 +274,9 @@ export class InnerObservablesPool {
                     ),
                     finalize(() => {
                         this.clearMacroInstance({
-                            message,
+                            message: innerObservable.message,
                             status: 'terminated',
-                            purgeOnDone,
+                            purgeOnDone: innerObservable.purgeOnDone,
                         })
                     }),
                 )
@@ -284,68 +284,56 @@ export class InnerObservablesPool {
         )
     }
 
-    private async newMacroInstance(
-        {
-            macroTypeId,
-            message,
-            configuration,
-            inputSlot,
-            outputSlot,
-        }: {
-            macroTypeId: string
-            message
-            configuration: Connections.JsonMap
-            inputSlot: number
-            outputSlot: number
-        },
+    private async newFlowchartInstance(
+        innerObservable: VsfInnerObservable,
         connectionsHint?: { from: string; to: string },
     ): Promise<{
-        macro: Immutable<Modules.ImplementationTrait>
+        instancePool: Immutable<Deployers.DeployerTrait>
         context: Context
     }> {
         // Do not be tempted to use this.instancePool$.value as initial pool to avoid the latter 'reduce':
         // this code is executed in parallel and this.instancePool$.value is likely to return the empty InstancePool
         // even if it is not the first call to `newMacroInstance`.
         this.index += 1
-        const uid = `${macroTypeId}#${this.index}`
+        const uid = `${innerObservable.id}#${this.index}`
         return await this.overallContext.withChildAsync(uid, async (ctx) => {
             const instanceCtx = this.journal.addPage({
                 title: uid,
                 context: ctx,
             })
-            this.instanceContext.set(message, instanceCtx)
+            this.instanceContext.set(innerObservable.message, instanceCtx)
+            const parsed = parseDag({
+                flows: innerObservable.flowchart.branches,
+                configs: innerObservable.flowchart.configurations,
+                toolboxes: this.environment.allToolboxes,
+                availableModules: [],
+            })
             const deployment = {
                 environment: this.environment,
                 scope: {
                     uid,
-                    configuration,
                 },
                 chart: {
-                    modules: [
-                        {
-                            uid,
-                            typeId: macroTypeId,
-                            configuration,
-                            toolboxId: macroToolbox.uid,
-                        },
-                    ],
-                    connections: [],
+                    modules: parsed.modules,
+                    connections: parsed.connections,
                 },
                 connectionsHint: {
                     [uid]: {
                         parent: connectionsHint,
-                        inputSlot: inputSlot,
-                        outputSlot: outputSlot,
+                        inputSlot: innerObservable.input,
+                        outputSlot: innerObservable.output,
                     },
                 },
             }
             this.instancePools.set(
-                message,
+                innerObservable.message,
                 new Deployers.InstancePool({
                     parentUid: this.parentUid,
                 }).deploy(deployment, instanceCtx),
             )
-            const instancePool = await this.instancePools.get(message)
+            const instancePool = await this.instancePools.get(
+                innerObservable.message,
+            )
             const reducedPool = mergeInstancePools(
                 this.parentUid,
                 this.instancePool$.value,
@@ -353,7 +341,7 @@ export class InnerObservablesPool {
             )
             this.instancePool$.next(reducedPool)
             return {
-                macro: instancePool.modules[0],
+                instancePool,
                 context: instanceCtx,
             }
         })
@@ -418,4 +406,15 @@ export class InnerObservablesPool {
 
 const noOp = () => {
     /*no op*/
+}
+
+function parseIO(input: string, type: 'input' | 'output') {
+    const indexOpen = input.indexOf('(')
+    const indexClose = input.indexOf(')')
+    const slot =
+        type == 'input'
+            ? input.substring(0, indexOpen)
+            : input.substring(indexClose + 1)
+    const moduleId = input.substring(indexOpen + 2, indexClose)
+    return { slot: parseInt(slot), moduleId }
 }
