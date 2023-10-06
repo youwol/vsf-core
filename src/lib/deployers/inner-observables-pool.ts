@@ -8,9 +8,9 @@ import {
     Immutables,
     EnvironmentTrait,
 } from '../common'
-import { Modules, Deployers, Connections, Projects } from '..'
+import { Modules, Deployers, Connections } from '..'
 import { ConnectionsHint } from '../deployers'
-import { parseDag } from '../project'
+import { Flowchart, parseDag } from '../project'
 
 function mergeInstancePools(
     uid: string,
@@ -57,7 +57,40 @@ export type OnInnerPoolEventEndArgs = OnInnerPoolEventArgs & {
 }
 
 /**
- * Represents a pool of {@link Projects.VsfInnerObservable}, each one serving as defining an observables.
+ * Type structure allowing to convert a flowchart into an inner observable from a message.
+ */
+export type VsfInnerObservable = {
+    /**
+     * flowchart definition
+     */
+    flowchart: Flowchart
+    /**
+     * If provided, the message is sent this input.
+     *
+     * Format is e.g. `0(#moduleId)`, where `0` is the index of the input slot & `moduleId`
+     * the target module ID in the flowchart.
+     */
+    input?: string
+    /**
+     * The output slot that serves as defining the observable.
+     *
+     * Format is e.g. `(#moduleId)0`, where `0` is the index of the output slot & `moduleId`
+     * the target module ID in the flowchart.
+     */
+    output: string
+    /**
+     * Initiating message
+     */
+    message: Connections.Message
+    /**
+     * If true, the associated instances of a flowchart are removed when the observable is either completed or
+     * terminated.
+     */
+    purgeOnDone: boolean
+}
+
+/**
+ * Represents a pool of {@link VsfInnerObservable}, each one serving as defining an observables.
  */
 export class InnerObservablesPool {
     /**
@@ -150,14 +183,14 @@ export class InnerObservablesPool {
     }
 
     /**
-     * Create an inner observable from a {@link Projects.VsfInnerObservable}.
+     * Create an inner observable from a {@link VsfInnerObservable}.
      *
      * @param innerObservable specification of the inner observable
      * @param connectionsHint connections hints to establish the connection between the inner modules
      * and the parent module (mostly graphical when rendering workflows).
      */
     inner$(
-        innerObservable: Projects.VsfInnerObservable,
+        innerObservable: VsfInnerObservable,
         connectionsHint?: { from: string; to: string },
     ): Observable<Immutable<Modules.OutputMessage>> {
         return from(
@@ -250,7 +283,7 @@ export class InnerObservablesPool {
     }
 
     private async newFlowchartInstance(
-        innerObservable: Projects.VsfInnerObservable,
+        innerObservable: VsfInnerObservable,
         connectionsHint?: { from: string; to: string },
     ): Promise<{
         instancePool: Immutable<Deployers.DeployerTrait>

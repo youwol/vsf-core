@@ -811,35 +811,3 @@ export type ProjectElements = {
      */
     customModules?: Modules.Module[]
 }
-
-/**
- * Type structure allowing to convert a flowchart into an inner observable from a message.
- */
-export type VsfInnerObservable = {
-    /**
-     * flowchart definition
-     */
-    flowchart: Flowchart
-    /**
-     * If provided, the message is sent this input.
-     *
-     * Format is e.g. `0(#moduleId)`, where `0` is the index of the input slot & `moduleId`
-     * the target module ID in the flowchart.
-     */
-    input?: string
-    /**
-     * The output slot that serves as defining the observable.
-     *
-     * Format is e.g. `(#moduleId)0`, where `0` is the index of the output slot & `moduleId`
-     * the target module ID in the flowchart.
-     */
-    output: string
-    /**
-     * Initiating message
-     */
-    message: Connections.Message
-    /**
-     * If true, the associated macro of an observable is removed when the observable is either completed or terminated.
-     */
-    purgeOnDone: boolean
-}

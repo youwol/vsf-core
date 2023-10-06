@@ -5,4 +5,3 @@
  */
 export * from './macro'
 export * from './macro-workers'
-export * from './inner-observables-pool'
