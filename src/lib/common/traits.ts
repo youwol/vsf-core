@@ -156,4 +156,5 @@ export type EnvironmentTrait = LoggerTrait &
         workersPools: Immutables<WorkersPoolInstance>
         toolboxes: Immutables<ToolBox>
         macrosToolbox: Immutable<ToolBox>
+        allToolboxes: Immutables<ToolBox>
     }

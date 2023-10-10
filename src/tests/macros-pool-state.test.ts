@@ -10,7 +10,7 @@ import {
     switchMap,
     tap,
 } from 'rxjs/operators'
-import { Configurations, Macros } from '../lib'
+import { Configurations, Deployers } from '../lib'
 
 function addMacro() {
     return (project$: Observable<ProjectState>) => {
@@ -98,16 +98,18 @@ test('some test', (done) => {
         .pipe(
             addMacro(),
             mergeMap((project) => {
-                const state = new Macros.InnerObservablesPool({
+                const state = new Deployers.InnerObservablesPool({
                     parentUid: 'test',
                     environment: project.environment,
                 })
                 return state.inner$({
-                    inputSlot: 0,
-                    outputSlot: 0,
+                    flowchart: {
+                        branches: ['(test-macro#macro)'],
+                        configurations: { macro: { takeCount: 2 } },
+                    },
+                    input: '0(#macro)',
+                    output: '(#macro)0',
                     message: { data: 5 },
-                    configuration: { takeCount: 2 },
-                    macroTypeId: 'test-macro',
                     purgeOnDone: true,
                 })
             }),
@@ -125,12 +127,12 @@ test('some test', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('with merge map', (done) => {
     const project = emptyProject()
-    let state: Macros.InnerObservablesPool
+    let state: Deployers.InnerObservablesPool
     of(project)
         .pipe(
             addMacro(),
             tap((project) => {
-                state = new Macros.InnerObservablesPool({
+                state = new Deployers.InnerObservablesPool({
                     parentUid: 'test',
                     environment: project.environment,
                 })
@@ -144,11 +146,15 @@ test('with merge map', (done) => {
             mergeMap(({ data }) => {
                 return state
                     .inner$({
-                        inputSlot: 0,
-                        outputSlot: 0,
+                        flowchart: {
+                            branches: ['(test-macro#macro)'],
+                            configurations: {
+                                macro: { takeCount: 3, interval: 100 },
+                            },
+                        },
+                        input: '0(#macro)',
+                        output: '(#macro)0',
                         message: { data },
-                        configuration: { takeCount: 3, interval: 100 },
-                        macroTypeId: 'test-macro',
                         purgeOnDone: false,
                     })
                     .pipe(delay(0))
@@ -166,12 +172,12 @@ test('with merge map', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('with switch map', (done) => {
     const project = emptyProject()
-    let state: Macros.InnerObservablesPool
+    let state: Deployers.InnerObservablesPool
     of(project)
         .pipe(
             addMacro(),
             tap((project) => {
-                state = new Macros.InnerObservablesPool({
+                state = new Deployers.InnerObservablesPool({
                     parentUid: 'test',
                     environment: project.environment,
                 })
@@ -185,11 +191,15 @@ test('with switch map', (done) => {
             switchMap(({ data }) => {
                 return state
                     .inner$({
-                        inputSlot: 0,
-                        outputSlot: 0,
+                        flowchart: {
+                            branches: ['(test-macro#macro)'],
+                            configurations: {
+                                macro: { takeCount: 3, interval: 100 },
+                            },
+                        },
                         message: { data },
-                        configuration: { takeCount: 3, interval: 100 },
-                        macroTypeId: 'test-macro',
+                        input: '0(#macro)',
+                        output: '(#macro)0',
                         purgeOnDone: false,
                     })
                     .pipe(delay(0))
@@ -207,12 +217,12 @@ test('with switch map', (done) => {
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('with concat map', (done) => {
     const project = emptyProject()
-    let state: Macros.InnerObservablesPool
+    let state: Deployers.InnerObservablesPool
     of(project)
         .pipe(
             addMacro(),
             tap((project) => {
-                state = new Macros.InnerObservablesPool({
+                state = new Deployers.InnerObservablesPool({
                     parentUid: 'test',
                     environment: project.environment,
                 })
@@ -225,11 +235,15 @@ test('with concat map', (done) => {
             }),
             concatMap(({ data }) => {
                 const args = {
-                    inputSlot: 0,
-                    outputSlot: 0,
+                    flowchart: {
+                        branches: ['(test-macro#macro)'],
+                        configurations: {
+                            macro: { takeCount: 3, interval: 100 },
+                        },
+                    },
                     message: { data },
-                    configuration: { takeCount: 3, interval: 100 },
-                    macroTypeId: 'test-macro',
+                    input: '0(#macro)',
+                    output: '(#macro)0',
                     purgeOnDone: false,
                 }
                 return state.inner$(args).pipe(delay(0))
