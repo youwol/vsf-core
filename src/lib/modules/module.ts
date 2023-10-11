@@ -456,7 +456,8 @@ export class Implementation<
         }
         if (
             params.instancePool &&
-            params.instancePool instanceof BehaviorSubject
+            params.instancePool instanceof BehaviorSubject &&
+            Deployers.implementsDeployerTrait(params.instancePool.value)
         ) {
             this.instancePool$ = params.instancePool
         }
