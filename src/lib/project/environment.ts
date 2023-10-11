@@ -407,17 +407,21 @@ export class Environment implements EnvironmentTrait {
 }
 
 function assertModuleIsToolbox(moduleId) {
+    const throwError = (reason) => {
+        console.error(reason)
+        throw Error(
+            `Can not import the package ${moduleId} as toolbox: ${reason}`,
+        )
+    }
     if (!globalThis[moduleId]) {
-        console.error(
+        throwError(
             `The js module of toolbox ${moduleId} did not expose global symbol ${moduleId}`,
         )
-        return false
     }
     if (!globalThis[moduleId].toolbox) {
-        console.error(
+        throwError(
             `The js module of toolbox ${moduleId} did not expose a function 'toolbox()'`,
         )
-        return false
     }
     return true
 }
