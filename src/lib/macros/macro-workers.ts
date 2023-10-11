@@ -1,95 +1,11 @@
 import { NoContext } from '@youwol/logging'
 import { takeUntil } from 'rxjs/operators'
-import { Observable } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 
 import { Immutable } from '../common'
 import { Deployers, Modules } from '..'
 import { createMacroInputs, createMacroOutputs, MacroModel } from './'
 
-function transmitInputMessage(
-    macroUid: string,
-    taskId: string,
-    target: { moduleId: string; slotId: number },
-    source$: Observable<unknown>,
-    workersPool: Immutable<WorkersPoolTypes.WorkersPool>,
-) {
-    const send = (kind, message = undefined) => {
-        workersPool.sendData({
-            taskId: taskId,
-            data: {
-                kind,
-                macro: macroUid,
-                ...target,
-                message,
-            },
-        })
-    }
-    source$.subscribe(
-        (m) => send('InputMessage', m),
-        () => {
-            /*no op on error*/
-        },
-        () => {
-            send('InputClosed')
-        },
-    )
-}
-export function getProbes(instancePool: Deployers.InstancePool, customArgs) {
-    const notForwarded = () => {
-        return {
-            data: 'Data not forwarded',
-        }
-    }
-    return [
-        ...instancePool.modules
-            .flatMap((m) => Object.values(m.inputSlots))
-            .map((inputSlot) => {
-                return {
-                    kind: 'module.inputSlot.rawMessage$',
-                    id: {
-                        moduleId: inputSlot.moduleId,
-                        slotId: inputSlot.slotId,
-                    },
-                    message: notForwarded,
-                } as Deployers.Probe<'module.inputSlot.rawMessage$'>
-            }),
-        ...instancePool.modules
-            .flatMap((m) =>
-                Object.values(m.outputSlots).map((slot, index) => ({
-                    slot,
-                    index,
-                })),
-            )
-            .map(({ slot, index }) => {
-                // If the following expression is inlined in the ternary operator where it is used below
-                // => consuming project will have an EsLint error at `import '@youwol/vsf-core'`:
-                //  'Parse errors in imported module '@youwol/vsf-core': Identifier expected.'
-                const isMacroOutputs =
-                    customArgs.outputs.find(
-                        (o) =>
-                            o.slotId === index && o.moduleId === slot.moduleId,
-                    ) !== undefined
-                return {
-                    kind: 'module.outputSlot.observable$',
-                    id: {
-                        moduleId: slot.moduleId,
-                        slotId: slot.slotId,
-                    },
-                    message: isMacroOutputs
-                        ? (inWorkerMessage) => inWorkerMessage
-                        : notForwarded,
-                } as Deployers.Probe<'module.outputSlot.observable$'>
-            }),
-        ...instancePool.connections.map((connection) => {
-            return {
-                kind: 'connection.status$',
-                id: { connectionId: connection.uid },
-                message: (inWorkerMessage) => inWorkerMessage,
-            } as Deployers.Probe<'connection.status$'>
-        }),
-    ]
-}
 export async function deployMacroInWorker(
     {
         macro,
@@ -118,7 +34,7 @@ export async function deployMacroInWorker(
                 environment: fwdParams.environment,
                 scope: {},
                 customArgs: { outputs: macro.outputs },
-                probes: getProbes,
+                probes: Deployers.getProbes,
             },
             ctx,
         )
@@ -139,7 +55,7 @@ export async function deployMacroInWorker(
         macro.inputs.map((input, i) => {
             const inputSlot = Object.values(implementation.inputSlots)[i]
 
-            transmitInputMessage(
+            Deployers.transmitInputMessage(
                 macro.uid,
                 instancePoolWorker.processId,
                 input,

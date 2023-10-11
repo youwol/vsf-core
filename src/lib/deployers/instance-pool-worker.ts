@@ -212,3 +212,32 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
         this.terminated$.next()
     }
 }
+
+export function transmitInputMessage(
+    macroUid: string,
+    taskId: string,
+    target: { moduleId: string; slotId: number },
+    source$: Observable<unknown>,
+    workersPool: Immutable<WorkersPoolTypes.WorkersPool>,
+) {
+    const send = (kind, message = undefined) => {
+        workersPool.sendData({
+            taskId: taskId,
+            data: {
+                kind,
+                macro: macroUid,
+                ...target,
+                message,
+            },
+        })
+    }
+    source$.subscribe(
+        (m) => send('InputMessage', m),
+        () => {
+            /*no op on error*/
+        },
+        () => {
+            send('InputClosed')
+        },
+    )
+}

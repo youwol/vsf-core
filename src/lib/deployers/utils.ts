@@ -3,8 +3,8 @@ import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
-import { EnvironmentTrait, Immutable } from '../common'
-import { Modules, Connections } from '..'
+import { EnvironmentTrait, Immutable, Immutables } from '../common'
+import { Modules, Connections, Deployers } from '..'
 import {
     Chart,
     InstancePool,
@@ -221,4 +221,67 @@ export function emitRuntime(context: WorkersPoolTypes.WorkerContext) {
         step: 'Runtime',
         importedBundles: cdnClient.monitoring().importedBundles,
     } as RuntimeNotification)
+}
+
+export function getProbes(
+    instancePool: Immutable<Deployers.InstancePool>,
+    customArgs: { outputs: Immutables<{ slotId?: number; moduleId: string }> },
+) {
+    const notForwarded = () => {
+        return {
+            data: 'Data not forwarded',
+        }
+    }
+    return [
+        ...instancePool.modules
+            .flatMap((m) => Object.values(m.inputSlots))
+            .map((inputSlot) => {
+                return {
+                    kind: 'module.inputSlot.rawMessage$',
+                    id: {
+                        moduleId: inputSlot.moduleId,
+                        slotId: inputSlot.slotId,
+                    },
+                    message: notForwarded,
+                } as Deployers.Probe<'module.inputSlot.rawMessage$'>
+            }),
+        ...instancePool.modules
+            .flatMap((m) =>
+                Object.values(m.outputSlots).map((slot, index) => ({
+                    slot,
+                    index,
+                })),
+            )
+            .map(({ slot, index }) => {
+                // If the following expression is inlined in the ternary operator where it is used below
+                // => consuming project will have an EsLint error at `import '@youwol/vsf-core'`:
+                //  'Parse errors in imported module '@youwol/vsf-core': Identifier expected.'
+                const isMacroOutputs =
+                    customArgs.outputs.find((o) => {
+                        if (!o.slotId) {
+                            return o.moduleId === slot.moduleId
+                        }
+                        return (
+                            o.slotId === index && o.moduleId === slot.moduleId
+                        )
+                    }) !== undefined
+                return {
+                    kind: 'module.outputSlot.observable$',
+                    id: {
+                        moduleId: slot.moduleId,
+                        slotId: slot.slotId,
+                    },
+                    message: isMacroOutputs
+                        ? (inWorkerMessage) => inWorkerMessage
+                        : notForwarded,
+                } as Deployers.Probe<'module.outputSlot.observable$'>
+            }),
+        ...instancePool.connections.map((connection) => {
+            return {
+                kind: 'connection.status$',
+                id: { connectionId: connection.uid },
+                message: (inWorkerMessage) => inWorkerMessage,
+            } as Deployers.Probe<'connection.status$'>
+        }),
+    ]
 }
