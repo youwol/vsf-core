@@ -22,7 +22,7 @@ import {
     WorkersPoolModel,
     WorkersPoolRunTime,
 } from '../common'
-import { Modules, Deployers, Macros } from '..'
+import { Modules, Deployers, Macros, Configurations } from '..'
 import { defaultViewsFactory } from './'
 
 export const customModulesToolbox = {
@@ -169,7 +169,7 @@ export class Environment implements EnvironmentTrait {
      * @param scope the {@link Modules.Scope} associated to the module
      * @param context used for logging if provided.
      */
-    async instantiateModule<T>(
+    async instantiateModule(
         {
             typeId,
             moduleId,
@@ -178,11 +178,13 @@ export class Environment implements EnvironmentTrait {
         }: {
             typeId: string
             moduleId?: string
-            configuration?: { [_k: string]: unknown }
+            configuration?: Configurations.ConfigInstance<Modules.SchemaModuleBase> & {
+                [_k: string]: unknown
+            }
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait = NoContext,
-    ): Promise<T & Modules.ImplementationTrait> {
+    ): Promise<Modules.ImplementationTrait> {
         return context.withChildAsync(
             `instantiateModule '${typeId}'`,
             async (ctx) => {
