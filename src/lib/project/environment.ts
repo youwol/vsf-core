@@ -190,17 +190,34 @@ export class Environment implements EnvironmentTrait {
             async (ctx) => {
                 const { factory, toolbox } = this.getFactory({ typeId })
                 ctx.info(`Found module's factory`, module)
-                const instance = (await factory.getInstance({
-                    fwdParams: {
-                        factory,
-                        toolbox,
-                        uid: moduleId,
-                        configurationInstance: configuration,
-                        environment: this,
+                const fwdParams: Immutable<Modules.ForwardArgs> = {
+                    factory,
+                    toolbox,
+                    uid: moduleId,
+                    configurationInstance: configuration,
+                    environment: this,
+                    scope,
+                    context: ctx,
+                }
+                if (
+                    toolbox.uid != Macros.macroToolbox.uid &&
+                    configuration?.workersPoolId &&
+                    configuration.workersPoolId != ''
+                ) {
+                    return await Deployers.moduleInstanceInWorker({
+                        moduleId,
+                        typeId,
+                        configuration,
                         scope,
-                        context: ctx,
-                    },
-                })) as T & Modules.ImplementationTrait
+                        workersPoolId: configuration.workersPoolId,
+                        toolboxId: toolbox.uid,
+                        environment: this,
+                        fwdParams,
+                    })
+                }
+                const instance = await factory.getInstance({
+                    fwdParams,
+                })
                 ctx.info(`Instance created`, instance)
                 return instance
             },

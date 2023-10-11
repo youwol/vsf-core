@@ -1,10 +1,10 @@
-import { filter, takeWhile } from 'rxjs/operators'
+import { filter, takeUntil, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
 import { EnvironmentTrait, Immutable, Immutables } from '../common'
-import { Modules, Connections, Deployers } from '..'
+import { Modules, Connections, Deployers, Configurations } from '..'
 import {
     Chart,
     InstancePool,
@@ -17,6 +17,10 @@ import {
     ProbeMessageFromWorker,
     RuntimeNotification,
 } from './'
+import { NoContext } from '@youwol/logging'
+import { WithModuleBaseSchema } from '../modules'
+import * as IOs from '../modules/IOs'
+import { Environment } from '../project'
 
 const noOp = () => {
     /*No op*/
@@ -284,4 +288,119 @@ export function getProbes(
             } as Deployers.Probe<'connection.status$'>
         }),
     ]
+}
+
+export async function moduleInstanceInWorker(
+    {
+        typeId,
+        moduleId,
+        toolboxId,
+        configuration,
+        scope,
+        workersPoolId,
+        environment,
+        fwdParams,
+    }: {
+        typeId: string
+        workersPoolId: string
+        toolboxId: string
+        moduleId: string
+        configuration?: { [_k: string]: unknown }
+        scope: Immutable<{ [k: string]: unknown }>
+        environment: Environment
+        fwdParams: Immutable<Modules.ForwardArgs>
+    },
+    context = NoContext,
+): Promise<Modules.ImplementationTrait> {
+    return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
+        const workersPool = environment.workersPools.find((wp) => {
+            return wp.model.id == workersPoolId
+        })
+        if (!workersPool) {
+            throw Error(
+                `Worker pool '${workersPoolId}' not found to deploy module '${typeId}' with id '${moduleId}'`,
+            )
+        }
+
+        ctx.info('Workers pool', workersPool)
+        const chart = {
+            modules: [
+                {
+                    uid: moduleId,
+                    typeId,
+                    toolboxId,
+                    configuration: {
+                        ...configuration,
+                        workersPoolId: '',
+                    },
+                },
+            ],
+            connections: [],
+        }
+        let instancePoolWorker = await Deployers.InstancePoolWorker.empty({
+            processName: moduleId,
+            workersPool: workersPool.instance,
+            parentUid: moduleId,
+        })
+        instancePoolWorker = await instancePoolWorker.deploy(
+            {
+                chart,
+                environment,
+                scope,
+                customArgs: { outputs: [{ moduleId: moduleId }] },
+                probes: Deployers.getProbes,
+            },
+            ctx,
+        )
+        const moduleProxy = instancePoolWorker.inspector().getModule(moduleId)
+        const inputs = Object.entries(moduleProxy.inputSlots).reduce(
+            (acc, [k, slot]) => {
+                return {
+                    ...acc,
+                    [k]: {
+                        description: slot.description,
+                        contrat: slot.contract,
+                    },
+                }
+            },
+            {},
+        )
+        const outputs = () =>
+            Object.entries(moduleProxy.outputSlots).reduce((acc, [k, slot]) => {
+                return {
+                    ...acc,
+                    [k]: slot.observable$,
+                }
+            }, {})
+        type TSchema = WithModuleBaseSchema<Configurations.Schema>
+        type TInputs = Record<string, IOs.Input>
+        const params: Modules.UserArgs<TSchema> = {
+            configuration: moduleProxy.configuration,
+            inputs,
+            outputs,
+            instancePool: instancePoolWorker,
+            html: () => ({
+                innerText: `Can not access html for modules running in workers pool (#${moduleId})`,
+            }),
+        }
+        const implementation = new Modules.Implementation<TSchema, TInputs>(
+            params,
+            fwdParams,
+        )
+
+        Object.values(implementation.inputSlots).map(
+            (inputSlot: Modules.InputSlot, i) => {
+                Deployers.transmitInputMessage(
+                    moduleId,
+                    instancePoolWorker.processId,
+                    { moduleId, slotId: i },
+                    inputSlot.preparedMessage$.pipe(
+                        takeUntil(instancePoolWorker.terminated$),
+                    ),
+                    workersPool.instance,
+                )
+            },
+        )
+        return implementation
+    })
 }
