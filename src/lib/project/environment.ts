@@ -22,7 +22,7 @@ import {
     WorkersPoolModel,
     WorkersPoolRunTime,
 } from '../common'
-import { Modules, Deployers, Macros } from '..'
+import { Modules, Deployers, Macros, Configurations } from '..'
 import { defaultViewsFactory } from './'
 
 export const customModulesToolbox = {
@@ -169,7 +169,7 @@ export class Environment implements EnvironmentTrait {
      * @param scope the {@link Modules.Scope} associated to the module
      * @param context used for logging if provided.
      */
-    async instantiateModule<T>(
+    async instantiateModule(
         {
             typeId,
             moduleId,
@@ -178,27 +178,46 @@ export class Environment implements EnvironmentTrait {
         }: {
             typeId: string
             moduleId?: string
-            configuration?: { [_k: string]: unknown }
+            configuration?: Configurations.ConfigInstance<Modules.SchemaModuleBase> & {
+                [_k: string]: unknown
+            }
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait = NoContext,
-    ): Promise<T & Modules.ImplementationTrait> {
+    ): Promise<Modules.ImplementationTrait> {
         return context.withChildAsync(
             `instantiateModule '${typeId}'`,
             async (ctx) => {
                 const { factory, toolbox } = this.getFactory({ typeId })
                 ctx.info(`Found module's factory`, module)
-                const instance = (await factory.getInstance({
-                    fwdParams: {
-                        factory,
-                        toolbox,
-                        uid: moduleId,
-                        configurationInstance: configuration,
-                        environment: this,
+                const fwdParams: Immutable<Modules.ForwardArgs> = {
+                    factory,
+                    toolbox,
+                    uid: moduleId,
+                    configurationInstance: configuration,
+                    environment: this,
+                    scope,
+                    context: ctx,
+                }
+                if (
+                    toolbox.uid != Macros.macroToolbox.uid &&
+                    configuration?.workersPoolId &&
+                    configuration.workersPoolId != ''
+                ) {
+                    return await Deployers.moduleInstanceInWorker({
+                        moduleId,
+                        typeId,
+                        configuration,
                         scope,
-                        context: ctx,
-                    },
-                })) as T & Modules.ImplementationTrait
+                        workersPoolId: configuration.workersPoolId,
+                        toolboxId: toolbox.uid,
+                        environment: this,
+                        fwdParams,
+                    })
+                }
+                const instance = await factory.getInstance({
+                    fwdParams,
+                })
                 ctx.info(`Instance created`, instance)
                 return instance
             },
@@ -405,17 +424,21 @@ export class Environment implements EnvironmentTrait {
 }
 
 function assertModuleIsToolbox(moduleId) {
+    const throwError = (reason) => {
+        console.error(reason)
+        throw Error(
+            `Can not import the package ${moduleId} as toolbox: ${reason}`,
+        )
+    }
     if (!globalThis[moduleId]) {
-        console.error(
+        throwError(
             `The js module of toolbox ${moduleId} did not expose global symbol ${moduleId}`,
         )
-        return false
     }
     if (!globalThis[moduleId].toolbox) {
-        console.error(
+        throwError(
             `The js module of toolbox ${moduleId} did not expose a function 'toolbox()'`,
         )
-        return false
     }
     return true
 }

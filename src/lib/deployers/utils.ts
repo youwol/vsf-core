@@ -1,10 +1,10 @@
-import { filter, takeWhile } from 'rxjs/operators'
+import { filter, takeUntil, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
 import { WorkersPoolTypes } from '@youwol/cdn-client'
 import * as CdnClient from '@youwol/cdn-client'
 
-import { EnvironmentTrait, Immutable } from '../common'
-import { Modules, Connections } from '..'
+import { EnvironmentTrait, Immutable, Immutables } from '../common'
+import { Modules, Connections, Deployers, Configurations } from '..'
 import {
     Chart,
     InstancePool,
@@ -17,6 +17,10 @@ import {
     ProbeMessageFromWorker,
     RuntimeNotification,
 } from './'
+import { NoContext } from '@youwol/logging'
+import { WithModuleBaseSchema } from '../modules'
+import * as IOs from '../modules/IOs'
+import { Environment } from '../project'
 
 const noOp = () => {
     /*No op*/
@@ -172,8 +176,8 @@ function toModuleProxy({
         outputSlots,
         // Remaining fields are TODO
         // They need to be recovered from the worker
-        configuration: undefined,
-        configurationInstance: undefined,
+        configuration: { schema: {} },
+        configurationInstance: {},
         journal: undefined,
     }
 }
@@ -221,4 +225,182 @@ export function emitRuntime(context: WorkersPoolTypes.WorkerContext) {
         step: 'Runtime',
         importedBundles: cdnClient.monitoring().importedBundles,
     } as RuntimeNotification)
+}
+
+export function getProbes(
+    instancePool: Immutable<Deployers.InstancePool>,
+    customArgs: { outputs: Immutables<{ slotId?: number; moduleId: string }> },
+) {
+    const notForwarded = () => {
+        return {
+            data: 'Data not forwarded',
+        }
+    }
+    return [
+        ...instancePool.modules
+            .flatMap((m) => Object.values(m.inputSlots))
+            .map((inputSlot) => {
+                return {
+                    kind: 'module.inputSlot.rawMessage$',
+                    id: {
+                        moduleId: inputSlot.moduleId,
+                        slotId: inputSlot.slotId,
+                    },
+                    message: notForwarded,
+                } as Deployers.Probe<'module.inputSlot.rawMessage$'>
+            }),
+        ...instancePool.modules
+            .flatMap((m) =>
+                Object.values(m.outputSlots).map((slot, index) => ({
+                    slot,
+                    index,
+                })),
+            )
+            .map(({ slot, index }) => {
+                // If the following expression is inlined in the ternary operator where it is used below
+                // => consuming project will have an EsLint error at `import '@youwol/vsf-core'`:
+                //  'Parse errors in imported module '@youwol/vsf-core': Identifier expected.'
+                const isMacroOutputs =
+                    customArgs.outputs.find((o) => {
+                        if (!o.slotId) {
+                            return o.moduleId === slot.moduleId
+                        }
+                        return (
+                            o.slotId === index && o.moduleId === slot.moduleId
+                        )
+                    }) !== undefined
+                return {
+                    kind: 'module.outputSlot.observable$',
+                    id: {
+                        moduleId: slot.moduleId,
+                        slotId: slot.slotId,
+                    },
+                    message: isMacroOutputs
+                        ? (inWorkerMessage) => inWorkerMessage
+                        : notForwarded,
+                } as Deployers.Probe<'module.outputSlot.observable$'>
+            }),
+        ...instancePool.connections.map((connection) => {
+            return {
+                kind: 'connection.status$',
+                id: { connectionId: connection.uid },
+                message: (inWorkerMessage) => inWorkerMessage,
+            } as Deployers.Probe<'connection.status$'>
+        }),
+    ]
+}
+
+export async function moduleInstanceInWorker(
+    {
+        typeId,
+        moduleId,
+        toolboxId,
+        configuration,
+        scope,
+        workersPoolId,
+        environment,
+        fwdParams,
+    }: {
+        typeId: string
+        workersPoolId: string
+        toolboxId: string
+        moduleId: string
+        configuration?: { [_k: string]: unknown }
+        scope: Immutable<{ [k: string]: unknown }>
+        environment: Environment
+        fwdParams: Immutable<Modules.ForwardArgs>
+    },
+    context = NoContext,
+): Promise<Modules.ImplementationTrait> {
+    return await context.withChildAsync('deployMacroInWorker', async (ctx) => {
+        const workersPool = environment.workersPools.find((wp) => {
+            return wp.model.id == workersPoolId
+        })
+        if (!workersPool) {
+            throw Error(
+                `Worker pool '${workersPoolId}' not found to deploy module '${typeId}' with id '${moduleId}'`,
+            )
+        }
+
+        ctx.info('Workers pool', workersPool)
+        const chart = {
+            modules: [
+                {
+                    uid: moduleId,
+                    typeId,
+                    toolboxId,
+                    configuration: {
+                        ...configuration,
+                        workersPoolId: '',
+                    },
+                },
+            ],
+            connections: [],
+        }
+        let instancePoolWorker = await Deployers.InstancePoolWorker.empty({
+            processName: moduleId,
+            workersPool: workersPool.instance,
+            parentUid: moduleId,
+        })
+        instancePoolWorker = await instancePoolWorker.deploy(
+            {
+                chart,
+                environment,
+                scope,
+                customArgs: { outputs: [{ moduleId: moduleId }] },
+                probes: Deployers.getProbes,
+            },
+            ctx,
+        )
+        const moduleProxy = instancePoolWorker.inspector().getModule(moduleId)
+        const inputs = Object.entries(moduleProxy.inputSlots).reduce(
+            (acc, [k, slot]) => {
+                return {
+                    ...acc,
+                    [k]: {
+                        description: slot.description,
+                        contrat: slot.contract,
+                    },
+                }
+            },
+            {},
+        )
+        const outputs = () =>
+            Object.entries(moduleProxy.outputSlots).reduce((acc, [k, slot]) => {
+                return {
+                    ...acc,
+                    [k]: slot.observable$,
+                }
+            }, {})
+        type TSchema = WithModuleBaseSchema<Configurations.Schema>
+        type TInputs = Record<string, IOs.Input>
+        const params: Modules.UserArgs<TSchema> = {
+            configuration: moduleProxy.configuration,
+            inputs,
+            outputs,
+            instancePool: instancePoolWorker,
+            html: () => ({
+                innerText: `Can not access html for modules running in workers pool (#${moduleId})`,
+            }),
+        }
+        const implementation = new Modules.Implementation<TSchema, TInputs>(
+            params,
+            fwdParams,
+        )
+
+        Object.values(implementation.inputSlots).map(
+            (inputSlot: Modules.InputSlot, i) => {
+                Deployers.transmitInputMessage(
+                    moduleId,
+                    instancePoolWorker.processId,
+                    { moduleId, slotId: i },
+                    inputSlot.preparedMessage$.pipe(
+                        takeUntil(instancePoolWorker.terminated$),
+                    ),
+                    workersPool.instance,
+                )
+            },
+        )
+        return implementation
+    })
 }

@@ -14,7 +14,12 @@ import {
     ToolboxObjectTrait,
 } from '../common'
 import { Configurations, Deployers, Connections } from '..'
-import { ImplementationTrait, moduleConnectors } from './'
+import {
+    baseModuleSchemaDefaultInstance,
+    ImplementationTrait,
+    moduleConnectors,
+    WithModuleBaseSchema,
+} from './'
 import * as IOs from './IOs'
 
 /**
@@ -311,7 +316,7 @@ export type ForwardArgs = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export class Implementation<
-    TSchema extends Configurations.Schema,
+    TSchema extends WithModuleBaseSchema<Configurations.Schema>,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > implements ImplementationTrait<TSchema, TInputs, TState>
@@ -356,7 +361,7 @@ export class Implementation<
      * @group Immutable Properties
      */
     public readonly configuration: Immutable<
-        Configurations.Configuration<TSchema>
+        Configurations.Configuration<WithModuleBaseSchema<TSchema>>
     >
     /**
      * The static configuration instance. This is the model extracted from the declared module's configuration
@@ -365,7 +370,7 @@ export class Implementation<
      * @group Immutable Properties
      */
     public readonly configurationInstance: Immutable<
-        Configurations.ConfigInstance<TSchema>
+        Configurations.ConfigInstance<WithModuleBaseSchema<TSchema>>
     >
     /**
      * Inputs of the module as provided by the developer
@@ -447,6 +452,13 @@ export class Implementation<
         fwdParameters: ForwardArgs,
     ) {
         Object.assign(this, params, fwdParameters)
+        this.configuration = {
+            schema: {
+                ...baseModuleSchemaDefaultInstance(),
+                ...params.configuration.schema,
+            },
+        }
+
         this.typeId = this.factory.declaration.typeId
         this.toolboxId = fwdParameters.toolbox.uid
         if (Deployers.implementsDeployerTrait(params.instancePool)) {
@@ -456,7 +468,8 @@ export class Implementation<
         }
         if (
             params.instancePool &&
-            params.instancePool instanceof BehaviorSubject
+            params.instancePool instanceof BehaviorSubject &&
+            Deployers.implementsDeployerTrait(params.instancePool.value)
         ) {
             this.instancePool$ = params.instancePool
         }

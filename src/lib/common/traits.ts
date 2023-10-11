@@ -1,4 +1,5 @@
 import {
+    Configurations,
     Deployers,
     ExecutionJournal,
     Immutable,
@@ -97,7 +98,7 @@ export interface LoggerTrait {
  * Runtime environment.
  */
 export interface InstallerTrait {
-    instantiateModule<T>(
+    instantiateModule(
         {
             typeId,
             moduleId,
@@ -106,11 +107,13 @@ export interface InstallerTrait {
         }: {
             typeId: string
             moduleId?: string
-            configuration?: { [_k: string]: unknown }
+            configuration?: Configurations.ConfigInstance<Modules.SchemaModuleBase> & {
+                [_k: string]: unknown
+            }
             scope: Immutable<{ [k: string]: unknown }>
         },
         context: ContextLoggerTrait,
-    ): Promise<T & Modules.ImplementationTrait>
+    ): Promise<Modules.ImplementationTrait>
 
     installDependencies(
         {

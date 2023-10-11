@@ -52,3 +52,16 @@ test('add workers pool', (done) => {
         )
         .subscribe(() => done())
 })
+
+test('import wrong package (not a toolbox)', async () => {
+    const env = new Environment()
+    await expect(() => env.import(['@youwol/flux-view'])).rejects.toThrow()
+})
+
+test('get factory : module does not exist', async () => {
+    const env = new Environment()
+    await env.import(['@youwol/vsf-rxjs'])
+    expect(() => {
+        env.getFactory({ typeId: 'module-not-exist' })
+    }).toThrow()
+})

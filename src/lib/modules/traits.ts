@@ -48,7 +48,7 @@ export interface Api$Trait<TInputs> {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type ImplementationTrait<
-    TSchema extends Configurations.Schema = Configurations.Schema,
+    TSchema extends WithModuleBaseSchema<Configurations.Schema> = WithModuleBaseSchema<Configurations.Schema>,
     TInputs = Record<string, Input>,
     TState = unknown,
 > = Api$Trait<TInputs> &
@@ -63,3 +63,30 @@ export type ImplementationTrait<
         state?: Immutable<TState>
         instancePool$?: BehaviorSubject<Immutable<Deployers.DeployerTrait>>
     }
+
+/**
+ * Type of the common configuration's schema shared by all modules.
+ */
+export type SchemaModuleBase = {
+    /**
+     * worker pool id, required for deployment of the module in a worker pool.
+     */
+    workersPoolId?: Configurations.String
+}
+
+/**
+ * Generate the default instance of {@link SchemaModuleBase}.
+ */
+export function baseModuleSchemaDefaultInstance() {
+    return {
+        workersPoolId: new Configurations.String({ value: '' }),
+    }
+}
+
+/**
+ * type helper to include {@link SchemaModuleBase} properties to a provided schema.
+ *
+ * @typeParam T type of the provided schema
+ */
+export type WithModuleBaseSchema<T extends Configurations.Schema> =
+    Partial<SchemaModuleBase> & T
