@@ -172,8 +172,8 @@ function toModuleProxy({
         outputSlots,
         // Remaining fields are TODO
         // They need to be recovered from the worker
-        configuration: undefined,
-        configurationInstance: undefined,
+        configuration: { schema: {} },
+        configurationInstance: {},
         journal: undefined,
     }
 }
