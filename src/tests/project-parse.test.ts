@@ -120,6 +120,7 @@ test('repl modules with config', async () => {
         name: 'Sphere',
         radius: 0,
         transform: { translation: { x: 4, y: 0, z: 0 } },
+        workersPoolId: '',
     })
 })
 
