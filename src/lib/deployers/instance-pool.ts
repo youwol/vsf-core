@@ -2,7 +2,7 @@ import { ReplaySubject } from 'rxjs'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
 
 import { Immutable, Immutables, EnvironmentTrait } from '../common'
-import { Modules, Configurations, Connections, Workflows } from '..'
+import { Modules, Connections } from '..'
 
 /**
  * Specifies resources of a deployment.
@@ -311,30 +311,5 @@ export class Inspector {
                 },
                 { connections: this.connections, modules: this.modules },
             )
-    }
-
-    toFlatWorkflowModel(): Workflows.WorkflowModel {
-        const flattened = this.flat()
-        return {
-            uid: '',
-            modules: flattened.modules.map((m) => ({
-                uid: m.uid,
-                typeId: m.typeId,
-                toolboxId: m.toolboxId,
-                toolboxVersion: m.toolboxVersion,
-            })),
-            connections: flattened.connections.map((c) => {
-                return {
-                    ...c,
-                    configuration: Configurations.extractConfigWith({
-                        configuration: c.configuration,
-                        values: {},
-                    }),
-                }
-            }),
-            rootLayer: new Workflows.Layer({
-                moduleIds: this.modules.map((m) => m.uid),
-            }),
-        }
     }
 }
