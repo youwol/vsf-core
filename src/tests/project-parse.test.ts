@@ -1,8 +1,9 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { attr$ } from '@youwol/flux-view'
 import { Connection } from '../lib/connections'
-import { Configurations, Modules, Contracts } from '../lib'
+import { Configurations, Modules, Contracts, Projects } from '../lib'
 import { map } from 'rxjs/operators'
+
 setupCdnHttpConnection()
 
 test('one module', async () => {
@@ -19,6 +20,14 @@ test('one module', async () => {
     expect(modules).toHaveLength(1)
     expect(connections).toHaveLength(0)
     expect(project.getModule('filter')).toBeTruthy()
+})
+
+test('error: module not available', async () => {
+    await expect(() =>
+        new Projects.ProjectState().with({
+            flowchart: { branches: ['(module-not-exist)'] },
+        }),
+    ).rejects.toThrow()
 })
 
 test('only modules, canvas & html', async () => {
