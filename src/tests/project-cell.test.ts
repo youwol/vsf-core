@@ -17,7 +17,7 @@ test('JsCell no view', async () => {
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState }) => {
             return await project.with({
-                flowchart: { branches: ['(map#map)'] },
+                workflow: { branches: ['(map#map)'] },
             })
         },
     })
@@ -35,7 +35,7 @@ test('JsCell with display', (done) => {
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(map#map)'] },
+                workflow: { branches: ['(map#map)'] },
             })
             cell.display('a test', { innerText: 'test' })
             return project
@@ -71,7 +71,7 @@ test('JsCell with log', (done) => {
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(map#map)'] },
+                workflow: { branches: ['(map#map)'] },
             })
             cell.log('a test', { value: 42 })
             cell.log('a second test', { value: 84 })
@@ -143,7 +143,7 @@ test('BatchCells', async () => {
     const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(map#map)'] },
+                workflow: { branches: ['(map#map)'] },
             })
             return project
         },
@@ -151,7 +151,7 @@ test('BatchCells', async () => {
     const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(#map)>>(filter#filter)'] },
+                workflow: { branches: ['(#map)>>(filter#filter)'] },
             })
             return project
         },
@@ -193,7 +193,7 @@ test('insert cell', async () => {
     const source0 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(map#map)'] },
+                workflow: { branches: ['(map#map)'] },
             })
             return project
         },
@@ -201,7 +201,7 @@ test('insert cell', async () => {
     const source1 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(map#map)>>(filter#filter)'] },
+                workflow: { branches: ['(map#map)>>(filter#filter)'] },
             })
             return project
         },
@@ -217,7 +217,7 @@ test('insert cell', async () => {
     const source2 = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
             project = await project.with({
-                flowchart: { branches: ['(of#of)>>(#map)'] },
+                workflow: { branches: ['(of#of)>>(#map)'] },
             })
             return project
         },

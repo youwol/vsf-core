@@ -8,7 +8,7 @@ setupCdnHttpConnection()
 test('execution', (done) => {
     from(
         emptyProject().with({
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>>(filter#filter)>#a0>(sphere#s0)'],
                 configurations: {
                     a0: {

@@ -26,7 +26,7 @@ test('merge context message', () => {
 test('start$ & end$', (done) => {
     from(
         emptyProject().with({
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>>(delay#delay)>#a0>(sphere#s0)'],
                 configurations: {
                     a0: {
@@ -60,7 +60,7 @@ test('start$ & end$', (done) => {
 test('transmission delay', (done) => {
     from(
         emptyProject().with({
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>#a0>(map#map)'],
                 configurations: {
                     a0: {

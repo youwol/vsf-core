@@ -49,7 +49,7 @@ function addMapTakeMacro() {
                     macros: [
                         {
                             typeId: 'test-macro',
-                            flowchart: {
+                            workflow: {
                                 branches: ['(map#map)>>(take#take)'],
                                 configurations: {
                                     map: {
@@ -261,7 +261,7 @@ test('simple project with workers pool', (done) => {
             mergeMap((project) =>
                 from(
                     project.with({
-                        flowchart: {
+                        workflow: {
                             branches: [
                                 '(of#of)>>(test-macro#macro)>>(reduce#reduce)',
                             ],
@@ -304,7 +304,7 @@ test('simple project with workers pool + stop', (done) => {
             mergeMap((project) =>
                 from(
                     project.with({
-                        flowchart: {
+                        workflow: {
                             branches: [
                                 '(timer#timer)>>(test-macro#macro)>>(reduce#reduce)',
                             ],

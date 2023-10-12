@@ -10,7 +10,7 @@ import {
 } from '../common'
 import { Modules, Deployers, Connections } from '..'
 import { ConnectionsHint } from '../deployers'
-import { Flowchart, parseDag } from '../project'
+import { Workflow, parseDag } from '../project'
 
 function mergeInstancePools(
     uid: string,
@@ -57,25 +57,25 @@ export type OnInnerPoolEventEndArgs = OnInnerPoolEventArgs & {
 }
 
 /**
- * Type structure allowing to convert a flowchart into an inner observable from a message.
+ * Type structure allowing to convert a workflow into an inner observable from a message.
  */
 export type VsfInnerObservable = {
     /**
-     * flowchart definition
+     * workflow definition
      */
-    flowchart: Flowchart
+    workflow: Workflow
     /**
      * If provided, the message is sent this input.
      *
      * Format is e.g. `0(#moduleId)`, where `0` is the index of the input slot & `moduleId`
-     * the target module ID in the flowchart.
+     * the target module ID in the workflow.
      */
     input?: string
     /**
      * The output slot that serves as defining the observable.
      *
      * Format is e.g. `(#moduleId)0`, where `0` is the index of the output slot & `moduleId`
-     * the target module ID in the flowchart.
+     * the target module ID in the workflow.
      */
     output: string
     /**
@@ -83,7 +83,7 @@ export type VsfInnerObservable = {
      */
     message: Connections.Message
     /**
-     * If true, the associated instances of a flowchart are removed when the observable is either completed or
+     * If true, the associated instances of a workflow are removed when the observable is either completed or
      * terminated.
      */
     purgeOnDone: boolean
@@ -100,7 +100,7 @@ export class InnerObservablesPool {
     public readonly parentUid: string
     /**
      * `instancePool$` gather the 'global' (merged from {@link instancePools}) instance pools of the deployed
-     * flowcharts running at a particular point in time.
+     * workflows running at a particular point in time.
      */
     public readonly instancePool$: BehaviorSubject<
         Immutable<Deployers.InstancePool>
@@ -135,16 +135,16 @@ export class InnerObservablesPool {
     > = new Map()
 
     /**
-     * Callback called when a flowchart has been deployed.
+     * Callback called when a workflow has been deployed.
      */
     onStarted?: (args: OnInnerPoolEventArgs) => void
     /**
-     * Callback called when the observable from a flowchart has been completed.
-     * Note: if the observable complete, the flowchart is also consider `terminated`.
+     * Callback called when the observable from a workflow has been completed.
+     * Note: if the observable complete, the workflow is also consider `terminated`.
      */
     onCompleted?: (args: OnInnerPoolEventEndArgs) => void
     /**
-     * Callback called when the observable from a flowchart has been terminated.
+     * Callback called when the observable from a workflow has been terminated.
      * If can be either: (i) the observable as completed, or (ii) the observable has been terminated
      * (e.g. because of a switch from a `switchMap`).
      */
@@ -194,7 +194,7 @@ export class InnerObservablesPool {
         connectionsHint?: { from: string; to: string },
     ): Observable<Immutable<Modules.OutputMessage>> {
         return from(
-            this.newFlowchartInstance(innerObservable, connectionsHint),
+            this.newWorkflowInstance(innerObservable, connectionsHint),
         ).pipe(
             tap(() => {
                 this.onStarted({
@@ -218,7 +218,7 @@ export class InnerObservablesPool {
                     ?.rawMessage$
                 if (input$) {
                     context.info(
-                        "Send input to flowchart's input slot.",
+                        "Send input to workflow's input slot.",
                         innerObservable.message,
                     )
                     input$.next({
@@ -229,7 +229,7 @@ export class InnerObservablesPool {
                     return
                 }
                 throw Error(
-                    `The flowchart do not feature an input slot ${innerObservable.input}`,
+                    `The workflow do not feature an input slot ${innerObservable.input}`,
                 )
             }),
             mergeMap(({ instancePool, suffix, context }) => {
@@ -240,7 +240,7 @@ export class InnerObservablesPool {
                 )
 
                 context.info(
-                    `Stream from flowchart output '${innerObservable.output}'.`,
+                    `Stream from workflow output '${innerObservable.output}'.`,
                     innerObservable.message,
                 )
                 const outputModule = instancePool
@@ -259,7 +259,7 @@ export class InnerObservablesPool {
                         },
                         () => {
                             context.info('Inner observable completed')
-                            this.clearFlowchartInstance({
+                            this.clearWorkflowInstance({
                                 message: innerObservable.message,
                                 status: 'completed',
                                 purgeOnDone: innerObservable.purgeOnDone,
@@ -271,7 +271,7 @@ export class InnerObservablesPool {
                         },
                     ),
                     finalize(() => {
-                        this.clearFlowchartInstance({
+                        this.clearWorkflowInstance({
                             message: innerObservable.message,
                             status: 'terminated',
                             purgeOnDone: innerObservable.purgeOnDone,
@@ -282,7 +282,7 @@ export class InnerObservablesPool {
         )
     }
 
-    private async newFlowchartInstance(
+    private async newWorkflowInstance(
         innerObservable: VsfInnerObservable,
         connectionsHint?: { from: string; to: string },
     ): Promise<{
@@ -292,10 +292,10 @@ export class InnerObservablesPool {
     }> {
         // Do not be tempted to use this.instancePool$.value as initial pool to avoid the latter 'reduce':
         // this code is executed in parallel and this.instancePool$.value is likely to return the empty InstancePool
-        // even if it is not the first call to `newFlowchartInstance`.
+        // even if it is not the first call to `newWorkflowInstance`.
         this.index += 1
         const suffix = `#${this.index}`
-        const uid = `flowchart${suffix}`
+        const uid = `workflow${suffix}`
         return await this.overallContext.withChildAsync(uid, async (ctx) => {
             const instanceCtx = this.journal.addPage({
                 title: uid,
@@ -303,12 +303,12 @@ export class InnerObservablesPool {
             })
             this.instanceContext.set(innerObservable.message, instanceCtx)
             const parsed = parseDag({
-                flows: innerObservable.flowchart.branches,
-                configs: innerObservable.flowchart.configurations,
+                flows: innerObservable.workflow.branches,
+                configs: innerObservable.workflow.configurations,
                 toolboxes: this.environment.allToolboxes,
                 availableModules: [],
             })
-            const { modules, connections } = suffixFlowchart(parsed, suffix)
+            const { modules, connections } = suffixWorkflow(parsed, suffix)
             const input = parseIO(innerObservable.input, suffix, 'input')
             const output = parseIO(innerObservable.output, suffix, 'output')
             const connectionsHints = [
@@ -362,7 +362,7 @@ export class InnerObservablesPool {
         })
     }
 
-    private clearFlowchartInstance({
+    private clearWorkflowInstance({
         message,
         status,
         purgeOnDone,
@@ -371,7 +371,7 @@ export class InnerObservablesPool {
         status: 'completed' | 'terminated'
         purgeOnDone: boolean
     }) {
-        this.overallContext.info('Trigger teardown of flowchart')
+        this.overallContext.info('Trigger teardown of workflow')
 
         if (this.instancePools.has(message)) {
             this.instancePools.get(message).then((pool) => {
@@ -386,7 +386,7 @@ export class InnerObservablesPool {
 
                 if (!purgeOnDone) {
                     this.overallContext.info(
-                        'Purge on done disable, no flowchart instance deletion',
+                        'Purge on done disable, no workflow instance deletion',
                     )
                     return
                 }
@@ -439,7 +439,7 @@ function parseIO(io: string, suffix: string, type: 'input' | 'output') {
     return { slotId: parseInt(slot), moduleId: moduleId + suffix }
 }
 
-function suffixFlowchart(
+function suffixWorkflow(
     parsed: {
         modules: Modules.ModuleModel[]
         connections: Connections.ConnectionModel[]

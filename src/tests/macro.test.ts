@@ -11,7 +11,7 @@ test('add a macro - no instance', async () => {
         macros: [
             {
                 typeId: 'test-macro',
-                flowchart: {
+                workflow: {
                     branches: ['(map#map)'],
                     configurations: {
                         c0: {
@@ -38,7 +38,7 @@ test('add a macro & layer - no instance', async () => {
         macros: [
             {
                 typeId: 'test-macro',
-                flowchart: {
+                workflow: {
                     branches: ['(map#map)>>(map#map2)'],
                 },
             },
@@ -66,7 +66,7 @@ test('add a macro + API (index) + instance', async () => {
         macros: [
             {
                 typeId: 'test-macro',
-                flowchart: {
+                workflow: {
                     branches: ['(map#map0)>#c0>(map#map1)'],
                     configurations: {
                         c0: {
@@ -120,7 +120,7 @@ test('add 2 macros & play', (done) => {
             mergeMap(() => {
                 return from(
                     project.with({
-                        flowchart: {
+                        workflow: {
                             branches: [
                                 '(test-macro0#macroOf)>>(test-macro1#macroMap)',
                             ],
@@ -128,14 +128,14 @@ test('add 2 macros & play', (done) => {
                         macros: [
                             {
                                 typeId: 'test-macro0',
-                                flowchart: { branches: ['(of#of)>>(map#map)'] },
+                                workflow: { branches: ['(of#of)>>(map#map)'] },
                                 api: {
                                     outputs: ['(#map)0'],
                                 },
                             },
                             {
                                 typeId: 'test-macro1',
-                                flowchart: { branches: ['(map#map)'] },
+                                workflow: { branches: ['(map#map)'] },
                                 api: {
                                     inputs: ['0(#map)'],
                                     outputs: ['(#map)0'],
@@ -186,7 +186,7 @@ function createMacro() {
                         macros: [
                             {
                                 typeId: 'test-macro0',
-                                flowchart: {
+                                workflow: {
                                     branches: ['(of#of)>#c>(map#map)'],
                                     configurations: {
                                         c: {
@@ -236,7 +236,7 @@ test('add 2 macros + default config & play', (done) => {
             mergeMap((project) => {
                 return from(
                     project.with({
-                        flowchart: { branches: ['(test-macro0#macro)'] },
+                        workflow: { branches: ['(test-macro0#macro)'] },
                     }),
                 )
             }),
@@ -262,7 +262,7 @@ test('add 2 macros + dyn. config & play', (done) => {
             mergeMap((project) => {
                 return from(
                     project.with({
-                        flowchart: {
+                        workflow: {
                             branches: ['(test-macro0#macro)'],
                             configurations: {
                                 macro: {

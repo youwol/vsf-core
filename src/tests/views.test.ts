@@ -40,7 +40,7 @@ test('ViewsFactory#documentation', async () => {
 test('ViewsFactory#project', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
         },
     })
@@ -52,7 +52,7 @@ test('ViewsFactory#project', async () => {
 test('Project.summaryHtml', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
         },
     })
