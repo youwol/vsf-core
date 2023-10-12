@@ -26,7 +26,7 @@ import {
     HtmlView,
 } from './'
 import { uuidv4 } from '../modules'
-import { CanvasAnnotation, ProjectElements, Worksheet } from './models'
+import { FlowchartAnnotation, ProjectElements, Worksheet } from './models'
 import { WorkflowModel } from '../workflows'
 
 export type HtmlViewsStore = { [k: string]: HtmlView }
@@ -71,7 +71,7 @@ export class ProjectState {
      *
      * @group Immutable Properties
      */
-    public readonly canvasViews: Immutables<CanvasAnnotation> = []
+    public readonly canvasViews: Immutables<FlowchartAnnotation> = []
 
     /**
      * Supporting environment
@@ -203,8 +203,8 @@ export class ProjectState {
             project = await elements.macros.reduce(async (acc, macro) => {
                 let p = await acc
                 p = await p.parseDag(
-                    macro.flowchart.branches,
-                    macro.flowchart.configurations,
+                    macro.workflow.branches,
+                    macro.workflow.configurations,
                     macro.typeId,
                 )
                 p = p.exposeMacro(macro.typeId, {
@@ -220,10 +220,10 @@ export class ProjectState {
                 return p
             }, Promise.resolve(project))
         }
-        if (elements.flowchart) {
+        if (elements.workflow) {
             project = await project.parseDag(
-                elements.flowchart.branches || [],
-                elements.flowchart.configurations,
+                elements.workflow.branches || [],
+                elements.workflow.configurations,
             )
         }
         if (elements.views) {
@@ -238,11 +238,11 @@ export class ProjectState {
                 project,
             )
         }
-        if (elements.canvas?.annotations) {
-            project = project.addToCanvas(...elements.canvas.annotations)
+        if (elements.flowchart?.annotations) {
+            project = project.addToCanvas(...elements.flowchart.annotations)
         }
-        if (elements.canvas?.layers) {
-            project = elements.canvas.layers.reduce(
+        if (elements.flowchart?.layers) {
+            project = elements.flowchart.layers.reduce(
                 (acc, layer) =>
                     acc.addLayer({ ...layer, uids: layer.moduleIds }),
                 project,
@@ -470,8 +470,8 @@ export class ProjectState {
         }
         const ws = this.worksheets.find((ws) => ws.id === worksheetId)
         const model = parseDag({
-            flows: ws.flowchart.branches,
-            configs: ws.flowchart.configurations,
+            flows: ws.workflow.branches,
+            configs: ws.workflow.configurations,
             toolboxes: this.environment.allToolboxes,
             availableModules: [],
         })
@@ -540,9 +540,9 @@ export class ProjectState {
     }
 
     /**
-     * Register {@link CanvasAnnotation} elements in the project.
+     * Register {@link FlowchartAnnotation} elements in the project.
      * Any element of the workflow rendered in the canvas (e.g. modules, connections, layers) matching
-     * the {@link CanvasAnnotation}'s selector will have their corresponding view displayed.
+     * the {@link FlowchartAnnotation}'s selector will have their corresponding view displayed.
      *
      * Below is an example displaying the html view of a module with `uid='view'` & implementing {@link HtmlTrait}:
      *
@@ -562,9 +562,9 @@ export class ProjectState {
      *      })
      * })
      * ```
-     * @param elements List of {@link CanvasAnnotation}
+     * @param elements List of {@link FlowchartAnnotation}
      */
-    addToCanvas(...elements: CanvasAnnotation[]) {
+    addToCanvas(...elements: FlowchartAnnotation[]) {
         return new ProjectState({
             ...this,
             canvasViews: [...this.canvasViews, ...elements],

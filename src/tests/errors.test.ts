@@ -12,7 +12,7 @@ console.error = () => {
 test('error in adaptor', (done) => {
     from(
         emptyProject().with({
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>#a0>(sphere#s0)'],
                 configurations: {
                     a0: {
@@ -42,7 +42,7 @@ test('error in adaptor', (done) => {
 test('error in contract', (done) => {
     from(
         emptyProject().with({
-            flowchart: { branches: ['(of#of)>>(sphere#s0)>>(console)'] },
+            workflow: { branches: ['(of#of)>>(sphere#s0)>>(console)'] },
         }),
     )
         .pipe(
@@ -61,7 +61,7 @@ test('error in contract', (done) => {
 test('error in module', (done) => {
     from(
         emptyProject().with({
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>>(map#map)>>(console)'],
                 configurations: {
                     map: {

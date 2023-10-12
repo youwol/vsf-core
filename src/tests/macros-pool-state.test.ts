@@ -21,7 +21,7 @@ function addMacro() {
                         macros: [
                             {
                                 typeId: 'test-macro',
-                                flowchart: {
+                                workflow: {
                                     branches: [
                                         '(map#map)>>(combineLatest#comb)>#c>(delay)>>(take#take)',
                                         '(timer#timer)>>1(#comb)',
@@ -103,7 +103,7 @@ test('some test', (done) => {
                     environment: project.environment,
                 })
                 return state.inner$({
-                    flowchart: {
+                    workflow: {
                         branches: ['(test-macro#macro)'],
                         configurations: { macro: { takeCount: 2 } },
                     },
@@ -146,7 +146,7 @@ test('with merge map', (done) => {
             mergeMap(({ data }) => {
                 return state
                     .inner$({
-                        flowchart: {
+                        workflow: {
                             branches: ['(test-macro#macro)'],
                             configurations: {
                                 macro: { takeCount: 3, interval: 100 },
@@ -191,7 +191,7 @@ test('with switch map', (done) => {
             switchMap(({ data }) => {
                 return state
                     .inner$({
-                        flowchart: {
+                        workflow: {
                             branches: ['(test-macro#macro)'],
                             configurations: {
                                 macro: { takeCount: 3, interval: 100 },
@@ -235,7 +235,7 @@ test('with concat map', (done) => {
             }),
             concatMap(({ data }) => {
                 const args = {
-                    flowchart: {
+                    workflow: {
                         branches: ['(test-macro#macro)'],
                         configurations: {
                             macro: { takeCount: 3, interval: 100 },

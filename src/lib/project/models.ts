@@ -28,13 +28,13 @@ export type HtmlView = (
 ) => VirtualDOM
 
 /**
- * Represents a CanvasView configuration for adding graphical elements to a flowchart canvas.
+ * Small (usually) graphical elements definition added to a flowchart.
  *
- * A `CanvasView` object defines a selector function to choose specific elements within a flowchart
+ * It is composed by a selector function to choose specific elements within a flowchart
  * (such as modules or connections) and a view function to provide associated graphical elements for
  * the selected elements.
  */
-export type CanvasAnnotation = {
+export type FlowchartAnnotation = {
     /**
      * A selector function that determines whether an element should be associated with this view.
      *
@@ -51,8 +51,8 @@ export type CanvasAnnotation = {
      * A function that generates a graphical representation for the associated elements.
      *
      * The `html` function takes an `elem` parameter, which is an immutable representation of the
-     * associated element. It is responsible for creating and returning a virtual DOM (VirtualDOM)
-     * representation of the graphical element that should be displayed on the flowchart canvas for
+     * associated element. It is responsible for creating and returning a virtual DOM
+     * representation of the graphical element that should be displayed on the flowchart for
      * the associated element.
      *
      * @param elem An immutable representation of the associated element.
@@ -66,7 +66,7 @@ export type CanvasAnnotation = {
 }
 
 /**
- * Represents a FlowchartLayer configuration for organizing elements within a flowchart canvas.
+ * Represents a FlowchartLayer configuration for organizing elements within a flowchart.
  *
  * A `FlowchartLayer` object allows you to group modules (and associated connections, widgets, etc.) within a
  * flowchart into a layer. This grouping simplifies the reading and organization of the flowchart elements.
@@ -93,18 +93,18 @@ export type FlowchartLayer = {
     moduleIds: string[]
 }
 /**
- * Definition (or extension) of a flowchart.
+ * Definition (or extension) of a workflow.
  *
- * A flowchart is a visual representation of a sequence of steps or actions that needs to be performed.
+ * A workflow is a visual representation of a sequence of steps or actions that needs to be performed.
  * It is specified as a sequence of modules connected by connections.
  *
- * The following code snippet demonstrates this data structure for defining a flowchart. It assumes the availability
+ * The following code snippet demonstrates this data structure for defining a workflow. It assumes the availability
  * of a toolbox that collects modules of various types, including `moduleA`, `moduleB`, `moduleC`, `moduleD`,
  * `moduleE`, and `moduleF`.
  *
  * Example Usage:
  * ```
- * const chart = {
+ * const workflow = {
  *      branches: [
  *          '(moduleA#A)>>(moduleB#B)>#BtoC>(moduleC#C)0>>(moduleD#D)',
  *          '(moduleE#E)>>1(#C)1>>(moduleF#F)'
@@ -126,15 +126,15 @@ export type FlowchartLayer = {
  * - The symbol `(moduleA#A)` signifies the instantiation of a **module** of type `moduleA` with an ID of `A`.
  *   IDs are optional in general but required if a configuration needs to be associated with a specific module.
  * - The symbol `>>` denotes the instantiation of an unidirectional **connection** from the previous (on the left) to
- *   the next (on the right) modules in the flowchart.
+ *   the next (on the right) modules in the workflow.
  *   By default, it connects the entry/exit slots with index '0'. You can explicitly provide indices for
  *   input and output slots, e.g., `1>>0` (exit slot #1 of the previous module connected to input slot #0 of
  *   the next one). In order to be configured, the connection can have an id (starting with '#'), such as
  *   `#BtoC` in the previous example.
  */
-export type Flowchart = {
+export type Workflow = {
     /**
-     * Branches of the flowchart.
+     * Branches of the workflow.
      * Each branch is represented as a string that defines the flow of modules and connections.
      */
     branches?: string[]
@@ -143,14 +143,13 @@ export type Flowchart = {
      * Configurations of the modules and connections.
      * Keys are the module or connection IDs, and values are used to override parameter values of the default
      * configuration for the associated module or connection. This allows for customization of specific modules
-     * or connections within the flowchart.
+     * or connections within the workflow.
      */
     configurations?: { [k: string]: unknown }
 }
 
 /**
- * A `ProjectView` object wraps an HTML view with an ID. It is commonly used to provide views to projects,
- * for both the 'main' flowchart and  for 'worksheets.'
+ * A `ProjectView` object wraps an HTML view with an ID. It is commonly used to provide views to projects.
  *
  */
 export type ProjectView = {
@@ -175,9 +174,9 @@ export type Worksheet = {
      */
     id: string
     /**
-     * A flowchart that describes the modules and their connections within the worksheet.
+     * A workflow that describes the modules and their connections within the worksheet.
      */
-    flowchart: Flowchart
+    workflow: Workflow
     /**
      * Custom HTML views that can be associated with the worksheet.
      */
@@ -185,23 +184,22 @@ export type Worksheet = {
 }
 
 /**
- * Represents a canvas configuration for displaying flowcharts on screen.
- *
- * A `Canvas` object provides information on how to render and display flowcharts.
- * It allows you to organize modules into layers and add graphical elements (views) to the flowchart.
+ * Configuration to render and display workflows on screen using flowchart.
+ * It allows you to organize modules into layers and add graphical elements.
  */
-export type Canvas = {
+export type Flowchart = {
     /**
      * Flowchart layers are used to group modules together, helping to organize and manage the
-     * visual representation of the flowchart. Each layer can contain a subset of modules.
+     * visual representation of the flowchart. Each layer can contain a subset of modules or other layers.
      */
     layers?: FlowchartLayer[]
 
     /**
-     * Canvas annotations are graphical elements that can be added to the flowchart to enhance its
-     * visual representation. These views elements designed to provide context or information about the flowchart.
+     * Annotations are graphical elements that can be added to the flowchart to enhance its
+     * visual representation. These views elements designed to provide context or information about the
+     * underlying workflow.
      */
-    annotations?: CanvasAnnotation[]
+    annotations?: FlowchartAnnotation[]
 }
 /**
  * Represents a collection of the values of module configuration's attributes with string keys.
@@ -328,12 +326,12 @@ export type MacroAPI<TSchema extends Configurations.Schema> = {
  * Macros function as a container for modules, including the capability to incorporate other macros,
  * and their connections.
  * They offer the flexibility to be instantiated multiple times with varying configurations at any location
- * within the flowcharts.
+ * within the workflows.
  * Much like functions are essential in traditional software development, macros hold a central role in
  * Visual Studio Flow.
  *
  * They typically serve three primary use cases:
- * *  Enabling the encapsulation of a specific flowchart into an independent and reusable module.
+ * *  Enabling the encapsulation of a specific workflows into an independent and reusable module.
  * *  Facilitating the offloading of associated logic from the main thread to a {@link WorkersPool}.
  * *  Acting as a replacement for observable generators, often serving as inner observables within various modules
  * (e.g. those exposing the operators <a href='https://rxjs.dev/api/operators/mergeMap' target='_blank'>mergeMap</a>,
@@ -346,7 +344,7 @@ export type MacroAPI<TSchema extends Configurations.Schema> = {
  *
  * const macro : Macro = {
  *      typeId:'lightMacro',
- *      flowchart:{
+ *      workflow:{
  *          branches:[
  *              '(of#of)>>(hemisphereLight#hemLight)>>0(combineLatest#combLights)>>(group#grpLights)',
  *              '(#of)>>(pointLight#pointLight)>>1(#combLights)',
@@ -379,10 +377,10 @@ export type Macro<TSchema extends Configurations.Schema> = {
     typeId: string
 
     /**
-     * This property represents the specification of the flowchart associated with the macro.
-     * Please refer to the {@link Flowchart} documentation.
+     * This property represents the specification of the workflow associated with the macro.
+     * Please refer to the {@link Workflow} documentation.
      */
-    flowchart?: Flowchart
+    workflow?: Workflow
 
     /**
      * This property specifies the API (Application Programming Interface) for the macro:
@@ -394,7 +392,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
 
     /**
      * This property defines the structure and appearance of the macro when it is executed. A view is typically used
-     * to aggregate in a specific layout the individual views of some inner modules (included in the {@link flowchart}).
+     * to aggregate in a specific layout the individual views of some inner modules (included in the {@link workflow}).
      *
      * @param instance Macro instance
      * @param config eventual 'configuration' that gets forwarded from the caller.
@@ -426,7 +424,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
  *      }],
  *      macros:[{
  *          typeId: 'factorial',
- *          flowchart:{
+ *          workflow:{
  *              branches:['(map#toFactorial)'],
  *              configurations:{
  *                  toFactorial:{
@@ -439,7 +437,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
  *          },
  *          api:{ inputs: ['0(#map)'], outputs:['(#map)0'] }
  *      }],
- *      flowchart: {
+ *      workflow: {
  *          branches: ['(of#of)>>(factorial#factorial)>>(console)'],
  *          configurations: {
  *              of: { args: 42 },
@@ -501,8 +499,8 @@ export type WorkersPool = {
  * *  1 - toolboxes & workersPools
  * *  2 - customModules
  * *  2 - macros
- * *  3 - flowchart
- * *  4 - views, worksheets & canvas
+ * *  3 - workflow
+ * *  4 - views, worksheets & flowchart
  *
  */
 export type ProjectElements = {
@@ -527,7 +525,7 @@ export type ProjectElements = {
     toolboxes?: string[]
 
     /**
-     * A flowchart representation. Additional information can be found in the documentation of {@link Flowchart}.
+     * A workflow representation. Additional information can be found in the documentation of {@link Workflow}.
      *
      * @example
      *
@@ -536,8 +534,8 @@ export type ProjectElements = {
      *      return project.with({
      *          // next line is for a sake of completeness: it makes the referenced modules available
      *          toolboxes:['@youwol/vsf-rxjs', '@youwol/vsf-debug'],
-     *          // this is an example of flowchart definition:
-     *          flowchart: {
+     *          // this is an example of workflow definition:
+     *          workflow: {
      *              branches:['(timer#timer)>>(take#take)>>(console)']
      *              configurations:{
      *                  take:{ count: 3 }
@@ -548,10 +546,10 @@ export type ProjectElements = {
      * ```
      *
      */
-    flowchart?: Flowchart
+    workflow?: Workflow
 
     /**
-     * Declare views of project, it allows to gather individual views of some modules of the flowchart into
+     * Declare views of project, it allows to gather individual views of some modules of the workflow into
      * specific layouts. Additional information can be found in the documentation of {@link ProjectView}.
      *
      * @example
@@ -560,7 +558,7 @@ export type ProjectElements = {
      *  (project: ProjectState) => {
      *      return project.with({     *
      *          toolboxes: ['@youwol/vsf-rxjs', '@youwol/vsf-flux-view'],
-     *          flowchart:{
+     *          workflow:{
      *              branches:['(timer#timer)>>(view#DateView)'],
      *              configurations:{
      *                  DateView:{
@@ -597,9 +595,9 @@ export type ProjectElements = {
      * *etc*).
      *
      * Those elements do not have side effects on data processing: they are only visual hints regarding the display of
-     * flowcharts.
+     * workflow.
      *
-     * Additional information can be found in the documentation of {@link Canvas}.
+     * Additional information can be found in the documentation of {@link Flowchart}.
      *
      *  @example
      *
@@ -607,16 +605,16 @@ export type ProjectElements = {
      *  (project: ProjectState) => {
      *      return project.with({
      *          toolboxes: ['@youwol/vsf-rxjs', '@youwol/vsf-debug'],
-     *          flowchart:{
+     *          workflow:{
      *              branches:['(of#A)>>(map#B)>>(console)']
      *          },
-     *          canvas: [{
-     *              // This creates a nested layer within the flowchart canvas including the modules `A`& `B`.
+     *          flowchart: [{
+     *              // This creates a nested layer within the flowchart including the modules `A`& `B`.
      *              layers:[{
      *                  layerId: 'nestedModules',
      *                  uids: ['A', 'B']
      *              }],
-     *              // This creates a custom module's view within the flowchart canvas associated to module `A`.
+     *              // This creates a custom module's view within the flowchart associated to module `A`.
      *              annotations: [{
      *                  selector: ({uid}) => uid === 'A',
      *                  html: (module) => {
@@ -635,10 +633,10 @@ export type ProjectElements = {
      * ```
      *
      */
-    canvas?: Canvas
+    flowchart?: Flowchart
 
     /**
-     * Side project that can be instantiated independently of the main one, themselves including flowchart, HTML views,
+     * Side project that can be instantiated independently of the main one, themselves including workflow, HTML views,
      * *etc*.
      * Additional information can be found in the documentation of {@link Worksheet}.
      *
@@ -650,7 +648,7 @@ export type ProjectElements = {
      *          toolboxes: ['@youwol/vsf-rxjs', '@youwol/vsf-debug'],
      *          worksheets: [{
      *              id: 'test worksheet',
-     *              flowchart:{
+     *              workflow:{
      *                  branches:['(timer#timer)>>(view#DateView)'],
      *                  configurations:{
      *                      DateView:{
@@ -693,7 +691,7 @@ export type ProjectElements = {
      *          toolboxes: ['@youwol/vsf-rxjs', '@youwol/vsf-debug'],
      *          macros: [{
      *              typeId:'foo',
-     *              flowchart:{
+     *              workflow:{
      *                  branches:['(timer#timer)>>(take#take)'],
      *                  configurations:{
      *                      take:{ count: 3 }
@@ -719,7 +717,7 @@ export type ProjectElements = {
      *              }
      *          }],
      *          // This illustrates how to instantiate the macro
-     *          flowchart:{
+     *          workflow:{
      *              branches: ['(foo#fooMacro)>>(console)'],
      *              configurations: {
      *                  fooMacro:{ takeCount: 4 }

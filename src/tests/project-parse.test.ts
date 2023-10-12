@@ -11,7 +11,7 @@ test('one module', async () => {
     const tb = project.getToolbox('@youwol/vs-flow-core/test-toolbox')
     expect(tb.name).toBe('test-toolbox')
     project = await project.with({
-        flowchart: { branches: ['(filter#filter)'] },
+        workflow: { branches: ['(filter#filter)'] },
     })
     const [modules, connections] = [
         project.main.modules,
@@ -25,7 +25,7 @@ test('one module', async () => {
 test('error: module not available', async () => {
     await expect(() =>
         new Projects.ProjectState().with({
-            flowchart: { branches: ['(module-not-exist)'] },
+            workflow: { branches: ['(module-not-exist)'] },
         }),
     ).rejects.toThrow()
 })
@@ -33,7 +33,7 @@ test('error: module not available', async () => {
 test('only modules, canvas & html', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: { branches: ['(filter)>#c0>(sphere#sphere)'] },
+        workflow: { branches: ['(filter)>#c0>(sphere#sphere)'] },
     })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(2)
@@ -62,7 +62,7 @@ test('only modules, canvas & html', async () => {
 test('modules with IO', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: { branches: ['(filter)0>>0(sphere)'] },
+        workflow: { branches: ['(filter)0>>0(sphere)'] },
     })
     const { modules, connections } = project.instancePool
     expect(modules).toHaveLength(2)
@@ -72,7 +72,7 @@ test('modules with IO', async () => {
 test('repl modules with IO & adaptor', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(filter)0>#c0>0(sphere)'],
             configurations: {
                 c0: {
@@ -97,7 +97,7 @@ test('repl modules with IO & adaptor', async () => {
 test('repl modules with IO & name', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(filter)0>>0(sphere#s0)>0', '(filter)0>>0(#s0)'],
         },
     })
@@ -114,7 +114,7 @@ test('repl modules with IO & name', async () => {
 test('repl modules with config', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(sphere#s0)'],
             configurations: {
                 s0: { transform: { translation: { x: 4 } } },
@@ -136,13 +136,13 @@ test('repl modules with config', async () => {
 test('repl organize', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: [
                 '(filter#filter)>>(map#map)>>(mergeMap#m2)',
                 '(of#of)>>#m2',
             ],
         },
-        canvas: {
+        flowchart: {
             layers: [{ layerId: 'foo', moduleIds: ['filter', 'map'] }],
         },
     })
@@ -158,7 +158,7 @@ test('repl organize', async () => {
 test('repl with view & canvas', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(timer#t0)>>(filter#f0)>>(map#m0)'],
             configurations: {
                 t0: { name: '1s' },
@@ -182,7 +182,7 @@ test('repl with view & canvas', async () => {
                 },
             },
         ],
-        canvas: {
+        flowchart: {
             annotations: [
                 {
                     selector: (elem) => elem.uid === 'm0',
@@ -203,7 +203,7 @@ test('repl with view & canvas', async () => {
 test('repl misc 0', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: [
                 '(filter#filter)>>(map#map)>>(mergeMap#m2)',
                 '(of#of)>>(#m2)',
@@ -218,19 +218,19 @@ test('repl misc 0', async () => {
 test('multiple steps', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
         },
     })
 
     const project0 = project
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(of#of)'],
         },
     })
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(#of)>>(#m1)'],
         },
     })
@@ -249,7 +249,7 @@ test('multiple steps', async () => {
 test('repl misc 1', async () => {
     let project = emptyProject()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(filter)0>#c0>(sphere)'],
             configurations: {
                 c0: {
@@ -307,7 +307,7 @@ test('custom module', async () => {
     })
     const project = await emptyProject().with({
         customModules: [module],
-        flowchart: {
+        workflow: {
             branches: ['(custom#m)'],
             configurations: {
                 m: {
@@ -333,7 +333,7 @@ test('worksheets', async () => {
         worksheets: [
             {
                 id: 'test-ws',
-                flowchart: {
+                workflow: {
                     branches: ['(of#of)>>(map#map)>>(console)'],
                 },
             },

@@ -47,7 +47,7 @@ test('one module', (done) => {
                                 stretchTo: 1,
                             },
                         ],
-                        flowchart: {
+                        workflow: {
                             branches: ['(of#of)>>(map#map)>>(console#log)'],
                             configurations: {
                                 map: {
@@ -91,7 +91,7 @@ test('error: worker pool does not exist', async () => {
         new ProjectState().with({
             toolboxes: ['@youwol/vsf-rxjs', '@youwol/vsf-debug'],
             workersPools: [],
-            flowchart: {
+            workflow: {
                 branches: ['(of#of)>>(map#map)>>(console#log)'],
                 configurations: {
                     map: {

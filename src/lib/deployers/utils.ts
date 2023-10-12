@@ -352,7 +352,8 @@ export async function moduleInstanceInWorker(
             },
             ctx,
         )
-        const moduleProxy = instancePoolWorker.inspector().getModule(moduleId)
+        const moduleProxy: Immutable<Modules.ImplementationTrait> =
+            instancePoolWorker.inspector().getModule(moduleId)
         const inputs = Object.entries(moduleProxy.inputSlots).reduce(
             (acc, [k, slot]) => {
                 return {

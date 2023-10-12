@@ -3,7 +3,7 @@ setupCdnHttpConnection()
 
 test('import', async () => {
     let project = emptyProject()
-    project = await project.with({ flowchart: { branches: ['(filter)'] } })
+    project = await project.with({ workflow: { branches: ['(filter)'] } })
     expect(project.main.modules).toHaveLength(1)
 })
 
@@ -11,7 +11,7 @@ test('project layer simple', async () => {
     let project = emptyProject()
     expect(project).toBeTruthy()
     project = await project.with({
-        flowchart: {
+        workflow: {
             branches: ['(timer#m0)>>(filter#m1)>>(map#m2)>>(sphere#m3)'],
         },
     })
@@ -20,7 +20,7 @@ test('project layer simple', async () => {
     expect(project.main.rootLayer.moduleIds).toHaveLength(4)
     expect(project.main.rootLayer.children).toHaveLength(0)
     project = await project.with({
-        canvas: {
+        flowchart: {
             layers: [
                 {
                     layerId: 'foo',
@@ -35,7 +35,7 @@ test('project layer simple', async () => {
     expect(project.main.rootLayer.children[0].moduleIds).toHaveLength(3)
     expect(project.main.rootLayer.children[0].children).toHaveLength(0)
     project = await project.with({
-        canvas: {
+        flowchart: {
             layers: [
                 {
                     parentLayerId: 'foo',
