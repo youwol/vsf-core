@@ -7,10 +7,10 @@ import {
     ContextLoggerTrait,
 } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
-import * as rxjs from 'rxjs'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
-
+// This import is used for documentation in `install`
+import { ProjectElements } from './models'
 import { setup } from '../../auto-generated'
 import * as vsf from '..'
 import {
@@ -35,10 +35,22 @@ export const customModulesToolbox = {
     modules: [],
 }
 
+export type LibrariesStore = { [_k: string]: unknown }
 /**
  * Runtime environment.
  */
 export class Environment implements EnvironmentTrait {
+    /**
+     * The libraries installed using {@link install}.
+     *
+     * The key is either:
+     * *  the name of the library if no alias provided (e.g. `install(['@youwol/flux-view'])`)
+     * *  the alias of the library if an alias has been provided  (e.g. `install(['@youwol/flux-view as fv'])`)
+     */
+    public readonly libraries: Immutable<LibrariesStore> = {
+        vsf,
+    }
+
     /**
      * Standard toolboxes are toolboxes provided at construction
      * and already instantiated. They can be imported without download step.
@@ -76,17 +88,6 @@ export class Environment implements EnvironmentTrait {
     public readonly allToolboxes: Immutables<ToolBox>
 
     /**
-     * This is a temporary workaround.
-     * @hidden
-     */
-    public readonly vsf = vsf
-    /**
-     * This is a temporary workaround.
-     * @hidden
-     */
-    public readonly rxjs = rxjs
-
-    /**
      * Available workers pools, see {@link addWorkersPool}.
      */
     public readonly workersPools: Immutables<WorkersPoolInstance> = []
@@ -116,6 +117,7 @@ export class Environment implements EnvironmentTrait {
             macrosToolbox?: Immutable<ToolBox>
             customModulesToolbox?: Immutable<ToolBox>
             toolboxes?: Immutables<ToolBox>
+            libraries?: Immutable<LibrariesStore>
             viewsFactory?: Immutable<Journal.DataViewsFactory>
             stdToolboxes?: Immutables<ToolBox>
             workersPools?: Immutables<WorkersPoolInstance>
@@ -140,22 +142,67 @@ export class Environment implements EnvironmentTrait {
     }
 
     /**
-     * Import a toolbox.
+     * Install toolboxes & libraries.
      *
-     * @param toolboxIds name of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
+     * @param targets.toolboxes list of toolboxes to install, see {@link ProjectElements.toolboxes}
+     * @param targets.libraries list of libraries to install, see {@link ProjectElements.libraries}
      */
-    async import(toolboxIds: string[]): Promise<Environment> {
-        const installed = this.toolboxes.map((tb) => tb.uid)
-        const toInstall = toolboxIds.filter((tbId) => !installed.includes(tbId))
-        await install({ modules: toInstall })
-        const toolboxes = toolboxIds
+    async install(targets: {
+        toolboxes: Immutables<string>
+        libraries: Immutables<string>
+    }): Promise<Environment> {
+        const { toolboxes, libraries } = targets
+        const tbInstalled = this.toolboxes.map((tb) => tb.uid)
+        const tbToInstall = toolboxes.filter(
+            (tbId) => !tbInstalled.includes(tbId),
+        )
+
+        const libToInstall = libraries
+            .filter((library) => !library.startsWith('~'))
+            .map((library) => {
+                if (!library.includes(' as ')) {
+                    const name = library.split('#')[0]
+                    return { name, alias: name, target: library }
+                }
+                const target = library.split(' as ')[0]
+                return {
+                    target,
+                    name: target.split('#')[0],
+                    alias: library.split(' as ')[1],
+                }
+            })
+
+        const installed = await install({
+            modules: [
+                ...libToInstall.map(({ target }) => target),
+                ...tbToInstall,
+            ],
+        })
+
+        const tbModules = toolboxes
             .filter((id) => assertModuleIsToolbox(id))
             .map((id) => globalThis[id].toolbox())
+
+        const indirectDependencies = libraries
+            .filter((library) => library.startsWith('~'))
+            .map((target) => {
+                const name = target.split(' as ')[0].substring(1)
+                const alias = target.split(' as ')[1]
+                return { name, alias }
+            })
+        const libModules = [...libToInstall, ...indirectDependencies].reduce(
+            (acc, { name, alias }) => ({
+                ...acc,
+                [alias]: installed[name],
+            }),
+            {},
+        )
 
         return Promise.resolve(
             new Environment({
                 ...this,
-                toolboxes: [...this.toolboxes, ...toolboxes],
+                toolboxes: [...this.toolboxes, ...tbModules],
+                libraries: { ...this.libraries, ...libModules },
             }),
         )
     }

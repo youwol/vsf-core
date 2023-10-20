@@ -119,14 +119,19 @@ export class ProjectState {
     }
 
     /**
-     * Import some toolboxes in the environment.
+     * Install toolboxes & libraries.
      *
-     * @param toolboxIds UIDs of the toolbox, can include semantic versioning using e.g. `@youwol/vsf-rxjs#^0.1.2`.
+     * @param targets.toolboxes list of toolboxes to install, see {@link ProjectElements.toolboxes}
+     * @param targets.libraries list of libraries to install, see {@link ProjectElements.libraries}
      */
-    async import(...toolboxIds: string[]) {
-        const newEnv = await this.environment.import(toolboxIds)
-
-        return new ProjectState({ ...this, environment: newEnv })
+    async install(targets: {
+        toolboxes: Immutables<string>
+        libraries: Immutables<string>
+    }) {
+        return new ProjectState({
+            ...this,
+            environment: await this.environment.install(targets),
+        })
     }
 
     /**
@@ -176,8 +181,11 @@ export class ProjectState {
     async with(elements: Immutable<ProjectElements>) {
         // eslint-disable-next-line @typescript-eslint/no-this-alias -- It makes things simple I guess
         let project: ProjectState = this
-        if (elements.toolboxes) {
-            project = await project.import(...elements.toolboxes)
+        if (elements.toolboxes || elements.libraries) {
+            project = await project.install({
+                toolboxes: elements.toolboxes || [],
+                libraries: elements.libraries || [],
+            })
         }
         if (elements.workersPools) {
             project = await elements.workersPools.reduce(

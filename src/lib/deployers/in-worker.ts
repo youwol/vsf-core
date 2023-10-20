@@ -164,7 +164,10 @@ export async function startWorkerShadowPool({
             context.info(`${workerId}: importing ${toolboxes.size} toolbox`, [
                 ...toolboxes,
             ])
-            project = await project.import(...toolboxes)
+            project = await project.install({
+                toolboxes: [...toolboxes],
+                libraries: [],
+            })
 
             emitRuntime_(context)
 

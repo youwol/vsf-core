@@ -13,7 +13,7 @@ beforeAll(async () => {
 
 test('import toolboxes', async () => {
     const env = new Environment()
-    await env.import(['@youwol/vsf-rxjs'])
+    await env.install({ toolboxes: ['@youwol/vsf-rxjs'], libraries: [] })
     expect(globalThis['@youwol/vsf-rxjs']).toBeTruthy()
     const vsfRxjs = globalThis['@youwol/vsf-rxjs']
     const tb = vsfRxjs.toolbox()
@@ -21,9 +21,24 @@ test('import toolboxes', async () => {
     expect(tb).toHaveProperty('modules')
 })
 
+test('import libraries', async () => {
+    const env = await new Environment().install({
+        libraries: [
+            '@youwol/flux-view as fv',
+            `@youwol/http-clients#^1.0.0`,
+            `~rxjs as rxjs`,
+        ],
+        toolboxes: [],
+    })
+    expect(env.libraries.vsf).toBeTruthy()
+    expect(env.libraries.fv).toBeTruthy()
+    expect(env.libraries.rxjs).toBeTruthy()
+    expect(env.libraries['@youwol/http-clients']).toBeTruthy()
+})
+
 test('install dependencies', async () => {
     let env = new Environment()
-    env = await env.import(['@youwol/vsf-pmp'])
+    env = await env.install({ toolboxes: ['@youwol/vsf-pmp'], libraries: [] })
     expect(globalThis['THREE']).toBeFalsy()
     await env.installDependencies({ modules: [{ typeId: 'toThree' }] })
     expect(globalThis['THREE']).toBeTruthy()
@@ -55,12 +70,14 @@ test('add workers pool', (done) => {
 
 test('import wrong package (not a toolbox)', async () => {
     const env = new Environment()
-    await expect(() => env.import(['@youwol/flux-view'])).rejects.toThrow()
+    await expect(() =>
+        env.install({ toolboxes: ['@youwol/flux-view'], libraries: [] }),
+    ).rejects.toThrow()
 })
 
 test('get factory : module does not exist', async () => {
     const env = new Environment()
-    await env.import(['@youwol/vsf-rxjs'])
+    await env.install({ toolboxes: ['@youwol/vsf-rxjs'], libraries: [] })
     expect(() => {
         env.getFactory({ typeId: 'module-not-exist' })
     }).toThrow()

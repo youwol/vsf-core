@@ -493,10 +493,10 @@ export type WorkersPool = {
 }
 
 /**
- * Gather the elements that can extend a {@link ProjectState}, using the {@link ProjectState.with} method.
+ * Gather the elements that can extend a project.
  *
  * Elements are extending the project in the following order:
- * *  1 - toolboxes & workersPools
+ * *  1 - toolboxes & libraries & workersPools
  * *  2 - customModules
  * *  2 - macros
  * *  3 - workflow
@@ -523,6 +523,30 @@ export type ProjectElements = {
      *
      */
     toolboxes?: string[]
+
+    /**
+     * Libraries to import
+     *
+     * @example
+     *
+     * ```
+     * (project: ProjectState) => {
+     *      project = await project.with({
+     *          libraries:[
+     *              // implicit 'latest' version, explicit export name
+     *              '@youwol/flux-view as fv',
+     *              // explicit version using semantic versioning, default export name (i.e. library name)
+     *              '@youwol/http-clients#^2.0.6',
+     *              // recover an indirect dependencies with an alias
+     *              '~rxjs as rxjs'
+     *              ]
+     *      })
+     *      const { fv, rxjs } = project.environment.libraries
+     *      const httpClients = project.environment.libraries['@youwol/http-clients']
+     * }
+     * ```
+     */
+    libraries?: string[]
 
     /**
      * A workflow representation. Additional information can be found in the documentation of {@link Workflow}.
