@@ -476,8 +476,8 @@ export class Environment implements EnvironmentTrait {
     }
 }
 
-function assertModuleIsToolbox(moduleId) {
-    const throwError = (reason) => {
+function assertModuleIsToolbox(moduleId: string) {
+    const throwError = (reason: string) => {
         console.error(reason)
         throw Error(
             `Can not import the package ${moduleId} as toolbox: ${reason}`,

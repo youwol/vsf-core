@@ -138,7 +138,7 @@ export class ProjectState {
      * Get a toolbox definition from the environment.
      * @param toolboxId UID of the toolbox
      */
-    getToolbox(toolboxId): Immutable<ToolBox> {
+    getToolbox(toolboxId: string): Immutable<ToolBox> {
         return this.environment.allToolboxes.find((t) => t.uid == toolboxId)
     }
 
@@ -146,7 +146,7 @@ export class ProjectState {
      * Get a module from the {@link main} workflow.
      * @param moduleId UID of the module
      */
-    getModule(moduleId): Immutable<Modules.ImplementationTrait> {
+    getModule(moduleId: string): Immutable<Modules.ImplementationTrait> {
         return this.instancePool.modules.find((m) => m.uid == moduleId)
     }
 
