@@ -179,85 +179,84 @@ export class ProjectState {
      * @param elements
      */
     async with(elements: Immutable<ProjectElements>) {
-        // eslint-disable-next-line @typescript-eslint/no-this-alias -- It makes things simple I guess
-        let project: ProjectState = this
-        if (elements.toolboxes || elements.libraries) {
-            project = await project.install({
-                toolboxes: elements.toolboxes || [],
-                libraries: elements.libraries || [],
-            })
+        const defaultElements = {
+            toolboxes: [],
+            libraries: [],
+            workersPools: [],
+            customModules: [],
+            macros: [],
+            views: [],
+            worksheets: [],
+            flowchart: { annotations: [], layers: [] },
         }
-        if (elements.workersPools) {
-            project = await elements.workersPools.reduce(
-                async (acc, workerPool) => {
-                    const p = await acc
-                    return p.addWorkersPool({
-                        ...workerPool,
-                        id: workerPool.id,
-                    })
-                },
-                Promise.resolve(project),
-            )
-        }
-        if (elements.customModules) {
-            project = await elements.customModules.reduce(
-                async (acc, module) => {
-                    return (await acc).addCustomModule(module)
-                },
-                Promise.resolve(project),
-            )
-        }
-        if (elements.macros) {
-            project = await elements.macros.reduce(async (acc, macro) => {
-                let p = await acc
-                p = await p.parseDag(
-                    macro.workflow.branches,
-                    macro.workflow.configurations,
-                    macro.typeId,
-                )
-                p = p.exposeMacro(macro.typeId, {
-                    configuration: {
-                        schema: macro.api?.configuration?.schema || {},
-                    },
-                    configMapper:
-                        macro.api?.configuration?.mapper || (() => ({})),
-                    inputs: macro.api?.inputs || [],
-                    outputs: macro.api?.outputs || [],
-                    html: macro.html,
+        elements = { ...defaultElements, ...elements }
+
+        let project: ProjectState = await this.install({
+            toolboxes: elements.toolboxes,
+            libraries: elements.libraries,
+        })
+
+        project = await elements.workersPools.reduce(
+            async (acc, workerPool) => {
+                const p = await acc
+                return p.addWorkersPool({
+                    ...workerPool,
+                    id: workerPool.id,
                 })
-                return p
-            }, Promise.resolve(project))
-        }
+            },
+            Promise.resolve(project),
+        )
+
+        project = await elements.customModules.reduce(async (acc, module) => {
+            return (await acc).addCustomModule(module)
+        }, Promise.resolve(project))
+
+        project = await elements.macros.reduce(async (acc, macro) => {
+            let p = await acc
+            p = await p.parseDag(
+                macro.workflow.branches,
+                macro.workflow.configurations,
+                macro.typeId,
+            )
+            p = p.exposeMacro(macro.typeId, {
+                configuration: {
+                    schema: macro.api?.configuration?.schema || {},
+                },
+                configMapper: macro.api?.configuration?.mapper || (() => ({})),
+                inputs: macro.api?.inputs || [],
+                outputs: macro.api?.outputs || [],
+                html: macro.html,
+            })
+            return p
+        }, Promise.resolve(project))
+
         if (elements.workflow) {
             project = await project.parseDag(
                 elements.workflow.branches || [],
                 elements.workflow.configurations,
             )
         }
-        if (elements.views) {
-            project = elements.views.reduce(
-                (acc, { id, html }) => acc.addHtml(id, html),
-                project,
-            )
-        }
-        if (elements.worksheets) {
-            project = elements.worksheets.reduce(
-                (acc, e) => project.addWorksheet(e),
-                project,
-            )
-        }
-        if (elements.flowchart?.annotations) {
-            project = project.addToCanvas(...elements.flowchart.annotations)
-        }
-        if (elements.flowchart?.layers) {
-            project = elements.flowchart.layers.reduce(
-                (acc, layer) =>
-                    acc.addLayer({ ...layer, uids: layer.moduleIds }),
-                project,
-            )
-        }
+
+        project = elements.views.reduce(
+            (acc, { id, html }) => acc.addHtml(id, html),
+            project,
+        )
+
+        project = elements.worksheets.reduce(
+            (acc, e) => acc.addWorksheet(e),
+            project,
+        )
+
+        project = project.addToCanvas(...(elements.flowchart.annotations || []))
+
+        project = (elements.flowchart.layers || []).reduce(
+            (acc, layer) => acc.addLayer({ ...layer, uids: layer.moduleIds }),
+            project,
+        )
+
         return project
     }
+
     /**
      * Parse a DAG, see {@link parseDag}.
      *

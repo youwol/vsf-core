@@ -151,6 +151,12 @@ export class Environment implements EnvironmentTrait {
         toolboxes: Immutables<string>
         libraries: Immutables<string>
     }): Promise<Environment> {
+        // The next 'if' branch is because there are no guard in cdn-client for empty installation.
+        // In tests, it can lead to failures because the cdnClient's backend config may be not defined for scenario
+        // in which nothing is expected to be installed.
+        if (targets.toolboxes.length + targets.libraries.length == 0) {
+            return this
+        }
         const { toolboxes, libraries } = targets
         const tbInstalled = this.toolboxes.map((tb) => tb.uid)
         const tbToInstall = toolboxes.filter(
