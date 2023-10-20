@@ -203,12 +203,12 @@ export class Connection implements ConnectionTrait {
     /**
      * Connect the connection (subscribing associated observables).
      *
-     * @param apiFinder a function that returns connectable entities ({@link Modules.Api$Trait}) for particular uid.
+     * @param apiFinder a function that returns connectable entities ({@link Modules.ApiTrait}) for particular uid.
      */
     connect({
         apiFinder,
     }: {
-        apiFinder: (uid: string) => Immutable<Modules.Api$Trait<unknown>>
+        apiFinder: (uid: string) => Immutable<Modules.ApiTrait<unknown>>
     }) {
         const startModule = apiFinder(this.start.moduleId)
         const endModule = apiFinder(this.end.moduleId)

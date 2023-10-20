@@ -29,7 +29,7 @@ export interface SlotTrait {
 /**
  * Trait for object with API defined as observables
  */
-export interface Api$Trait<TInputs> {
+export interface ApiTrait<TInputs> {
     inputSlots: Immutable<{
         [Property in keyof TInputs]: InputSlot<
             GetGenericInput<TInputs[Property]>
@@ -53,7 +53,7 @@ export type ImplementationTrait<
     > = WithModuleBaseSchema<Configurations.Schema<OverrideType>>,
     TInputs = Record<string, Input>,
     TState = unknown,
-> = Api$Trait<TInputs> &
+> = ApiTrait<TInputs> &
     Configurations.ConfigurableTrait<TSchema> &
     UidTrait &
     JournalTrait &
