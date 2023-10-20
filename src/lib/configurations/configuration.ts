@@ -69,11 +69,11 @@ function parseObject<TSchema extends Schema>(model: TSchema, values) {
             return {
                 ...acc,
                 [k]:
-                    values && values[k] != undefined
+                    values?.[k] != undefined
                         ? asAttribute.withValue(values[k]).getValue()
                         : asAttribute.getValue(),
             }
         }
-        return { ...acc, [k]: parseObject(v as Schema, values && values[k]) }
+        return { ...acc, [k]: parseObject(v as Schema, values?.[k]) }
     }, {})
 }

@@ -226,7 +226,7 @@ export class Connection implements ConnectionTrait {
                 const ctx = this.journal.addPage({
                     title: 'data transiting',
                 })
-                this._start$ && this._start$.next(message)
+                this._start$?.next(message)
                 ctx.info('Incoming message', message)
                 const adapted = adaptor ? adaptor(message) : message
                 ctx.info('Adapted message', adapted)
@@ -245,7 +245,7 @@ export class Connection implements ConnectionTrait {
                 : adapted$
         this.subscription = delayed$.subscribe(
             (adaptedMessage: Modules.InputMessage) => {
-                this._end$ && this._end$.next(adaptedMessage)
+                this._end$?.next(adaptedMessage)
                 endSlot.rawMessage$.next(adaptedMessage)
             },
             (error) => {
@@ -259,8 +259,8 @@ export class Connection implements ConnectionTrait {
             },
             () => {
                 endSlot.rawMessage$.complete()
-                this._start$ && this._start$.complete()
-                this._end$ && this._end$.complete()
+                this._start$?.complete()
+                this._end$?.complete()
                 this.status$.next('completed')
             },
         )
