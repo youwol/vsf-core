@@ -1,4 +1,4 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 
 const inputs = {
     input$: {
@@ -8,13 +8,13 @@ const inputs = {
 }
 const configuration = {
     schema: {
-        name: new Configurations.String({
+        name: Modules.stringAttribute({
             value: 'Plot',
         }),
         circles: [
             {
-                x: new Configurations.Float({ value: 50 }),
-                y: new Configurations.Float({ value: 50 }),
+                x: Modules.floatAttribute({ value: 50 }),
+                y: Modules.floatAttribute({ value: 50 }),
             },
         ],
     },

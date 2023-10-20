@@ -1,4 +1,4 @@
-import { Modules, Configurations } from '../../lib'
+import { Modules } from '../../lib'
 import { of } from 'rxjs'
 
 /**
@@ -24,17 +24,23 @@ export const configuration = {
          *
          * Default to `{}`.
          */
-        args: new Configurations.Any({
-            value: {},
-        }),
+        args: Modules.anyAttribute(
+            {
+                value: {},
+            },
+            { override: 'final' },
+        ),
         /** If {@link args} is an array and this attribute is `true`, the individual value
          * of the array are emitted separately.
          *
          * Default to `false`.
          */
-        spread: new Configurations.Boolean({
-            value: false,
-        }),
+        spread: Modules.booleanAttribute(
+            {
+                value: false,
+            },
+            { override: 'final' },
+        ),
     },
 }
 

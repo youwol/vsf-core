@@ -1,8 +1,8 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 
 export const configuration = {
     schema: {
-        prefix: new Configurations.String({
+        prefix: Modules.stringAttribute({
             value: '',
         }),
     },

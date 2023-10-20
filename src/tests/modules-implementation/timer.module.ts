@@ -1,15 +1,21 @@
-import { Modules, Configurations } from '../../lib'
+import { Modules } from '../../lib'
 import { timer } from 'rxjs'
 import { map } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        dueTime: new Configurations.Float({
-            value: 0,
-        }),
-        interval: new Configurations.Float({
-            value: 1000,
-        }),
+        dueTime: Modules.floatAttribute(
+            {
+                value: 0,
+            },
+            { override: 'final' },
+        ),
+        interval: Modules.floatAttribute(
+            {
+                value: 1000,
+            },
+            { override: 'final' },
+        ),
     },
 }
 

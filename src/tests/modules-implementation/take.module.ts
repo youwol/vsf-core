@@ -1,4 +1,4 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 import { take } from 'rxjs/operators'
 
 export const configuration = {
@@ -6,7 +6,7 @@ export const configuration = {
         /**
          * The maximum number of next values to emit.
          */
-        count: new Configurations.Integer({
+        count: Modules.integerAttribute({
             value: 1,
         }),
     },
