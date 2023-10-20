@@ -18,6 +18,7 @@ import {
     baseModuleSchemaDefaultInstance,
     ImplementationTrait,
     moduleConnectors,
+    OverrideType,
     WithModuleBaseSchema,
 } from './'
 import * as IOs from './IOs'
@@ -122,7 +123,7 @@ export type InputsMap<TInputs> = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export type UserArgs<
-    TSchema extends Configurations.Schema,
+    TSchema extends Configurations.Schema<OverrideType>,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > = {
@@ -316,7 +317,7 @@ export type ForwardArgs = {
  * @typeParam TState The type of the (optional) state associated to the module.
  */
 export class Implementation<
-    TSchema extends WithModuleBaseSchema<Configurations.Schema>,
+    TSchema extends WithModuleBaseSchema<Configurations.Schema<OverrideType>>,
     TInputs = Record<string, IOs.Input>,
     TState = NoState,
 > implements ImplementationTrait<TSchema, TInputs, TState>

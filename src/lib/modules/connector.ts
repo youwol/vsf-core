@@ -20,6 +20,7 @@ import {
     Input,
     InputSlot,
     OutputSlot,
+    OverrideType,
 } from './'
 
 function prepareMessage(
@@ -85,7 +86,9 @@ export function moduleConnectors<
         [Property in keyof TInputs]: TInputs[Property]
     }>
     outputs?: OutputsMapper<TSchema, TInputs, TState>
-    defaultConfiguration: Immutable<Configurations.Configuration<TSchema>>
+    defaultConfiguration: Immutable<
+        Configurations.Configuration<Configurations.Schema<OverrideType>>
+    >
     scope: Scope
     staticConfiguration: { [_k: string]: unknown }
     executionJournal: ExecutionJournal
