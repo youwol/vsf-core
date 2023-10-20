@@ -78,11 +78,11 @@ export type ImplementationTrait<
  * It is used as an annotation for the {@link Configurations.AttributeTrait}.
  *
  * The distinction becomes relevant when processing a message in a module's output definition
- * and dealing with the {@link ProcessingMessage.configuration}:
+ * and dealing with the {@link ProcessingMessage}'s configuration:
  * * An attribute marked as 'final' maintains a value that is equal to the one defined at the module's construction and
  * cannot be changed.
  * * An attribute marked as 'overridable' initially has a value equal to the one defined at the module's construction
- * by default. However, it can be overridden if the {@link IncomingMessage.configuration} provides a new value for
+ * by default. However, it can be overridden if the {@link InputMessage}'s configuration provides a new value for
  * this attribute.
  */
 export type OverrideType = 'final' | 'overridable'
