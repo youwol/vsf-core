@@ -1,4 +1,4 @@
-import { Modules, Configurations } from '../../lib'
+import { Modules } from '../../lib'
 import { map } from 'rxjs/operators'
 import { createVariableInputs } from './common'
 import { combineLatest } from 'rxjs'
@@ -19,9 +19,10 @@ export const configuration = {
          *
          * Default to `2`.
          */
-        inputsCount: new Configurations.Integer({
-            value: 2,
-        }),
+        inputsCount: Modules.integerAttribute(
+            { value: 2 },
+            { override: 'final' },
+        ),
     },
 }
 

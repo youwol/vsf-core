@@ -1,11 +1,14 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 import { delay } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        due: new Configurations.Float({
-            value: 0,
-        }),
+        due: Modules.floatAttribute(
+            {
+                value: 0,
+            },
+            { override: 'final' },
+        ),
     },
 }
 

@@ -20,18 +20,32 @@ import {
     Input,
     InputSlot,
     OutputSlot,
+    OverrideType,
 } from './'
 
-function prepareMessage(
+type PrepareMessageArgs = {
+    moduleId: string
+    slotId: string
+    defaultConfiguration: Immutable<
+        Configurations.Configuration<Configurations.Schema<OverrideType>>
+    >
+    staticConfiguration: { [_k: string]: unknown }
+    contract: Contracts.ExpectationTrait<unknown>
+    scope: Immutable<{ [k: string]: unknown }>
+    rawMessage: InputMessage
+    executionJournal: ExecutionJournal
+}
+
+function prepareMessage({
     moduleId,
     slotId,
     defaultConfiguration,
     staticConfiguration,
     contract,
     scope,
-    rawMessage: InputMessage,
+    rawMessage,
     executionJournal,
-): ProcessingMessage {
+}: PrepareMessageArgs): ProcessingMessage {
     const ctx = executionJournal.addPage({
         title: `Enter slot ${slotId}`,
     })
@@ -85,7 +99,9 @@ export function moduleConnectors<
         [Property in keyof TInputs]: TInputs[Property]
     }>
     outputs?: OutputsMapper<TSchema, TInputs, TState>
-    defaultConfiguration: Immutable<Configurations.Configuration<TSchema>>
+    defaultConfiguration: Immutable<
+        Configurations.Configuration<Configurations.Schema<OverrideType>>
+    >
     scope: Scope
     staticConfiguration: { [_k: string]: unknown }
     executionJournal: ExecutionJournal
@@ -107,16 +123,16 @@ export function moduleConnectors<
             const rawMessage$ = new ReplaySubject<InputMessage>()
             const preparedMessage$ = rawMessage$.pipe(
                 map((rawMessage) => {
-                    return prepareMessage(
-                        params.moduleUid,
-                        slotId,
-                        params.defaultConfiguration,
-                        params.staticConfiguration,
-                        input.contract,
-                        params.scope,
-                        rawMessage,
-                        params.executionJournal,
-                    )
+                    return prepareMessage({
+                        moduleId: params.moduleUid,
+                        slotId: slotId,
+                        defaultConfiguration: params.defaultConfiguration,
+                        staticConfiguration: params.staticConfiguration,
+                        contract: input.contract,
+                        scope: params.scope,
+                        rawMessage: rawMessage,
+                        executionJournal: params.executionJournal,
+                    })
                 }),
                 filter((message) => message != undefined),
             )

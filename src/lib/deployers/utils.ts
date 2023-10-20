@@ -373,7 +373,9 @@ export async function moduleInstanceInWorker(
                     [k]: slot.observable$,
                 }
             }, {})
-        type TSchema = WithModuleBaseSchema<Configurations.Schema>
+        type TSchema = WithModuleBaseSchema<
+            Configurations.Schema<Modules.OverrideType>
+        >
         type TInputs = Record<string, IOs.Input>
         const params: Modules.UserArgs<TSchema> = {
             configuration: moduleProxy.configuration,

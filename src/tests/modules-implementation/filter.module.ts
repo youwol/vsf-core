@@ -1,15 +1,18 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 import { filter } from 'rxjs/operators'
 
 export const configuration = {
     schema: {
-        predicate: new Configurations.JsCode({
-            value: (
-                message: Modules.ProcessingMessage,
-                // eslint-disable-next-line unused-imports/no-unused-vars -- for documentation purpose
-                index: number,
-            ): boolean => message.data != undefined,
-        }),
+        predicate: Modules.jsCodeAttribute(
+            {
+                value: (
+                    message: Modules.ProcessingMessage,
+                    // eslint-disable-next-line unused-imports/no-unused-vars -- for documentation purpose
+                    index: number,
+                ): boolean => message.data != undefined,
+            },
+            { override: 'overridable' },
+        ),
     },
 }
 

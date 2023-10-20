@@ -1,12 +1,15 @@
-import { Modules, Configurations, Contracts } from '../../lib'
+import { Modules, Contracts } from '../../lib'
 import { delayWhen } from 'rxjs/operators'
 import { interval } from 'rxjs'
 
 export const configuration = {
     schema: {
-        delayDurationSelector: new Configurations.JsCode({
-            value: (value, index) => interval(0),
-        }),
+        delayDurationSelector: Modules.jsCodeAttribute(
+            {
+                value: (value, index) => interval(0),
+            },
+            { override: 'final' },
+        ),
     },
 }
 

@@ -68,7 +68,7 @@ export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
 
 export type ConnectionTrait = UidTrait &
     Configurations.ConfigurableTrait<{
-        adaptor?: Configurations.JsCode<(Message) => Message>
+        adaptor?: Configurations.JsCode<(m: Message) => Message>
         transmissionDelay?: Configurations.Integer
     }> &
     JournalTrait &
@@ -203,12 +203,12 @@ export class Connection implements ConnectionTrait {
     /**
      * Connect the connection (subscribing associated observables).
      *
-     * @param apiFinder a function that returns connectable entities ({@link Modules.Api$Trait}) for particular uid.
+     * @param apiFinder a function that returns connectable entities ({@link Modules.ApiTrait}) for particular uid.
      */
     connect({
         apiFinder,
     }: {
-        apiFinder: (uid: string) => Immutable<Modules.Api$Trait<unknown>>
+        apiFinder: (uid: string) => Immutable<Modules.ApiTrait<unknown>>
     }) {
         const startModule = apiFinder(this.start.moduleId)
         const endModule = apiFinder(this.end.moduleId)
@@ -226,7 +226,7 @@ export class Connection implements ConnectionTrait {
                 const ctx = this.journal.addPage({
                     title: 'data transiting',
                 })
-                this._start$ && this._start$.next(message)
+                this._start$?.next(message)
                 ctx.info('Incoming message', message)
                 const adapted = adaptor ? adaptor(message) : message
                 ctx.info('Adapted message', adapted)
@@ -245,7 +245,7 @@ export class Connection implements ConnectionTrait {
                 : adapted$
         this.subscription = delayed$.subscribe(
             (adaptedMessage: Modules.InputMessage) => {
-                this._end$ && this._end$.next(adaptedMessage)
+                this._end$?.next(adaptedMessage)
                 endSlot.rawMessage$.next(adaptedMessage)
             },
             (error) => {
@@ -259,8 +259,8 @@ export class Connection implements ConnectionTrait {
             },
             () => {
                 endSlot.rawMessage$.complete()
-                this._start$ && this._start$.complete()
-                this._end$ && this._end$.complete()
+                this._start$?.complete()
+                this._end$?.complete()
                 this.status$.next('completed')
             },
         )

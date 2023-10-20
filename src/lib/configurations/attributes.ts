@@ -2,24 +2,29 @@ import { Configurations } from '..'
 /**
  * Trait for object with attribute behavior.
  */
-export interface AttributeTrait<TValue> {
+export interface AttributeTrait<TValue, TAnnotation> {
+    readonly annotation?: TAnnotation
     /**
      * return the value of the attribute
      */
     getValue(): TValue
 
-    withValue(value: unknown): AttributeTrait<TValue>
+    withValue(value: unknown): AttributeTrait<TValue, TAnnotation>
 }
 
 /**
  * Attribute representing javascript function
  */
-export class JsCode<TFct extends (...d: unknown[]) => unknown>
-    implements AttributeTrait<TFct>
+export class JsCode<
+    TFct extends (...d: unknown[]) => unknown,
+    TAnnotation = never,
+> implements AttributeTrait<TFct, TAnnotation>
 {
+    readonly annotation?: TAnnotation
     public readonly __value: TFct
 
-    constructor(params: { value?: string | TFct }) {
+    constructor(params: { value?: string | TFct }, annotation?: TAnnotation) {
+        this.annotation = annotation
         this.__value =
             typeof params.value == 'string'
                 ? new Function(this.sanitizeStr(params.value))()
@@ -35,7 +40,7 @@ export class JsCode<TFct extends (...d: unknown[]) => unknown>
     }
 
     withValue(value: string | TFct) {
-        return new JsCode<TFct>({ value })
+        return new JsCode<TFct, TAnnotation>({ value })
     }
 
     private sanitizeStr(raw: string) {
@@ -46,14 +51,21 @@ export class JsCode<TFct extends (...d: unknown[]) => unknown>
 /**
  * Attribute representing float
  */
-export class Float implements AttributeTrait<number> {
+export class Float<TAnnotation = never>
+    implements AttributeTrait<number, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: number
     public readonly min?: number
     public readonly max?: number
 
-    constructor(params: { value?: number; min?: number; max?: number }) {
+    constructor(
+        params: { value?: number; min?: number; max?: number },
+        annotation?: TAnnotation,
+    ) {
         Object.assign(this, params)
-        this.__value = params.value && params.value
+        this.annotation = annotation
+        this.__value = params.value
     }
 
     getValue() {
@@ -61,17 +73,21 @@ export class Float implements AttributeTrait<number> {
     }
 
     withValue(value: number) {
-        return new Float({ value })
+        return new Float<TAnnotation>({ value }, this.annotation)
     }
 }
 
 /**
  * Attribute representing string
  */
-export class String implements AttributeTrait<string> {
+export class String<TAnnotation = never>
+    implements AttributeTrait<string, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: string
-    constructor(params: { value: string }) {
+    constructor(params: { value: string }, annotation?: TAnnotation) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value && params.value
     }
 
@@ -80,17 +96,24 @@ export class String implements AttributeTrait<string> {
     }
 
     withValue(value: string) {
-        return new Configurations.String({ value })
+        return new Configurations.String<TAnnotation>(
+            { value },
+            this.annotation,
+        )
     }
 }
 
 /**
  * Attribute representing string literal
  */
-export class StringLiteral<T> implements AttributeTrait<T> {
+export class StringLiteral<T, TAnnotation = never>
+    implements AttributeTrait<T, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: T
-    constructor(params: { value: T }) {
+    constructor(params: { value: T }, annotation?: TAnnotation) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value && params.value
     }
 
@@ -99,19 +122,26 @@ export class StringLiteral<T> implements AttributeTrait<T> {
     }
 
     withValue(value: T) {
-        return new StringLiteral<T>({ value })
+        return new StringLiteral<T, TAnnotation>({ value }, this.annotation)
     }
 }
 
 /**
  * Attribute representing integer
  */
-export class Integer implements AttributeTrait<number> {
+export class Integer<TAnnotation = never>
+    implements AttributeTrait<number, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: number
     public readonly min?: number
     public readonly max?: number
-    constructor(params: { value: number; min?: number; max?: number }) {
+    constructor(
+        params: { value: number; min?: number; max?: number },
+        annotation?: TAnnotation,
+    ) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value && params.value
     }
 
@@ -120,18 +150,22 @@ export class Integer implements AttributeTrait<number> {
     }
 
     withValue(value: number) {
-        return new Integer({ value })
+        return new Integer<TAnnotation>({ value }, this.annotation)
     }
 }
 
 /**
  * Attribute representing boolean
  */
-export class Boolean implements AttributeTrait<boolean> {
+export class Boolean<TAnnotation = never>
+    implements AttributeTrait<boolean, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: boolean
 
-    constructor(params: { value: boolean }) {
+    constructor(params: { value: boolean }, annotation?: TAnnotation) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value && params.value
     }
 
@@ -140,18 +174,28 @@ export class Boolean implements AttributeTrait<boolean> {
     }
 
     withValue(value: boolean) {
-        return new Configurations.Boolean({ value })
+        return new Configurations.Boolean<TAnnotation>(
+            { value },
+            this.annotation,
+        )
     }
 }
 
 /**
  * Attribute representing an unknown object `{ [k: string]: unknown }`
  */
-export class AnyObject implements AttributeTrait<{ [k: string]: unknown }> {
+export class AnyObject<TAnnotation = never>
+    implements AttributeTrait<{ [k: string]: unknown }, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: { [k: string]: unknown }
 
-    constructor(params: { value: { [k: string]: unknown } }) {
+    constructor(
+        params: { value: { [k: string]: unknown } },
+        annotation?: TAnnotation,
+    ) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value && params.value
     }
 
@@ -160,18 +204,22 @@ export class AnyObject implements AttributeTrait<{ [k: string]: unknown }> {
     }
 
     withValue(value: { [k: string]: unknown }) {
-        return new AnyObject({ value })
+        return new AnyObject<TAnnotation>({ value }, this.annotation)
     }
 }
 
 /**
  * Attribute representing an unknown object `{ [k: string]: unknown }`
  */
-export class Any implements AttributeTrait<unknown> {
+export class Any<TAnnotation = never>
+    implements AttributeTrait<unknown, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: unknown
 
-    constructor(params: { value: unknown }) {
+    constructor(params: { value: unknown }, annotation?: TAnnotation) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value
     }
 
@@ -180,18 +228,22 @@ export class Any implements AttributeTrait<unknown> {
     }
 
     withValue(value: unknown) {
-        return new Any({ value })
+        return new Any<TAnnotation>({ value }, this.annotation)
     }
 }
 
 /**
  * Attribute representing a custom attribute of given type.
  */
-export class CustomAttribute<T> implements AttributeTrait<T> {
+export class CustomAttribute<T, TAnnotation = never>
+    implements AttributeTrait<T, TAnnotation>
+{
+    readonly annotation?: TAnnotation
     public readonly __value: T
 
-    constructor(params: { value: T }) {
+    constructor(params: { value: T }, annotation?: TAnnotation) {
         Object.assign(this, params)
+        this.annotation = annotation
         this.__value = params.value
     }
 
@@ -200,6 +252,6 @@ export class CustomAttribute<T> implements AttributeTrait<T> {
     }
 
     withValue(value: T) {
-        return new CustomAttribute<T>({ value })
+        return new CustomAttribute<T, TAnnotation>({ value }, this.annotation)
     }
 }
