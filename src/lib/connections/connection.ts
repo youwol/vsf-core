@@ -68,7 +68,7 @@ export type ConnectableTrait = StatusTrait<ConnectionStatus> & {
 
 export type ConnectionTrait = UidTrait &
     Configurations.ConfigurableTrait<{
-        adaptor?: Configurations.JsCode<(Message) => Message>
+        adaptor?: Configurations.JsCode<(m: Message) => Message>
         transmissionDelay?: Configurations.Integer
     }> &
     JournalTrait &
