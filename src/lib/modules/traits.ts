@@ -10,7 +10,14 @@ import {
     UidTrait,
 } from '../common'
 import { Deployers, Configurations } from '..'
-import { OutputSlot, GetGenericInput, Module, Input, InputSlot } from './'
+import {
+    OutputSlot,
+    GetGenericInput,
+    Module,
+    Input,
+    InputSlot,
+    stringAttribute,
+} from './'
 
 /**
  * Trait for slot.
@@ -93,7 +100,7 @@ export type SchemaModuleBase = {
     /**
      * worker pool id, required for deployment of the module in a worker pool.
      */
-    workersPoolId?: Configurations.String
+    workersPoolId?: Configurations.String<'overridable'>
 }
 
 /**
@@ -101,7 +108,7 @@ export type SchemaModuleBase = {
  */
 export function baseModuleSchemaDefaultInstance() {
     return {
-        workersPoolId: new Configurations.String({ value: '' }),
+        workersPoolId: stringAttribute({ value: '' }),
     }
 }
 
