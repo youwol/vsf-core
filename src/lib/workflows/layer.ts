@@ -48,9 +48,12 @@ export class Layer implements UidTrait {
      * @return reduced result
      */
     reduce<TRes>(fct: (acc: TRes, e: Layer) => TRes, v0: TRes): TRes {
-        return this.children.reduce((acc, e) => {
-            return e.reduce(fct, acc)
-        }, fct(v0, this))
+        return this.children.reduce(
+            (acc, e) => {
+                return e.reduce(fct, acc)
+            },
+            fct(v0, this),
+        )
     }
 
     /**

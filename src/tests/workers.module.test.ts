@@ -31,6 +31,7 @@ beforeAll(async () => {
     })
 })
 
+/* eslint-disable-next-line jest/no-done-callback -- TODO: return Promise from subscription instead of using done() */
 test('one module', (done) => {
     //const tb = project.getToolbox('@youwol/vs-flow-core/test-toolbox')
     //expect(tb.name).toBe('test-toolbox')

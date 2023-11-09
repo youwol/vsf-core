@@ -6,7 +6,7 @@ export const configuration = {
     schema: {
         delayDurationSelector: Modules.jsCodeAttribute(
             {
-                value: (value, index) => interval(0),
+                value: (_v, _idx) => interval(0),
             },
             { override: 'final' },
         ),

@@ -1,0 +1,20 @@
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  nestor_typescrit_ci:
+    name: Typescript
+    uses: youwol/nestor/.github/workflows/typescript-ci.yaml@v3
+    with:
+      skip: tests
+
+  nestor_integration_tests:
+    name: Integration Tests
+    uses: youwol/nestor/.github/workflows/integration-tests.yaml@v3
+    secrets: inherit

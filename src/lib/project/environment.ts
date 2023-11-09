@@ -9,7 +9,8 @@ import {
 import { Observable, ReplaySubject } from 'rxjs'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
 import { install, installWorkersPoolModule } from '@youwol/cdn-client'
-// This import is used for documentation in `install`
+// eslint-disable-next-line unused-imports/no-unused-imports -- For documentation in `install`
+import { ProjectElements } from './models'
 import { setup } from '../../auto-generated'
 import * as vsf from '../..'
 import {
