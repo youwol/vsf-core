@@ -53,9 +53,11 @@ export function module(fwdParams) {
             outputs,
             inputs,
             html: (_, config: { prefix: string }) => ({
+                tag: 'div',
                 innerText: `${config.prefix}: sphere html view`,
             }),
             canvas: (_, config: { prefix: string }) => ({
+                tag: 'div',
                 innerText: `${config.prefix}: sphere canvas view`,
             }),
         },

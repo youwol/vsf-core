@@ -45,7 +45,7 @@ template = Template(
             # `conditional-type-checks` is used to realize 'compile time' tests on type definitions
             "conditional-type-checks": "^1.0.4",
             # `@youwol/flux-view` is used for type declarations
-            "@youwol/flux-view": "^1.0.3",
+            "@youwol/rx-vdom": "^1.0.1",
             # three is a dev dependencies for testing & needed to generate documentation.
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
@@ -77,7 +77,7 @@ for file in [
     ".prettierignore",
     "LICENSE",
     "package.json",
-    "tsconfig.json",
+    # "tsconfig.json", because of the rx-vdom-config.ts
     "webpack.config.ts",
 ]:
     shutil.copyfile(src=folder_path / ".template" / file, dst=folder_path / file)

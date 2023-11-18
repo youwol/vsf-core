@@ -1,4 +1,8 @@
-import { VirtualDOM } from '@youwol/flux-view'
+import type {
+    FluxViewVirtualDOM,
+    VirtualDOM,
+    ChildrenLike,
+} from '@youwol/rx-vdom'
 import { Journal, installJournalModule } from '@youwol/logging'
 import * as webpmClient from '@youwol/webpm-client'
 import type * as CdnClient from '@youwol/cdn-client'
@@ -27,16 +31,13 @@ async function installFvTree(): Promise<typeof fvTree> {
             return window['fvTree']
         })
 }
-export async function installFluxView(): Promise<typeof fvTree> {
-    return await cdnClient
+export async function installRxVDOM(): Promise<typeof fvTree> {
+    return await webpmClient
         .install({
-            modules: [`@youwol/flux-view#1.x`],
-            aliases: {
-                fv: '@youwol/flux-view',
-            },
+            modules: [`@youwol/rx-vdom#^1.0.0 as rxDOM`],
         })
         .then((window) => {
-            return window['fv']
+            return window['rxDOM']
         })
 }
 
@@ -59,7 +60,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
                     title: ' ',
                     data,
                 })
-                return new ObjectJs.View({ state }) as VirtualDOM
+                return new ObjectJs.View({ state }) as FluxViewVirtualDOM
             })
         },
     },
@@ -79,7 +80,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
                         pages: data.pages,
                     },
                 })
-                return new module.JournalView({ state })
+                return new module.JournalView({ state }) as FluxViewVirtualDOM
             })
         },
     },
@@ -101,7 +102,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
         description: 'Summarize project',
         isCompatible: (d: unknown) => d instanceof ProjectState,
         view: (project: Immutable<ProjectState>) => {
-            return installFluxView().then(() => {
+            return installRxVDOM().then(() => {
                 return new ProjectSummaryView({ project })
             })
         },
@@ -117,7 +118,11 @@ It is a native view created using the method <a href='${basePathDoc}/VsfCore.Pro
  * View summarizing a {@link ProjectState} (see {@link ProjectState.summaryHtml}).
  *
  */
-export class ProjectSummaryView {
+export class ProjectSummaryView implements VirtualDOM<'div'> {
+    /**
+     * @group Immutable Properties
+     */
+    public readonly tag: 'div'
     /**
      * @group Immutable Properties
      */
@@ -129,13 +134,13 @@ export class ProjectSummaryView {
     /**
      * @group Immutable DOM Attributes
      */
-    public readonly children: VirtualDOM[]
+    public readonly children: ChildrenLike
 
     constructor(params: { project: Immutable<ProjectState> }) {
         Object.assign(this, params)
         this.children = [
             { tag: 'h2', innerText: 'Project summary' },
-            { class: 'w-50 mx-auto', innerHTML: summary },
+            { tag: 'div', class: 'w-50 mx-auto', innerHTML: summary },
             { tag: 'h3', innerText: 'Modules' },
             new ModulesSummaryView(params),
             { tag: 'h3', innerText: 'Connections' },
@@ -146,7 +151,11 @@ export class ProjectSummaryView {
 /**
  * @category View
  */
-class ModulesSummaryView {
+class ModulesSummaryView implements VirtualDOM<'div'> {
+    /**
+     * @group Immutable Properties
+     */
+    public readonly tag = 'div'
     /**
      * @group Immutable Properties
      */
@@ -158,7 +167,7 @@ class ModulesSummaryView {
     /**
      * @group Immutable DOM Attributes
      */
-    public readonly children: VirtualDOM[]
+    public readonly children: ChildrenLike
 
     constructor(params: { project: Immutable<ProjectState> }) {
         Object.assign(this, params)
@@ -168,6 +177,7 @@ class ModulesSummaryView {
         )
         this.children = [
             {
+                tag: 'div',
                 innerText: `The project's roots layer contains ${instances.length} instances:`,
             },
             {
@@ -178,6 +188,7 @@ class ModulesSummaryView {
                 })),
             },
             {
+                tag: 'div',
                 innerText: `Among those, ${views.length} are associated to HTML view: `,
             },
 
@@ -195,7 +206,11 @@ class ModulesSummaryView {
 /**
  * @category View
  */
-class ConnectionsSummaryView {
+class ConnectionsSummaryView implements VirtualDOM<'div'> {
+    /**
+     * @group Immutable Properties
+     */
+    public readonly tag = 'div'
     /**
      * @group Immutable Properties
      */
@@ -207,19 +222,14 @@ class ConnectionsSummaryView {
     /**
      * @group Immutable DOM Attributes
      */
-    public readonly children: VirtualDOM[]
+    public readonly children: ChildrenLike
 
     constructor(params: { project: Immutable<ProjectState> }) {
         Object.assign(this, params)
         const connections = this.project.instancePool.connections
-        if (!globalThis['@youwol/flux-view']) {
-            throw Error(
-                'The package `@youwol/flux-view` needs to be available to create `ConnectionsSummaryView`',
-            )
-        }
-        const fv = globalThis['@youwol/flux-view']
         this.children = [
             {
+                tag: 'div',
                 innerText: `The project's roots layer contains ${connections.length} connections:`,
             },
             {
@@ -229,13 +239,17 @@ class ConnectionsSummaryView {
                     innerText: c.uid,
                     children: [
                         {
+                            tag: 'div',
                             innerText:
                                 "Last message's data having reached the connection's end:",
                         },
                         {
-                            innerText: fv.attr$(c.end$, ({ data }) =>
-                                JSON.stringify(data, null, 4),
-                            ),
+                            tag: 'div',
+                            innerText: {
+                                source$: c.end$,
+                                vdomMap: ({ data }) =>
+                                    JSON.stringify(data, null, 4),
+                            },
                         },
                     ],
                 })),

@@ -1,6 +1,6 @@
 import { takeUntil } from 'rxjs/operators'
 import { ContextLoggerTrait, NoContext } from '@youwol/logging'
-import { VirtualDOM } from '@youwol/flux-view'
+import { AnyVirtualDOM } from '@youwol/rx-vdom'
 
 import { Immutable, Immutables, ToolboxObjectTrait } from '../common'
 import { Configurations, Modules, Contracts, Deployers, Workflows } from '..'
@@ -262,7 +262,10 @@ export type MacroApi = {
         slotId: number
         moduleId: string
     }[]
-    html: (instance: Modules.ImplementationTrait, config: unknown) => VirtualDOM
+    html: (
+        instance: Modules.ImplementationTrait,
+        config: unknown,
+    ) => AnyVirtualDOM
 }
 
 /**

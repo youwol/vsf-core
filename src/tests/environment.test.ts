@@ -24,14 +24,14 @@ test('import toolboxes', async () => {
 test('import libraries', async () => {
     const env = await new Environment().install({
         libraries: [
-            '@youwol/flux-view as fv',
+            '@youwol/rx-vdom as rxDOM',
             `@youwol/http-clients#^1.0.0`,
             `~rxjs as rxjs`,
         ],
         toolboxes: [],
     })
     expect(env.libraries.vsf).toBeTruthy()
-    expect(env.libraries.fv).toBeTruthy()
+    expect(env.libraries.rxDOM).toBeTruthy()
     expect(env.libraries.rxjs).toBeTruthy()
     expect(env.libraries['@youwol/http-clients']).toBeTruthy()
 })
@@ -71,7 +71,7 @@ test('add workers pool', (done) => {
 test('import wrong package (not a toolbox)', async () => {
     const env = new Environment()
     await expect(() =>
-        env.install({ toolboxes: ['@youwol/flux-view'], libraries: [] }),
+        env.install({ toolboxes: ['@youwol/rx-vdom'], libraries: [] }),
     ).rejects.toThrow()
 })
 

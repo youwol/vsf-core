@@ -1,5 +1,5 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
-import { defaultViewsFactory, installFluxView } from '../lib/project'
+import { defaultViewsFactory, installRxVDOM } from '../lib/project'
 import { ExecutionJournal } from '../lib'
 
 beforeAll(async () => {
@@ -56,7 +56,7 @@ test('Project.summaryHtml', async () => {
             branches: ['(timer#t0)>>(filter#f0)>>(map#m0)>>(mergeMap#m1)'],
         },
     })
-    await installFluxView()
+    await installRxVDOM()
     const view = project.summaryHtml()
     expect(view).toBeTruthy()
 })

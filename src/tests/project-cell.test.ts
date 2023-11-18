@@ -37,7 +37,7 @@ test('JsCell with display', (done) => {
             project = await project.with({
                 workflow: { branches: ['(map#map)'] },
             })
-            cell.display('a test', { innerText: 'test' })
+            cell.display('a test', { tag: 'div', innerText: 'test' })
             return project
         },
     })
@@ -59,6 +59,7 @@ test('JsCell with display', (done) => {
             expect(outputs).toHaveLength(2)
             // success element
             expect(outputs[1]).toEqual({
+                tag: 'div',
                 class: 'fas fa-check fv-text-success',
             })
             done()
@@ -86,7 +87,7 @@ test('JsCell with log', (done) => {
                 name: 'the solution',
                 isCompatible: (d) => (d as { value: number }).value == 42,
                 view: (d: { value: 42 }) => {
-                    return { innerText: `value is ${d.value}` }
+                    return { tag: 'div', innerText: `value is ${d.value}` }
                 },
             },
             {
@@ -94,6 +95,7 @@ test('JsCell with log', (done) => {
                 isCompatible: (d) => (d as { value: number }).value == 84,
                 view: (d: { value: 84 }) => {
                     return Promise.resolve({
+                        tag: 'div',
                         id: 'test-2',
                         innerText: `value is ${d.value}`,
                     })
@@ -114,21 +116,26 @@ test('JsCell with log', (done) => {
             expect(outputs).toHaveLength(5)
             // success element
             expect(outputs[0]).toEqual({
+                tag: 'div',
                 class: 'fv-text-focus',
                 innerHTML: '<b>a test</b>',
             })
             expect(outputs[1]).toEqual({
+                tag: 'div',
                 innerText: 'value is 42',
             })
             expect(outputs[2]).toEqual({
+                tag: 'div',
                 class: 'fv-text-focus',
                 innerHTML: '<b>a second test</b>',
             })
             expect(outputs[3].children[0]).toEqual({
+                tag: 'div',
                 id: 'test-2',
                 innerText: 'value is 84',
             })
             expect(outputs[4]).toEqual({
+                tag: 'div',
                 class: 'fas fa-check fv-text-success',
             })
             done()

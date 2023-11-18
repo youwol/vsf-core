@@ -44,8 +44,8 @@ export class Environment implements EnvironmentTrait {
      * The libraries installed using {@link install}.
      *
      * The key is either:
-     * *  the name of the library if no alias provided (e.g. `install(['@youwol/flux-view'])`)
-     * *  the alias of the library if an alias has been provided  (e.g. `install(['@youwol/flux-view as fv'])`)
+     * *  the name of the library if no alias provided (e.g. `install(['@youwol/rx-vdom'])`)
+     * *  the alias of the library if an alias has been provided  (e.g. `install(['@youwol/rx-vdom as rxDOM'])`)
      */
     public readonly libraries: Immutable<LibrariesStore> = {
         vsf,

@@ -383,6 +383,7 @@ export async function moduleInstanceInWorker(
             outputs,
             instancePool: instancePoolWorker,
             html: () => ({
+                tag: 'div',
                 innerText: `Can not access html for modules running in workers pool (#${moduleId})`,
             }),
         }
