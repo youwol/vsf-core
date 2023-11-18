@@ -29,17 +29,18 @@
     },
     "dependencies": {
         "rxjs": "^6.5.5",
-        "@youwol/cdn-client": "^2.0.6",
+        "@youwol/webpm-client": "^2.2.0",
         "@youwol/logging": "^0.1.1",
         "@youwol/fv-tree": "^0.2.3",
         "ts-essentials": "^9.3.1"
     },
     "devDependencies": {
         "conditional-type-checks": "^1.0.4",
-        "@youwol/flux-view": "^1.0.3",
+        "@youwol/rx-vdom": "^1.0.1",
         "three": "^0.152.0",
         "@types/three": "^0.152.0",
         "@youwol/http-primitives": "^0.1.2",
+        "@youwol/cdn-client": "^2.0.6",
         "@types/jest": "^29.5.6",
         "@types/node": "^18.9.1",
         "@types/webpack": "^5.28.0",
@@ -60,7 +61,7 @@
     "webpm": {
         "dependencies": {
             "rxjs": "^6.5.5",
-            "@youwol/cdn-client": "^2.0.6",
+            "@youwol/webpm-client": "^2.2.0",
             "@youwol/logging": "^0.1.1"
         },
         "aliases": []

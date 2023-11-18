@@ -2,7 +2,7 @@
 const runTimeDependencies = {
     "externals": {
         "rxjs": "^6.5.5",
-        "@youwol/cdn-client": "^2.0.6",
+        "@youwol/webpm-client": "^2.2.0",
         "@youwol/logging": "^0.1.1",
         "@youwol/fv-tree": "^0.2.3",
         "ts-essentials": "^9.3.1"
@@ -15,10 +15,10 @@ const externals = {
         "commonjs2": "rxjs",
         "root": "rxjs_APIv6"
     },
-    "@youwol/cdn-client": {
-        "commonjs": "@youwol/cdn-client",
-        "commonjs2": "@youwol/cdn-client",
-        "root": "@youwol/cdn-client_APIv2"
+    "@youwol/webpm-client": {
+        "commonjs": "@youwol/webpm-client",
+        "commonjs2": "@youwol/webpm-client",
+        "root": "@youwol/webpm-client_APIv2"
     },
     "@youwol/logging": {
         "commonjs": "@youwol/logging",
@@ -49,9 +49,9 @@ const exportedSymbols = {
         "apiKey": "6",
         "exportedSymbol": "rxjs"
     },
-    "@youwol/cdn-client": {
+    "@youwol/webpm-client": {
         "apiKey": "2",
-        "exportedSymbol": "@youwol/cdn-client"
+        "exportedSymbol": "@youwol/webpm-client"
     },
     "@youwol/logging": {
         "apiKey": "01",
@@ -71,7 +71,7 @@ const mainEntry : {entryFile: string,loadDependencies:string[]} = {
     "entryFile": "./index.ts",
     "loadDependencies": [
         "rxjs",
-        "@youwol/cdn-client",
+        "@youwol/webpm-client",
         "@youwol/logging"
     ]
 }
