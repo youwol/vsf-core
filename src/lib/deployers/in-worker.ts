@@ -1,7 +1,7 @@
 /**
  * Only import of types are allowed here as it is executed in a worker
  */
-import type { WorkersPoolTypes } from '@youwol/cdn-client'
+import type { WorkersPoolTypes } from '@youwol/webpm-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
 

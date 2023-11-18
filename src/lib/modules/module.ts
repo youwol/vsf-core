@@ -1,6 +1,6 @@
 import { VirtualDOM } from '@youwol/flux-view'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
-import { InstallInputs } from '@youwol/cdn-client'
+import { InstallInputs } from '@youwol/webpm-client'
 import { BehaviorSubject, Observable } from 'rxjs'
 
 import {

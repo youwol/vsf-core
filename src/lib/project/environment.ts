@@ -8,7 +8,7 @@ import {
 } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { install, installWorkersPoolModule } from '@youwol/cdn-client'
+import { install, installWorkersPoolModule } from '@youwol/webpm-client'
 // eslint-disable-next-line unused-imports/no-unused-imports -- For documentation in `install`
 import { ProjectElements } from './models'
 import { setup } from '../../auto-generated'
@@ -377,7 +377,7 @@ export class Environment implements EnvironmentTrait {
                         modules: [`@youwol/vsf-core#${setup.version}`],
                         aliases: {
                             vsfCore: '@youwol/vsf-core',
-                            CDN: '@youwol/cdn-client',
+                            CDN: '@youwol/webpm-client',
                         },
                     },
                     globals: {

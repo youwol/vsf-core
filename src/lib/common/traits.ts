@@ -10,7 +10,7 @@ import {
 import { VirtualDOM } from '@youwol/flux-view'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { ContextLoggerTrait, LogChannel } from '@youwol/logging'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { WorkersPoolTypes } from '@youwol/webpm-client'
 
 /**
  * Trait for object with unique ID

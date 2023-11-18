@@ -1,7 +1,7 @@
 import { filter, takeUntil, takeWhile } from 'rxjs/operators'
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
-import * as CdnClient from '@youwol/cdn-client'
+import { WorkersPoolTypes } from '@youwol/webpm-client'
+import * as WebpmClient from '@youwol/webpm-client'
 
 import { EnvironmentTrait, Immutable, Immutables } from '../common'
 import { Modules, Connections, Deployers, Configurations } from '..'
@@ -220,10 +220,10 @@ function toConnectionProxy({
 }
 
 export function emitRuntime(context: WorkersPoolTypes.WorkerContext) {
-    const cdnClient: typeof CdnClient = globalThis.CDN
+    const webpmClient: typeof WebpmClient = globalThis.CDN
     context.sendData({
         step: 'Runtime',
-        importedBundles: cdnClient.monitoring().importedBundles,
+        importedBundles: webpmClient.monitoring().importedBundles,
     } as RuntimeNotification)
 }
 

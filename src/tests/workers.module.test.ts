@@ -3,7 +3,7 @@ import {
     InstallInputs,
     installTestWorkersPoolModule,
     WorkersPoolTypes,
-} from '@youwol/cdn-client'
+} from '@youwol/webpm-client'
 import { setup } from '../auto-generated'
 import { ProjectState } from '../lib/project'
 import { from, of } from 'rxjs'

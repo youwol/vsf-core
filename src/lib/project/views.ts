@@ -1,6 +1,7 @@
 import { VirtualDOM } from '@youwol/flux-view'
 import { Journal, installJournalModule } from '@youwol/logging'
-import * as cdnClient from '@youwol/cdn-client'
+import * as webpmClient from '@youwol/webpm-client'
+import type * as CdnClient from '@youwol/cdn-client'
 import * as fvTree from '@youwol/fv-tree'
 
 import { setup } from '../../auto-generated'
@@ -15,7 +16,7 @@ import { ProjectState } from './'
 
 async function installFvTree(): Promise<typeof fvTree> {
     const version = setup.runTimeDependencies.externals['@youwol/fv-tree']
-    return await cdnClient
+    return await webpmClient
         .install({
             modules: [`@youwol/fv-tree#${version}`],
             aliases: {
@@ -67,7 +68,10 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
         description: 'ExecutionJournal view',
         isCompatible: (d) => d instanceof ExecutionJournal,
         view: (data: ExecutionJournal) => {
-            return installJournalModule(cdnClient).then((module) => {
+            // @youwol/logging need a new version with @youwol/webpm-client
+            return installJournalModule(
+                webpmClient as unknown as typeof CdnClient,
+            ).then((module) => {
                 const state = new module.JournalState({
                     journal: {
                         title: "Module's Journal",

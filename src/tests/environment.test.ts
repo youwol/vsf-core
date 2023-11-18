@@ -1,5 +1,5 @@
 import { Environment } from '../lib/project'
-import { installTestWorkersPoolModule } from '@youwol/cdn-client'
+import { installTestWorkersPoolModule } from '@youwol/webpm-client'
 import { from } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
 import { setupCdnHttpConnection } from './test.utils'

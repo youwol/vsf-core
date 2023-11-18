@@ -1,7 +1,7 @@
 import { ContextLoggerTrait } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { filter, map, shareReplay, take } from 'rxjs/operators'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { WorkersPoolTypes } from '@youwol/webpm-client'
 
 import { Immutable, Immutables, EnvironmentTrait } from '../common'
 import { Modules, Connections } from '..'
@@ -111,7 +111,7 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
         const ready$ = channel$.pipe(
             filter((m) => m.type == 'Data' && m.data['step'] == 'Ready'),
             take(1),
-            map((m) => m as unknown as ReadyMessage),
+            map((m: unknown) => m as ReadyMessage),
             shareReplay({ bufferSize: 1, refCount: true }),
         )
 

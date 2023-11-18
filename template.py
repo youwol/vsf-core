@@ -18,7 +18,7 @@ pkg_json = parse_json(folder_path / "package.json")
 
 load_dependencies = {
     "rxjs": "^6.5.5",
-    "@youwol/cdn-client": "^2.0.6",
+    "@youwol/webpm-client": "^2.2.0",
     "@youwol/logging": "^0.1.1",
 }
 
@@ -50,6 +50,8 @@ template = Template(
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
             "@youwol/http-primitives": "^0.1.2",
+            # @youwol/logging needs it
+            "@youwol/cdn-client": "^2.0.6",
         },
     ),
     userGuide=False,

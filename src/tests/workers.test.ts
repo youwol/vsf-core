@@ -2,7 +2,7 @@ import {
     InstallInputs,
     installTestWorkersPoolModule,
     WorkersPoolTypes,
-} from '@youwol/cdn-client'
+} from '@youwol/webpm-client'
 import { ProjectState } from '../lib/project'
 import { createChart, macroInstance, deployMacroInWorker } from '../lib/macros'
 import { from, Observable } from 'rxjs'

@@ -2,7 +2,7 @@ import './mock-requests'
 import { toolbox } from './toolbox'
 import { Environment, ProjectState } from '../lib/project'
 import { RootRouter } from '@youwol/http-primitives'
-import { Client, backendConfiguration } from '@youwol/cdn-client'
+import { Client, backendConfiguration } from '@youwol/webpm-client'
 
 export function emptyProject() {
     return new ProjectState({
