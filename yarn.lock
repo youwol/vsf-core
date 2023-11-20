@@ -824,16 +824,16 @@
   integrity sha512-hov8bUuiLiyFPGyFPE1lwWhmzYbirOXQNNo40+y3zow8aFVTeyn3VWL0VFFfdNddA8S4Vf0Tc062rzyNr7Paag==
 
 "@types/node@*":
-  version "20.9.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.9.1.tgz#9d578c610ce1e984adda087f685ace940954fe19"
-  integrity sha512-HhmzZh5LSJNS5O8jQKpJ/3ZcrrlG6L70hpGqMIAoM9YVD0YBRNWYsfwcXq8VnSjlNpCpgLzMXdiPo+dxcvSmiA==
+  version "20.9.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.9.2.tgz#002815c8e87fe0c9369121c78b52e800fadc0ac6"
+  integrity sha512-WHZXKFCEyIUJzAwh3NyyTHYSR35SevJ6mZ1nWwJafKtiQbqRTIKSRcw3Ma3acqgsent3RRDqeVwpHntMk+9irg==
   dependencies:
     undici-types "~5.26.4"
 
 "@types/node@^18.9.1":
-  version "18.18.9"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.18.9.tgz#5527ea1832db3bba8eb8023ce8497b7d3f299592"
-  integrity sha512-0f5klcuImLnG4Qreu9hPj/rEfFq6YRc5n2mAjSsH+ec/mJL+3voBH0+8T7o8RpFjH7ovc+TRsL/c7OYIQsPTfQ==
+  version "18.18.10"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.18.10.tgz#4971bffdf3a43977c4c8166aa714b2c0b05b3256"
+  integrity sha512-luANqZxPmjTll8bduz4ACs/lNTCLuWssCyjqTY9yLdsv1xnViQp3ISKwsEWOIecO13JWUqjVdig/Vjjc09o8uA==
   dependencies:
     undici-types "~5.26.4"
 
@@ -1188,15 +1188,6 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@youwol/cdn-client@^2.0.6":
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/@youwol/cdn-client/-/cdn-client-2.1.3.tgz#3d1b2e03553eef9f59f608bd6fbb8e8431dbd7af"
-  integrity sha512-znoOvSlUuJjXD/yMCVwny0D4l1jFu259pdMRR7GimbjlBNjr4kBKJ+ZAbIY4DeSyRR/NbfvHggkSJZ5CRugMHg==
-  dependencies:
-    "@youwol/flux-view" "^1.1.0"
-    rxjs "^6.5.5"
-    semver "^7.3.4"
-
 "@youwol/eslint-config@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@youwol/eslint-config/-/eslint-config-1.0.0.tgz#867c06947cc32085d9bac832d4905a36b11442ac"
@@ -1212,27 +1203,12 @@
     eslint-plugin-tsdoc "^0.2.17"
     eslint-plugin-unused-imports "^3.0.0"
 
-"@youwol/flux-view@^1.0.3", "@youwol/flux-view@^1.1.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@youwol/flux-view/-/flux-view-1.2.0.tgz#3e04b2503fe284f5d0edc9e362b8bc4f862be88c"
-  integrity sha512-KV/+T3P+3u4wRYDd900D5YJdg4IB95z8ZJMs6t3Nmg2LLbJRhwiZ45HmsSSz5hUV3Wgi9WOcN1DLYUcbxHR/fQ==
+"@youwol/http-primitives@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@youwol/http-primitives/-/http-primitives-0.2.0.tgz#ef4f8946e330942be8a1ba8fb170ac20b2960c93"
+  integrity sha512-DYoO424yJHEgBdVEOFJhzlDl9rd5MN2tcXU5Mj7jFZvMNIKKYquIN875gYw5vgv4XMNDc+zjIfbYmt6Y77m0pQ==
   dependencies:
-    "@ungap/custom-elements" "1.2.0"
-
-"@youwol/fv-tree@^0.2.3":
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/@youwol/fv-tree/-/fv-tree-0.2.3.tgz#deb21ba4a9824d32abb914507087d1d4f35157d6"
-  integrity sha512-6BgLcOavufjl3VbonUW07I+gt/zEFZLaTfmMAxixFVCokK0vWb5h1skahskgPfkU4IuqEBQ6YPok6uoSaUExZQ==
-  dependencies:
-    "@youwol/flux-view" "^1.0.3"
-    rxjs "^6.5.5"
-
-"@youwol/http-primitives@^0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@youwol/http-primitives/-/http-primitives-0.1.2.tgz#0ac9e0d660508157dd777fd6c8f83fc4bca9d540"
-  integrity sha512-wtSarBFx1qf/tOvcX9eAj3PsT4LEqI9IbD+mUf2xKvH4XKkrIUaAIdcIX9rg5eFKYVeQAi3RlTyTQyQz14/X+A==
-  dependencies:
-    rxjs "^6.5.5"
+    rxjs "^7.5.6"
 
 "@youwol/jest-preset@1.0.0":
   version "1.0.0"
@@ -1246,14 +1222,14 @@
     jest-junit "^16.0.0"
     ts-jest "^29.1.1"
 
-"@youwol/logging@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@youwol/logging/-/logging-0.1.1.tgz#98e2c54e27ffe0693be6003a69704910a9e1ee57"
-  integrity sha512-QMkiV0+FVUcd33Aq45L5m8qJzfMd6XS/dt/gnbVSAPyGpHf9aaezvumDxBkTwdNz19RtD0l6RA9qduKZ4eGd9w==
+"@youwol/logging@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@youwol/logging/-/logging-0.2.0.tgz#66df636482ef63773cb593b5d36c0f423312d54d"
+  integrity sha512-wXKcHnZPKQlxCUtIZzvZUn6JODbDJI1Eq4UO4f7h6sILtNb7HZrRbaUhSWUOVt/ncizb+4FUf3dDzOz1I0xsLQ==
   dependencies:
-    "@youwol/flux-view" "^1.1.0"
-    "@youwol/fv-tree" "^0.2.3"
-    rxjs "^6.5.5"
+    "@youwol/rx-tree-views" "^0.3.1"
+    "@youwol/rx-vdom" "^1.0.1"
+    rxjs "^7.5.6"
 
 "@youwol/prettier-config@1.0.0":
   version "1.0.0"
@@ -1262,6 +1238,14 @@
   dependencies:
     prettier "^3.0.3"
     prettier-plugin-properties "^0.3.0"
+
+"@youwol/rx-tree-views@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@youwol/rx-tree-views/-/rx-tree-views-0.3.1.tgz#18d3245804c9c377441f58e3442a4a80ceb0c7d5"
+  integrity sha512-IsqMuOLNAAWyc/7YMEnoUaEsASo3CaE2y0umlzqMXnI+3WZOBwZ1lpzUm7UvYI1giF3pPb9J9w9V/ZdTzZViAg==
+  dependencies:
+    "@youwol/rx-vdom" "^1.0.1"
+    rxjs "^7.5.6"
 
 "@youwol/rx-vdom@^1.0.1":
   version "1.0.1"
@@ -1277,13 +1261,13 @@
   resolved "https://registry.yarnpkg.com/@youwol/tsconfig/-/tsconfig-1.0.0.tgz#76e8569781dc4bdc53f27dc0b4f3cd6e17e1bd52"
   integrity sha512-R+8tI08X56yOpSfGTJ2gG5GWZVpirr63Prmtfe3EQgc0pXhNpE4kzoxS6ByYsRZPn+ydGJxE61P424uycm+rNQ==
 
-"@youwol/webpm-client@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@youwol/webpm-client/-/webpm-client-2.2.0.tgz#b28c2f1a5adaf624ae6ca4d8ca8505c302505cd0"
-  integrity sha512-XOigMoaREk+DXxVVNByycnKo5CcOweylGdGudYm0iueFT+GFLuQmrxBMbh5mnsDIkvRSgDioIFJu3XIoITGS8A==
+"@youwol/webpm-client@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@youwol/webpm-client/-/webpm-client-3.0.0.tgz#6bef16b5b20bccfde73fca1ea6dae822d9669b18"
+  integrity sha512-qTeQlz8GbxqrPunwcUxyDBin1jdOmmdbSVi3o60UA0BzM2g1515hJksmgYDfN25i8EuG7jN17wxZz9N0RgdPpw==
   dependencies:
-    "@youwol/flux-view" "^1.1.0"
-    rxjs "^6.5.5"
+    "@youwol/rx-vdom" "^1.0.1"
+    rxjs "^7.5.6"
     semver "^7.3.4"
 
 abab@^2.0.6:
@@ -2000,9 +1984,9 @@ duplexer@^0.1.2:
   integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
 electron-to-chromium@^1.4.535:
-  version "1.4.587"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.587.tgz#d8b864f21338b60798d447a3d83b90753f701d07"
-  integrity sha512-RyJX0q/zOkAoefZhB9XHghGeATVP0Q3mwA253XD/zj2OeXc+JZB9pCaEv6R578JUYaWM9PRhye0kXvd/V1cQ3Q==
+  version "1.4.588"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.588.tgz#d553f3c008e73488fb181fdf2601fdb0b1ffbb78"
+  integrity sha512-soytjxwbgcCu7nh5Pf4S2/4wa6UIu+A3p03U2yVr53qGxi1/VTR3ENI+p50v+UxqqZAfl48j3z55ud7VHIOr9w==
 
 emittery@^0.13.1:
   version "0.13.1"
@@ -4207,12 +4191,12 @@ run-parallel@^1.1.9:
   dependencies:
     queue-microtask "^1.2.2"
 
-rxjs@^6.5.5:
-  version "6.6.7"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-6.6.7.tgz#90ac018acabf491bf65044235d5863c4dab804c9"
-  integrity sha512-hTdwr+7yYNIT5n4AMYp85KA6yw2Va0FLa3Rguvbpa4W3I5xynaBZo41cM3XM+4Q6fRMj3sBYIR1VAmZMXYJvRQ==
+rxjs@^7.5.6:
+  version "7.8.1"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-7.8.1.tgz#6f6f3d99ea8044291efd92e7c7fcf562c4057543"
+  integrity sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==
   dependencies:
-    tslib "^1.9.0"
+    tslib "^2.1.0"
 
 safe-array-concat@^1.0.1:
   version "1.0.1"
@@ -4695,10 +4679,15 @@ tsconfig-paths@^3.14.2:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
-tslib@^1.8.1, tslib@^1.9.0:
+tslib@^1.8.1:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
+
+tslib@^2.1.0:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tsutils@^3.21.0:
   version "3.21.0"
