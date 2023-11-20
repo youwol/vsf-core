@@ -5,8 +5,7 @@ import type {
 } from '@youwol/rx-vdom'
 import { Journal, installJournalModule } from '@youwol/logging'
 import * as webpmClient from '@youwol/webpm-client'
-import type * as CdnClient from '@youwol/cdn-client'
-import * as fvTree from '@youwol/fv-tree'
+import * as fvTree from '@youwol/rx-tree-views'
 
 import { setup } from '../../auto-generated'
 import {
@@ -70,9 +69,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
         isCompatible: (d) => d instanceof ExecutionJournal,
         view: (data: ExecutionJournal) => {
             // @youwol/logging need a new version with @youwol/webpm-client
-            return installJournalModule(
-                webpmClient as unknown as typeof CdnClient,
-            ).then((module) => {
+            return installJournalModule(webpmClient).then((module) => {
                 const state = new module.JournalState({
                     journal: {
                         title: "Module's Journal",
