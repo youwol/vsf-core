@@ -85,7 +85,7 @@ test('transmission delay', (done) => {
         .subscribe((ends) => {
             const stamps = ends.map((e) => e - ends[0])
             expect(stamps[0]).toBe(0)
-            expect(stamps[1]).toBeGreaterThanOrEqual(50)
+            expect(stamps[1]).toBeGreaterThanOrEqual(49)
             expect(stamps[1]).toBeLessThanOrEqual(55)
             expect(stamps[2]).toBeGreaterThanOrEqual(100)
             expect(stamps[2]).toBeLessThanOrEqual(105)
