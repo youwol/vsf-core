@@ -148,7 +148,7 @@ export async function startWorkerShadowPool({
             })
         }
         if (data.kind == 'StopSignal') {
-            stop$.next()
+            stop$.next(undefined)
         }
         if (data.kind == 'InputClosed') {
             const { moduleId, slotId } = data

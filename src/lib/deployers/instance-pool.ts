@@ -235,7 +235,7 @@ export class InstancePool implements DeployerTrait {
             .forEach((m) => {
                 m.instancePool$.value.stop({ keepAlive })
             })
-        this.terminated$.next()
+        this.terminated$.next(undefined)
     }
 
     inspector(): Inspector {

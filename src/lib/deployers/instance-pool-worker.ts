@@ -209,7 +209,7 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
             taskId: this.processId,
             data: { kind: 'StopSignal' },
         })
-        this.terminated$.next()
+        this.terminated$.next(undefined)
     }
 }
 
