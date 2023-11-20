@@ -17,9 +17,9 @@ folder_path = Path(__file__).parent
 pkg_json = parse_json(folder_path / "package.json")
 
 load_dependencies = {
-    "rxjs": "^6.5.5",
-    "@youwol/webpm-client": "^2.2.0",
-    "@youwol/logging": "^0.1.1",
+    "rxjs": "^7.5.6",
+    "@youwol/webpm-client": "^3.0.0",
+    "@youwol/logging": "^0.2.0",
 }
 
 template = Template(
@@ -34,7 +34,7 @@ template = Template(
             externals={
                 **load_dependencies,
                 # lazy loaded on demand (e.g. for default view of data)
-                "@youwol/fv-tree": "^0.2.3",
+                "@youwol/rx-tree-views": "^0.3.1",
                 # `ts-essentials` is used to help the `Immutable` type definition
                 # It is not in dev-dependencies as we want it to be installed from consuming projects
                 "ts-essentials": "^9.3.1",
@@ -49,9 +49,7 @@ template = Template(
             # three is a dev dependencies for testing & needed to generate documentation.
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
-            "@youwol/http-primitives": "^0.1.2",
-            # @youwol/logging needs it
-            "@youwol/cdn-client": "^2.0.6",
+            "@youwol/http-primitives": "^0.2.0",
         },
     ),
     userGuide=False,
