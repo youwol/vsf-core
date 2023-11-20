@@ -17,17 +17,14 @@ import {
 } from '../common'
 import { ProjectState } from './'
 
-async function installFvTree(): Promise<typeof fvTree> {
-    const version = setup.runTimeDependencies.externals['@youwol/fv-tree']
+async function installRxTreeViews(): Promise<typeof fvTree> {
+    const version = setup.runTimeDependencies.externals['@youwol/rx-tree-views']
     return await webpmClient
         .install({
-            modules: [`@youwol/fv-tree#${version}`],
-            aliases: {
-                fvTree: '@youwol/fv-tree',
-            },
+            modules: [`@youwol/rx-tree-views#${version} as treeViews`],
         })
         .then((window) => {
-            return window['fvTree']
+            return window['treeViews']
         })
 }
 export async function installRxVDOM(): Promise<typeof fvTree> {
@@ -54,7 +51,7 @@ export const defaultViewsFactory: Journal.DataViewsFactory = [
         description: 'Raw view of data',
         isCompatible: () => true,
         view: (data) => {
-            return installFvTree().then(({ ObjectJs }) => {
+            return installRxTreeViews().then(({ ObjectJs }) => {
                 const state = new ObjectJs.State({
                     title: ' ',
                     data,
