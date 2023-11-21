@@ -174,7 +174,7 @@ test('InstancePoolWorker.empty', (done) => {
                     importedBundles.includes('@youwol/vsf-core'),
                 ).toBeTruthy()
                 expect(
-                    importedBundles.includes('@youwol/cdn-client'),
+                    importedBundles.includes('@youwol/webpm-client'),
                 ).toBeTruthy()
             }),
         )
