@@ -5,6 +5,7 @@ import { AnyVirtualDOM } from '@youwol/rx-vdom'
 import { Immutable, Immutables, ToolboxObjectTrait } from '../common'
 import { Configurations, Modules, Contracts, Deployers, Workflows } from '..'
 import { deployMacroInWorker } from './'
+import { WithModuleBaseSchema } from '../modules'
 
 export const macroToolbox = {
     name: 'Macros',
@@ -25,8 +26,8 @@ export type MacroDeclaration = Modules.Declaration & {
 }
 
 export type MacroSchema = {
-    workersPoolId: Configurations.String
-} & Configurations.Schema
+    workersPoolId: Configurations.String<'overridable'>
+} & Modules.SchemaModule
 
 export const defaultMacroConfig = {
     schema: {
@@ -272,6 +273,8 @@ export type MacroApi = {
  * Specification of a macro for latter instantiation.
  */
 export type MacroModel = Workflows.WorkflowModel &
-    Partial<Configurations.ConfigurableTrait<MacroSchema>> &
+    Partial<
+        Configurations.ConfigurableTrait<WithModuleBaseSchema<MacroSchema>>
+    > &
     Partial<MacroApi> &
     ToolboxObjectTrait
