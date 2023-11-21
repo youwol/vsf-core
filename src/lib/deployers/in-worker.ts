@@ -1,7 +1,7 @@
 /**
  * Only import of types are allowed here as it is executed in a worker
  */
-import type { WorkersPoolTypes } from '@youwol/cdn-client'
+import type { WorkersPoolTypes } from '@youwol/webpm-client'
 import type * as RxJS from 'rxjs'
 import type * as operators from 'rxjs/operators'
 
@@ -148,7 +148,7 @@ export async function startWorkerShadowPool({
             })
         }
         if (data.kind == 'StopSignal') {
-            stop$.next()
+            stop$.next(undefined)
         }
         if (data.kind == 'InputClosed') {
             const { moduleId, slotId } = data

@@ -1,5 +1,5 @@
 import { Immutable, UidTrait } from '../common'
-import { VirtualDOM } from '@youwol/flux-view'
+import { AnyVirtualDOM } from '@youwol/rx-vdom'
 
 import { Configurations, Deployers, Modules, Connections } from '..'
 
@@ -11,7 +11,7 @@ import { Configurations, Deployers, Modules, Connections } from '..'
  * However, what sets it apart is its capability to associate not only static values but also observables with
  * attributes or child elements.
  * For more detailed information, you can refer to the documentation available at
- * <a href='https://l.youwol.com/doc/@youwol/flux-view' target='_blank'>@youwol/flux-view</a>.
+ * <a href='https://platform.youwol.com/api/assets-gateway/raw/package/QHlvdXdvbC9yeC12ZG9t/%5E1.0.0/dist/docs/modules.html' target='_blank'>@youwol/rx-vdom</a>.
  *
  * The `instancePool` parameter provides access to available instances, allowing you to gather views
  *  associated with specific modules within the instance pool. You can also add reactive elements to the view by
@@ -25,7 +25,7 @@ import { Configurations, Deployers, Modules, Connections } from '..'
 export type HtmlView = (
     instancePool: Immutable<Deployers.InstancePool>,
     config?: unknown,
-) => VirtualDOM
+) => AnyVirtualDOM
 
 /**
  * Small (usually) graphical elements definition added to a flowchart.
@@ -62,7 +62,7 @@ export type FlowchartAnnotation = {
         elem: Immutable<
             Modules.ImplementationTrait | Connections.ConnectionTrait
         >,
-    ) => VirtualDOM
+    ) => AnyVirtualDOM
 }
 
 /**
@@ -400,7 +400,7 @@ export type Macro<TSchema extends Configurations.Schema> = {
     html?: (
         instance: Immutable<Modules.ImplementationTrait>,
         config?: unknown,
-    ) => VirtualDOM
+    ) => AnyVirtualDOM
 }
 
 /**
@@ -534,14 +534,14 @@ export type ProjectElements = {
      *      project = await project.with({
      *          libraries:[
      *              // implicit 'latest' version, explicit export name
-     *              '@youwol/flux-view as fv',
+     *              '@youwol/rx-vdom as rxDOM',
      *              // explicit version using semantic versioning, default export name (i.e. library name)
      *              '@youwol/http-clients#^2.0.6',
      *              // recover an indirect dependencies with an alias
      *              '~rxjs as rxjs'
      *              ]
      *      })
-     *      const { fv, rxjs } = project.environment.libraries
+     *      const { rxDOM, rxjs } = project.environment.libraries
      *      const httpClients = project.environment.libraries['@youwol/http-clients']
      * }
      * ```
@@ -644,9 +644,9 @@ export type ProjectElements = {
      *                  html: (module) => {
      *                      // module can be used to retrieve input/output observables and create reactive element here.
      *                      // Not done here for the sake of simplicity.
-     *                      // Please refer to the @youwol/flux-view (https://l.youwol.com/doc/@youwol/flux-view)
-     *                      // documentation to create reactive elements.
+     *                      // Please refer to the @youwol/rx-vdom documentation to create reactive elements.
      *                      return {
+     *                          tag: 'div',
      *                          innerText: 'Module A'
      *                      }
      *                  }
@@ -817,9 +817,12 @@ export type ProjectElements = {
      *                  inputs,
      *                  outputs,
      *                  // a simple view for the module is provided below
-     *                   // fv (@youwol/flux-view library) is supposed to be available in the scope
      *                  html: (self: Immutable<Modules.ImplementationTrait>) => ({
-     *                      innerText: fv.attr$(self.outputSlots.output$.observable$, (v) => `last value emitted: ${v}`)
+     *                      tag: 'div',
+     *                      innerText: {
+     *                          source$: self.outputSlots.output$.observable$,
+     *                          vdomMap: (v) => `last value emitted: ${v}`
+     *                      }
      *                  })
      *              },
      *              fwdParams)

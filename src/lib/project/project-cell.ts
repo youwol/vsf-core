@@ -1,6 +1,6 @@
 import { BehaviorSubject, from, ReplaySubject } from 'rxjs'
 import { Journal } from '@youwol/logging'
-import { VirtualDOM } from '@youwol/flux-view'
+import { AnyVirtualDOM, FluxViewVirtualDOM } from '@youwol/rx-vdom'
 
 import { Immutable, Immutables } from '../common'
 import { Configurations } from '..'
@@ -43,7 +43,7 @@ export class JsCell implements CellTrait {
      *
      * @group Observables
      */
-    public readonly outputs$ = new ReplaySubject<VirtualDOM>()
+    public readonly outputs$ = new ReplaySubject<AnyVirtualDOM>()
 
     /**
      * Views factory used when calling {@link log}
@@ -68,7 +68,10 @@ export class JsCell implements CellTrait {
         return this.source
             .execute({ project, cell: this, env: project.environment })
             .then((project) => {
-                this.outputs$.next({ class: 'fas fa-check fv-text-success' })
+                this.outputs$.next({
+                    tag: 'div',
+                    class: 'fas fa-check fv-text-success',
+                })
                 this.outputs$.complete()
                 return project
             })
@@ -78,12 +81,14 @@ export class JsCell implements CellTrait {
      * Display elements - string or virtual DOM - in cell's {@link outputs$}.
      * @param args list of elements
      */
-    display(...args: (VirtualDOM | string)[]) {
+    display(...args: (AnyVirtualDOM | string)[]) {
         this.outputs$.next({
+            tag: 'div',
             class: 'd-flex align-items-center',
             children: args.map((view) => {
                 const vDOM = typeof view == 'string' ? stringView(view) : view
                 return {
+                    tag: 'div',
                     class: 'pr-2',
                     children: [vDOM],
                 }
@@ -103,13 +108,13 @@ export class JsCell implements CellTrait {
                     ? stringView(data)
                     : this.viewsFactory
                           .filter((view) => view.isCompatible(data))
-                          .map((fact) => fact.view(data))
+                          .map((fact) => fact.view(data) as FluxViewVirtualDOM)
             })
             .flat()
         from(allViews).subscribe((view) => {
             if (view instanceof Promise) {
-                view.then((v) => {
-                    this.outputs$.next({ children: [v] })
+                view.then((v: AnyVirtualDOM) => {
+                    this.outputs$.next({ tag: 'div', children: [v] })
                 })
                 return
             }
@@ -120,6 +125,7 @@ export class JsCell implements CellTrait {
 
 function stringView(data: string | boolean | number) {
     return {
+        tag: 'div' as const,
         class: 'fv-text-focus',
         innerHTML: `<b>${data}</b>`,
     }

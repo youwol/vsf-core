@@ -1,6 +1,6 @@
 // noinspection JSValidateJSDoc
 
-import { VirtualDOM } from '@youwol/flux-view'
+import { AnyVirtualDOM } from '@youwol/rx-vdom'
 
 import {
     Immutable,
@@ -340,7 +340,7 @@ export class ProjectState {
             html?: (
                 instance: Modules.ImplementationTrait,
                 config?: unknown,
-            ) => VirtualDOM
+            ) => AnyVirtualDOM
         },
     ) {
         const macro = this.macros.find((m) => m.uid == macroUid)
@@ -535,7 +535,7 @@ export class ProjectState {
      */
     addHtml(
         viewId: string,
-        vDOM: (instances: Deployers.InstancePool) => VirtualDOM,
+        vDOM: (instances: Deployers.InstancePool) => AnyVirtualDOM,
     ): ProjectState {
         return new ProjectState({
             ...this,

@@ -87,6 +87,7 @@ test('add a macro + API (index) + instance', async () => {
                         pool.inspector().get(e),
                     )
                     return {
+                        tag: 'div',
                         innerText: `${config.prefix}: ${m0.uid}>${c0.uid}>${m1.uid}`,
                     }
                 },

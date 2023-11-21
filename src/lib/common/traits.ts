@@ -7,10 +7,10 @@ import {
     Modules,
     ToolBox,
 } from '..'
-import { VirtualDOM } from '@youwol/flux-view'
+import type { AnyVirtualDOM } from '@youwol/rx-vdom'
 import { BehaviorSubject, Observable } from 'rxjs'
 import { ContextLoggerTrait, LogChannel } from '@youwol/logging'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { WorkersPoolTypes } from '@youwol/webpm-client'
 
 /**
  * Trait for object with unique ID
@@ -49,7 +49,7 @@ export interface JournalTrait {
  * Trait for objects that can be rendered in an HTML document.
  */
 export interface HtmlTrait {
-    html: (config?) => VirtualDOM
+    html: (config?) => AnyVirtualDOM
 }
 export function implementsHtmlTrait(object: unknown): object is HtmlTrait {
     return (object as HtmlTrait).html != undefined
@@ -59,7 +59,7 @@ export function implementsHtmlTrait(object: unknown): object is HtmlTrait {
  * Trait for objects that can be rendered in a (3D) canvas.
  */
 export interface CanvasTrait {
-    canvas: (config?) => VirtualDOM
+    canvas: (config?) => AnyVirtualDOM
 }
 
 /**

@@ -1,6 +1,6 @@
 import { NoContext } from '@youwol/logging'
 import { takeUntil } from 'rxjs/operators'
-import { WorkersPoolTypes } from '@youwol/cdn-client'
+import { WorkersPoolTypes } from '@youwol/webpm-client'
 
 import { Immutable } from '../common'
 import { Deployers, Modules } from '..'

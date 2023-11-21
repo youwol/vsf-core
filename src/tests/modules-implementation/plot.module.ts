@@ -26,9 +26,11 @@ export function module(fwdParams) {
             configuration,
             inputs,
             html: () => ({
+                tag: 'div',
                 innerText: 'plot html view',
             }),
             canvas: () => ({
+                tag: 'div',
                 innerText: 'plot canvas view',
             }),
         },

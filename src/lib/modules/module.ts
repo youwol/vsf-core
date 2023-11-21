@@ -1,6 +1,6 @@
-import { VirtualDOM } from '@youwol/flux-view'
+import { AnyVirtualDOM } from '@youwol/rx-vdom'
 import { Context, ContextLoggerTrait } from '@youwol/logging'
-import { InstallInputs } from '@youwol/cdn-client'
+import { InstallInputs } from '@youwol/webpm-client'
 import { BehaviorSubject, Observable } from 'rxjs'
 
 import {
@@ -152,7 +152,7 @@ export type UserArgs<
     canvas?: (
         instance: ImplementationTrait<TSchema, TInputs, TState>,
         config?: unknown,
-    ) => VirtualDOM
+    ) => AnyVirtualDOM
 
     /**
      * Module's representation as HTML element
@@ -160,7 +160,7 @@ export type UserArgs<
     html?: (
         instance: ImplementationTrait<TSchema, TInputs, TState>,
         config?: unknown,
-    ) => VirtualDOM
+    ) => AnyVirtualDOM
     /**
      * Module's state
      */
@@ -435,8 +435,8 @@ export class Implementation<
         Immutable<Deployers.DeployerTrait>
     >
 
-    public readonly canvas?: (config?) => VirtualDOM
-    public readonly html?: (config?) => VirtualDOM
+    public readonly canvas?: (config?) => AnyVirtualDOM
+    public readonly html?: (config?) => AnyVirtualDOM
 
     /**
      *

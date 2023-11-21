@@ -1,5 +1,4 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
-import { attr$ } from '@youwol/flux-view'
 import { Connection } from '../lib/connections'
 import { Configurations, Modules, Contracts, Projects } from '../lib'
 import { map } from 'rxjs/operators'
@@ -177,7 +176,11 @@ test('repl with view & canvas', async () => {
                     })
 
                     return {
-                        innerText: attr$(obs, () => new Date().toTimeString()),
+                        tag: 'div',
+                        innerText: {
+                            source$: obs,
+                            vdomMap: () => new Date().toTimeString(),
+                        },
                     }
                 },
             },
@@ -188,6 +191,7 @@ test('repl with view & canvas', async () => {
                     selector: (elem) => elem.uid === 'm0',
                     html: () => {
                         return {
+                            tag: 'div',
                             innerText: 'custom canvas element',
                         }
                     },

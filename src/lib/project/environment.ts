@@ -8,7 +8,7 @@ import {
 } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { install, installWorkersPoolModule } from '@youwol/cdn-client'
+import { install, installWorkersPoolModule } from '@youwol/webpm-client'
 // eslint-disable-next-line unused-imports/no-unused-imports -- For documentation in `install`
 import { ProjectElements } from './models'
 import { setup } from '../../auto-generated'
@@ -44,8 +44,8 @@ export class Environment implements EnvironmentTrait {
      * The libraries installed using {@link install}.
      *
      * The key is either:
-     * *  the name of the library if no alias provided (e.g. `install(['@youwol/flux-view'])`)
-     * *  the alias of the library if an alias has been provided  (e.g. `install(['@youwol/flux-view as fv'])`)
+     * *  the name of the library if no alias provided (e.g. `install(['@youwol/rx-vdom'])`)
+     * *  the alias of the library if an alias has been provided  (e.g. `install(['@youwol/rx-vdom as rxDOM'])`)
      */
     public readonly libraries: Immutable<LibrariesStore> = {
         vsf,
@@ -377,7 +377,7 @@ export class Environment implements EnvironmentTrait {
                         modules: [`@youwol/vsf-core#${setup.version}`],
                         aliases: {
                             vsfCore: '@youwol/vsf-core',
-                            CDN: '@youwol/cdn-client',
+                            CDN: '@youwol/webpm-client',
                         },
                     },
                     globals: {
