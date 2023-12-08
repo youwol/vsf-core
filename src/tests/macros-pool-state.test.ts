@@ -111,9 +111,6 @@ test('some test', async () => {
                 purgeOnDone: true,
             })
         }),
-        tap((d) => {
-            console.log(d)
-        }),
         reduce((acc, e) => [...acc, e], []),
     )
     const d = await firstValueFrom(test$)
