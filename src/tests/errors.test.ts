@@ -1,4 +1,4 @@
-import { from } from 'rxjs'
+import { firstValueFrom, from } from 'rxjs'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { mergeMap } from 'rxjs/operators'
 
@@ -8,9 +8,8 @@ console.error = () => {
     /*do not display expected errors*/
 }
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('error in adaptor', (done) => {
-    from(
+test('error in adaptor', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: {
                 branches: ['(of#of)>#a0>(sphere#s0)'],
@@ -23,43 +22,34 @@ test('error in adaptor', (done) => {
                 },
             },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return project.environment.errorChannel$
+        }),
     )
-        .pipe(
-            mergeMap((project) => {
-                return project.environment.errorChannel$
-            }),
-        )
-        .subscribe((error) => {
-            expect(error.context).toBeTruthy()
-            expect(error.text).toBe(
-                "Cannot read properties of undefined (reading 'b')",
-            )
-            done()
-        })
+    const error = await firstValueFrom(test$)
+    expect(error.context).toBeTruthy()
+    expect(error.text).toBe("Cannot read properties of undefined (reading 'b')")
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('error in contract', (done) => {
-    from(
+test('error in contract', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: { branches: ['(of#of)>>(sphere#s0)>>(console)'] },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return project.environment.errorChannel$
+        }),
     )
-        .pipe(
-            mergeMap((project) => {
-                return project.environment.errorChannel$
-            }),
-        )
-        .subscribe((error) => {
-            expect(error.context).toBeTruthy()
-            expect(error.text).toBe('Contract resolution failed for s0')
-            done()
-        })
+
+    const error = await firstValueFrom(test$)
+    expect(error.context).toBeTruthy()
+    expect(error.text).toBe('Contract resolution failed for s0')
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('error in module', (done) => {
-    from(
+test('error in module', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: {
                 branches: ['(of#of)>>(map#map)>>(console)'],
@@ -70,18 +60,14 @@ test('error in module', (done) => {
                 },
             },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return project.environment.errorChannel$
+        }),
     )
-        .pipe(
-            mergeMap((project) => {
-                return project.environment.errorChannel$
-            }),
-        )
-        .subscribe((error) => {
-            expect(error.context).toBeTruthy()
-            expect(error.context.title).toBe('Error in module processing')
-            expect(error.text).toBe(
-                "Cannot read properties of undefined (reading 'b')",
-            )
-            done()
-        })
+
+    const error = await firstValueFrom(test$)
+    expect(error.context).toBeTruthy()
+    expect(error.context.title).toBe('Error in module processing')
+    expect(error.text).toBe("Cannot read properties of undefined (reading 'b')")
 })

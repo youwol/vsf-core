@@ -1,5 +1,5 @@
 import { mergeMessagesContext } from '../lib/modules'
-import { forkJoin, from } from 'rxjs'
+import { firstValueFrom, forkJoin, from } from 'rxjs'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 import { MeshStandardMaterial } from 'three'
 import { map, mergeMap, reduce, take } from 'rxjs/operators'
@@ -22,9 +22,8 @@ test('merge context message', () => {
     })
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('start$ & end$', (done) => {
-    from(
+test('start$ & end$', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: {
                 branches: ['(of#of)>>(delay#delay)>#a0>(sphere#s0)'],
@@ -40,25 +39,21 @@ test('start$ & end$', (done) => {
                 },
             },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return forkJoin([
+                project.getConnection('a0').start$.pipe(take(1)),
+                project.getConnection('a0').end$.pipe(take(1)),
+            ])
+        }),
     )
-        .pipe(
-            mergeMap((project) => {
-                return forkJoin([
-                    project.getConnection('a0').start$.pipe(take(1)),
-                    project.getConnection('a0').end$.pipe(take(1)),
-                ])
-            }),
-        )
-        .subscribe(([start, end]) => {
-            expect(start.data).toEqual({})
-            expect(end.data).toBeInstanceOf(MeshStandardMaterial)
-            done()
-        })
+    const [start, end] = await firstValueFrom(test$)
+    expect(start.data).toEqual({})
+    expect(end.data).toBeInstanceOf(MeshStandardMaterial)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('transmission delay', (done) => {
-    from(
+test('transmission delay', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: {
                 branches: ['(of#of)>#a0>(map#map)'],
@@ -73,22 +68,17 @@ test('transmission delay', (done) => {
                 },
             },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return project.getConnection('a0').end$.pipe(map(() => Date.now()))
+        }),
+        reduce((acc, e) => [...acc, e], []),
     )
-        .pipe(
-            mergeMap((project) => {
-                return project
-                    .getConnection('a0')
-                    .end$.pipe(map(() => Date.now()))
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((ends) => {
-            const stamps = ends.map((e) => e - ends[0])
-            expect(stamps[0]).toBe(0)
-            expect(stamps[1]).toBeGreaterThanOrEqual(49)
-            expect(stamps[1]).toBeLessThanOrEqual(55)
-            expect(stamps[2]).toBeGreaterThanOrEqual(100)
-            expect(stamps[2]).toBeLessThanOrEqual(105)
-            done()
-        })
+    const ends = await firstValueFrom(test$)
+    const stamps = ends.map((e) => e - ends[0])
+    expect(stamps[0]).toBe(0)
+    expect(stamps[1]).toBeGreaterThanOrEqual(49)
+    expect(stamps[1]).toBeLessThanOrEqual(55)
+    expect(stamps[2]).toBeGreaterThanOrEqual(100)
+    expect(stamps[2]).toBeLessThanOrEqual(105)
 })

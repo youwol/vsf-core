@@ -8,7 +8,7 @@ import {
     ProjectsStore,
     ProjectState,
 } from '../lib/project'
-import { BehaviorSubject, from } from 'rxjs'
+import { BehaviorSubject, firstValueFrom, from } from 'rxjs'
 import { mergeMap, reduce } from 'rxjs/operators'
 setupCdnHttpConnection()
 
@@ -29,8 +29,7 @@ test('JsCell no view', async () => {
     expect(project.instancePool.modules).toHaveLength(1)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('JsCell with display', (done) => {
+test('JsCell with display', async () => {
     const project = emptyProject()
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
@@ -47,27 +46,23 @@ test('JsCell with display', (done) => {
         viewsFactory: [],
     })
 
-    from(cell.execute(project))
-        .pipe(
-            mergeMap(() => {
-                return cell.outputs$
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((outputs) => {
-            // expect the element displayed + success elements
-            expect(outputs).toHaveLength(2)
-            // success element
-            expect(outputs[1]).toEqual({
-                tag: 'div',
-                class: 'fas fa-check fv-text-success',
-            })
-            done()
-        })
+    const test$ = from(cell.execute(project)).pipe(
+        mergeMap(() => {
+            return cell.outputs$
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+    const outputs = await firstValueFrom(test$)
+    // expect the element displayed + success elements
+    expect(outputs).toHaveLength(2)
+    // success element
+    expect(outputs[1]).toEqual({
+        tag: 'div',
+        class: 'fas fa-check fv-text-success',
+    })
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('JsCell with log', (done) => {
+test('JsCell with log', async () => {
     const project = emptyProject()
     const source = new Configurations.JsCode({
         value: async ({ project }: { project: ProjectState; cell: JsCell }) => {
@@ -104,42 +99,39 @@ test('JsCell with log', (done) => {
         ],
     })
 
-    from(cell.execute(project))
-        .pipe(
-            mergeMap(() => {
-                return cell.outputs$
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((outputs) => {
-            // expect the element displayed + success elements
-            expect(outputs).toHaveLength(5)
-            // success element
-            expect(outputs[0]).toEqual({
-                tag: 'div',
-                class: 'fv-text-focus',
-                innerHTML: '<b>a test</b>',
-            })
-            expect(outputs[1]).toEqual({
-                tag: 'div',
-                innerText: 'value is 42',
-            })
-            expect(outputs[2]).toEqual({
-                tag: 'div',
-                class: 'fv-text-focus',
-                innerHTML: '<b>a second test</b>',
-            })
-            expect(outputs[3].children[0]).toEqual({
-                tag: 'div',
-                id: 'test-2',
-                innerText: 'value is 84',
-            })
-            expect(outputs[4]).toEqual({
-                tag: 'div',
-                class: 'fas fa-check fv-text-success',
-            })
-            done()
-        })
+    const test$ = from(cell.execute(project)).pipe(
+        mergeMap(() => {
+            return cell.outputs$
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+    const outputs = await firstValueFrom(test$)
+    // expect the element displayed + success elements
+    expect(outputs).toHaveLength(5)
+    // success element
+    expect(outputs[0]).toEqual({
+        tag: 'div',
+        class: 'fv-text-focus',
+        innerHTML: '<b>a test</b>',
+    })
+    expect(outputs[1]).toEqual({
+        tag: 'div',
+        innerText: 'value is 42',
+    })
+    expect(outputs[2]).toEqual({
+        tag: 'div',
+        class: 'fv-text-focus',
+        innerHTML: '<b>a second test</b>',
+    })
+    expect(outputs[3].children[0]).toEqual({
+        tag: 'div',
+        id: 'test-2',
+        innerText: 'value is 84',
+    })
+    expect(outputs[4]).toEqual({
+        tag: 'div',
+        class: 'fas fa-check fv-text-success',
+    })
 })
 
 test('BatchCells', async () => {

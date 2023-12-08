@@ -1,6 +1,6 @@
 import { ProjectState } from '../lib/project'
 import { createChart, macroInstance, deployMacroInWorker } from '../lib/macros'
-import { from, Observable } from 'rxjs'
+import { firstValueFrom, from, Observable } from 'rxjs'
 import { map, mergeMap, reduce, tap } from 'rxjs/operators'
 import {
     implementWorkerProcessTrait,
@@ -108,213 +108,188 @@ test('to clonable', () => {
     expect(obj2Cloned.att).toBeInstanceOf(SharedArrayBuffer)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('InstancePoolWorker.empty', (done) => {
+test('InstancePoolWorker.empty', async () => {
     const uid = 'test'
     const project = new ProjectState()
-    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
-        .pipe(
-            addWorkerPool('A'),
-            mergeMap((project) => {
-                const wp = project.environment.workersPools.find(
-                    (w) => w.model.id == 'A',
-                )
-                return from(
-                    InstancePoolWorker.empty({
-                        parentUid: 'test',
-                        processName: uid,
-                        workersPool: wp.instance,
-                    }),
-                ).pipe(
-                    tap((instancePool) => {
-                        expect(
-                            implementWorkerProcessTrait(instancePool),
-                        ).toBeTruthy()
-                        expect(instancePool.modules).toHaveLength(0)
-                        expect(instancePool.connections).toHaveLength(0)
-                    }),
-                    map((instancePool) => ({
-                        instancePool,
-                        runtime$: wp.runtimes$,
-                    })),
-                )
-            }),
-            mergeMap(({ runtime$ }) => {
-                return runtime$
-            }),
-            tap((runtime) => {
-                expect(Object.values(runtime)).toHaveLength(1)
-                expect(Object.values(runtime)[0]).toHaveProperty(
-                    'importedBundles',
-                )
-                const importedBundles = Object.keys(
-                    Object.values(runtime)[0].importedBundles,
-                )
-                expect(
-                    importedBundles.includes('@youwol/vsf-core'),
-                ).toBeTruthy()
-                expect(
-                    importedBundles.includes('@youwol/webpm-client'),
-                ).toBeTruthy()
-            }),
-        )
-        .subscribe(() => {
-            done()
-        })
+    const test$ = from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] })).pipe(
+        addWorkerPool('A'),
+        mergeMap((project) => {
+            const wp = project.environment.workersPools.find(
+                (w) => w.model.id == 'A',
+            )
+            return from(
+                InstancePoolWorker.empty({
+                    parentUid: 'test',
+                    processName: uid,
+                    workersPool: wp.instance,
+                }),
+            ).pipe(
+                tap((instancePool) => {
+                    expect(
+                        implementWorkerProcessTrait(instancePool),
+                    ).toBeTruthy()
+                    expect(instancePool.modules).toHaveLength(0)
+                    expect(instancePool.connections).toHaveLength(0)
+                }),
+                map((instancePool) => ({
+                    instancePool,
+                    runtime$: wp.runtimes$,
+                })),
+            )
+        }),
+        mergeMap(({ runtime$ }) => {
+            return runtime$
+        }),
+        tap((runtime) => {
+            expect(Object.values(runtime)).toHaveLength(1)
+            expect(Object.values(runtime)[0]).toHaveProperty('importedBundles')
+            const importedBundles = Object.keys(
+                Object.values(runtime)[0].importedBundles,
+            )
+            expect(importedBundles.includes('@youwol/vsf-core')).toBeTruthy()
+            expect(
+                importedBundles.includes('@youwol/webpm-client'),
+            ).toBeTruthy()
+        }),
+    )
+    await firstValueFrom(test$)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('deployMacroInWorker', (done) => {
+test('deployMacroInWorker', async () => {
     const project = new ProjectState()
-    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
-        .pipe(
-            addWorkerPool('A'),
-            addMapTakeMacro(),
-            mergeMap((project) => {
-                const wp = project.environment.workersPools.find(
-                    (w) => w.model.id == 'A',
-                )
-                const macro = project.macros[0]
-                const chart = createChart({
-                    macro: macro,
-                    dynamicConfig: {},
-                })
-                return from(
-                    deployMacroInWorker({
-                        macro,
-                        chart,
-                        workersPool: wp.instance,
-                        fwdParams: {
-                            uid: 'test',
-                            environment: project.environment,
-                            factory: macroInstance(macro),
-                            toolbox: project.getToolbox(
-                                ProjectState.macrosToolbox,
-                            ),
-                            scope: {},
-                            configurationInstance: { workersPoolId: 'A' },
-                            context: undefined,
-                        },
-                    }),
-                )
-            }),
-            tap((module) => {
-                const instancePool = module.instancePool$.value
-                expect(implementWorkerProcessTrait(instancePool)).toBeTruthy()
-                expect(instancePool.parentUid).toBe('test')
-                expect(instancePool.modules).toHaveLength(2)
-                expect(instancePool.connections).toHaveLength(1)
-                expect(module.configurationInstance).toEqual({
-                    workersPoolId: 'A',
-                    takeCount: 1,
-                })
-            }),
-            mergeMap((module) => {
-                const [input, output] = [
-                    module.inputSlots,
-                    module.outputSlots,
-                ].map((slots) => Object.values(slots)[0])
-                input.rawMessage$.next({
-                    data: 42,
-                    configuration: {},
-                    context: {},
-                })
-                return output.observable$
-            }),
-            reduce((acc, e) => [...acc, e], []),
-            tap(([m]) => {
-                expect(m.data).toBe(84)
-            }),
-        )
-        .subscribe(() => {
-            done()
-        })
+    const test$ = from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] })).pipe(
+        addWorkerPool('A'),
+        addMapTakeMacro(),
+        mergeMap((project) => {
+            const wp = project.environment.workersPools.find(
+                (w) => w.model.id == 'A',
+            )
+            const macro = project.macros[0]
+            const chart = createChart({
+                macro: macro,
+                dynamicConfig: {},
+            })
+            return from(
+                deployMacroInWorker({
+                    macro,
+                    chart,
+                    workersPool: wp.instance,
+                    fwdParams: {
+                        uid: 'test',
+                        environment: project.environment,
+                        factory: macroInstance(macro),
+                        toolbox: project.getToolbox(ProjectState.macrosToolbox),
+                        scope: {},
+                        configurationInstance: { workersPoolId: 'A' },
+                        context: undefined,
+                    },
+                }),
+            )
+        }),
+        tap((module) => {
+            const instancePool = module.instancePool$.value
+            expect(implementWorkerProcessTrait(instancePool)).toBeTruthy()
+            expect(instancePool.parentUid).toBe('test')
+            expect(instancePool.modules).toHaveLength(2)
+            expect(instancePool.connections).toHaveLength(1)
+            expect(module.configurationInstance).toEqual({
+                workersPoolId: 'A',
+                takeCount: 1,
+            })
+        }),
+        mergeMap((module) => {
+            const [input, output] = [module.inputSlots, module.outputSlots].map(
+                (slots) => Object.values(slots)[0],
+            )
+            input.rawMessage$.next({
+                data: 42,
+                configuration: {},
+                context: {},
+            })
+            return output.observable$
+        }),
+        reduce((acc, e) => [...acc, e], []),
+        tap(([m]) => {
+            expect(m.data).toBe(84)
+        }),
+    )
+    await firstValueFrom(test$)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('simple project with workers pool', (done) => {
+test('simple project with workers pool', async () => {
     const project = new ProjectState()
-    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
-        .pipe(
-            addWorkerPool('A'),
-            addMapTakeMacro(),
-            mergeMap((project) =>
-                from(
-                    project.with({
-                        workflow: {
-                            branches: [
-                                '(of#of)>>(test-macro#macro)>>(reduce#reduce)',
-                            ],
-                            configurations: {
-                                of: {
-                                    args: 42,
-                                },
-                                macro: {
-                                    workersPoolId: 'A',
-                                },
+    const test$ = from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] })).pipe(
+        addWorkerPool('A'),
+        addMapTakeMacro(),
+        mergeMap((project) =>
+            from(
+                project.with({
+                    workflow: {
+                        branches: [
+                            '(of#of)>>(test-macro#macro)>>(reduce#reduce)',
+                        ],
+                        configurations: {
+                            of: {
+                                args: 42,
+                            },
+                            macro: {
+                                workersPoolId: 'A',
                             },
                         },
-                    }),
-                ),
+                    },
+                }),
             ),
-            mergeMap((project) => {
-                const module = project.instancePool
-                    .inspector()
-                    .getModule('reduce')
-                expect(module).toBeTruthy()
-                return from(Object.values(module.outputSlots)[0].observable$)
-            }),
-            tap((m) => {
-                expect(m.data).toHaveLength(1)
-                expect(m.data[0]).toBe(84)
-            }),
-        )
-        .subscribe(() => {
-            done()
-        })
+        ),
+        mergeMap((project) => {
+            const module = project.instancePool.inspector().getModule('reduce')
+            expect(module).toBeTruthy()
+            return from(Object.values(module.outputSlots)[0].observable$)
+        }),
+        tap((m) => {
+            expect(m.data).toHaveLength(1)
+            expect(m.data[0]).toBe(84)
+        }),
+    )
+    await firstValueFrom(test$)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('simple project with workers pool + stop', (done) => {
+test('simple project with workers pool + stop', async () => {
     const project = new ProjectState()
-    from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] }))
-        .pipe(
-            addWorkerPool('A'),
-            addMapTakeMacro(),
-            mergeMap((project) =>
-                from(
-                    project.with({
-                        workflow: {
-                            branches: [
-                                '(timer#timer)>>(test-macro#macro)>>(reduce#reduce)',
-                            ],
-                            configurations: {
-                                timer: {
-                                    interval: 150,
-                                },
-                                macro: {
-                                    workersPoolId: 'A',
-                                    takeCount: 4,
-                                },
+    const test$ = from(project.with({ toolboxes: ['@youwol/vsf-rxjs'] })).pipe(
+        addWorkerPool('A'),
+        addMapTakeMacro(),
+        mergeMap((project) =>
+            from(
+                project.with({
+                    workflow: {
+                        branches: [
+                            '(timer#timer)>>(test-macro#macro)>>(reduce#reduce)',
+                        ],
+                        configurations: {
+                            timer: {
+                                interval: 150,
+                            },
+                            macro: {
+                                workersPoolId: 'A',
+                                takeCount: 4,
                             },
                         },
-                    }),
-                ),
+                    },
+                }),
             ),
-            mergeMap((project) => {
-                const inspector = project.instancePool.inspector()
-                const macro = inspector.getModule('macro')
-                setTimeout(() => macro.instancePool$.value.stop({}), 200)
-                const module = inspector.getModule('reduce')
-                return from(Object.values(module.outputSlots)[0].observable$)
-            }),
-            tap((m) => {
-                // the timer emit at (ms) 0, 150, 300, 450, ...; the macro take the first 4;
-                // but the stop signal is emitted at 200 ms => only 2 items
-                expect(m.data).toHaveLength(2)
-            }),
-        )
-        .subscribe(() => {
-            done()
-        })
+        ),
+        mergeMap((project) => {
+            const inspector = project.instancePool.inspector()
+            const macro = inspector.getModule('macro')
+            setTimeout(() => macro.instancePool$.value.stop({}), 200)
+            const module = inspector.getModule('reduce')
+            return from(Object.values(module.outputSlots)[0].observable$)
+        }),
+        tap((m) => {
+            // the timer emit at (ms) 0, 150, 300, 450, ...; the macro take the first 4;
+            // but the stop signal is emitted at 200 ms => only 2 items
+            expect(m.data).toHaveLength(2)
+        }),
+    )
+    await firstValueFrom(test$)
 })
