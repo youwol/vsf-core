@@ -11,6 +11,9 @@ beforeAll(async () => {
     await installTestWorkersEnvironment()
 })
 
+console.log = () => {
+    /*no op*/
+}
 test('one module', async () => {
     //const tb = project.getToolbox('@youwol/vs-flow-core/test-toolbox')
     //expect(tb.name).toBe('test-toolbox')
