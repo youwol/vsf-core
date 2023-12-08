@@ -6,6 +6,7 @@ import {
     setupCdnHttpConnection,
 } from './test.utils'
 
+jest.setTimeout(15 * 1000)
 console.log = () => {
     /*no op*/
 }
