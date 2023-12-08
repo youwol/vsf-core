@@ -164,7 +164,13 @@ test('with merge map', (done) => {
         .subscribe((d) => {
             expect(d).toHaveLength(6)
             const values = d.map(({ data }) => data)
-            expect(values).toEqual([2, 2, 10, 2, 10, 10])
+            // mergeMap does not enforce a particular policy, we may end in practice one
+            // of the two following possibilities
+            const expected = [
+                [2, 2, 10, 2, 10, 10],
+                [2, 2, 2, 10, 10, 10],
+            ]
+            expect(expected).toContainEqual(values)
             done()
         })
 })
