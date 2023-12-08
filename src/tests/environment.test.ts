@@ -1,8 +1,10 @@
 import { Environment } from '../lib/project'
-import { installTestWorkersPoolModule } from '@youwol/webpm-client'
 import { from } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
-import { setupCdnHttpConnection } from './test.utils'
+import {
+    installTestWorkersEnvironment,
+    setupCdnHttpConnection,
+} from './test.utils'
 
 console.log = () => {
     /*no op*/
@@ -48,7 +50,7 @@ test('install dependencies', async () => {
 
 // eslint-disable-next-line jest/no-done-callback -- more readable that way
 test('add workers pool', (done) => {
-    from(installTestWorkersPoolModule())
+    from(installTestWorkersEnvironment())
         .pipe(
             mergeMap(() => {
                 return from(

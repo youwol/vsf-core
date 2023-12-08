@@ -1,34 +1,14 @@
-import { setupCdnHttpConnection } from './test.utils'
 import {
-    InstallInputs,
-    installTestWorkersPoolModule,
-    WorkersPoolTypes,
-} from '@youwol/webpm-client'
-import { setup } from '../auto-generated'
+    setupCdnHttpConnection,
+    installTestWorkersEnvironment,
+} from './test.utils'
 import { ProjectState } from '../lib/project'
 import { from, of } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
 
 beforeAll(async () => {
     setupCdnHttpConnection({ localOnly: false })
-    await installTestWorkersPoolModule({
-        onBeforeWorkerInstall: ({
-            message,
-        }: {
-            message: WorkersPoolTypes.MessageInstall
-        }) => {
-            const install = message.cdnInstallation as InstallInputs
-            const vsfCore = `@youwol/vsf-core#${setup.version}`
-            install.modules = install.modules.filter(
-                (item) => item !== `@youwol/vsf-core#${setup.version}`,
-            )
-            const alias = Object.entries(install.aliases).find(
-                ([_, v]) =>
-                    typeof v === 'string' && v.includes('@youwol/vsf-core'),
-            )[0]
-            globalThis[alias] = vsfCore
-        },
-    })
+    await installTestWorkersEnvironment()
 })
 
 /* eslint-disable-next-line jest/no-done-callback -- TODO: return Promise from subscription instead of using done() */

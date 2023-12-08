@@ -1,8 +1,3 @@
-import {
-    InstallInputs,
-    installTestWorkersPoolModule,
-    WorkersPoolTypes,
-} from '@youwol/webpm-client'
 import { ProjectState } from '../lib/project'
 import { createChart, macroInstance, deployMacroInWorker } from '../lib/macros'
 import { from, Observable } from 'rxjs'
@@ -13,32 +8,17 @@ import {
     toClonable,
 } from '../lib/deployers'
 import { Configurations } from '../lib'
-import { setupCdnHttpConnection } from './test.utils'
-import { setup } from '../auto-generated'
+import {
+    installTestWorkersEnvironment,
+    setupCdnHttpConnection,
+} from './test.utils'
 
 console.log = () => {
     /*no op*/
 }
 beforeAll(async () => {
     setupCdnHttpConnection({ localOnly: false })
-    await installTestWorkersPoolModule({
-        onBeforeWorkerInstall: ({
-            message,
-        }: {
-            message: WorkersPoolTypes.MessageInstall
-        }) => {
-            const install = message.cdnInstallation as InstallInputs
-            const vsfCore = `@youwol/vsf-core#${setup.version}`
-            install.modules = install.modules.filter(
-                (item) => item !== `@youwol/vsf-core#${setup.version}`,
-            )
-            const alias = Object.entries(install.aliases).find(
-                ([_, v]) =>
-                    typeof v === 'string' && v.includes('@youwol/vsf-core'),
-            )[0]
-            globalThis[alias] = vsfCore
-        },
-    })
+    await installTestWorkersEnvironment()
 })
 
 function addMapTakeMacro() {
