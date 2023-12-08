@@ -1,9 +1,12 @@
 import { Environment } from '../lib/project'
-import { installTestWorkersPoolModule } from '@youwol/webpm-client'
-import { from } from 'rxjs'
+import { firstValueFrom, from } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
-import { setupCdnHttpConnection } from './test.utils'
+import {
+    installTestWorkersEnvironment,
+    setupCdnHttpConnection,
+} from './test.utils'
 
+jest.setTimeout(15 * 1000)
 console.log = () => {
     /*no op*/
 }
@@ -46,26 +49,24 @@ test('install dependencies', async () => {
     expect(module).toBeTruthy()
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('add workers pool', (done) => {
-    from(installTestWorkersPoolModule())
-        .pipe(
-            mergeMap(() => {
-                return from(
-                    new Environment().addWorkersPool({
-                        id: 'A',
-                        startAt: 1,
-                        stretchTo: 1,
-                    }),
-                )
-            }),
-            tap((env) => {
-                expect(env).toBeTruthy()
-                const wp = env.workersPools.find((w) => w.model.id == 'A')
-                expect(wp).toBeTruthy()
-            }),
-        )
-        .subscribe(() => done())
+test('add workers pool', async () => {
+    const test$ = from(installTestWorkersEnvironment()).pipe(
+        mergeMap(() => {
+            return from(
+                new Environment().addWorkersPool({
+                    id: 'A',
+                    startAt: 1,
+                    stretchTo: 1,
+                }),
+            )
+        }),
+        tap((env) => {
+            expect(env).toBeTruthy()
+            const wp = env.workersPools.find((w) => w.model.id == 'A')
+            expect(wp).toBeTruthy()
+        }),
+    )
+    await firstValueFrom(test$)
 })
 
 test('import wrong package (not a toolbox)', async () => {

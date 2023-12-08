@@ -1,5 +1,5 @@
 import { emptyProject } from './test.utils'
-import { from, merge, Observable, of } from 'rxjs'
+import { firstValueFrom, from, merge, Observable, of } from 'rxjs'
 import { ProjectState } from '../lib/project'
 import {
     concatMap,
@@ -90,151 +90,101 @@ function addMacro() {
     }
 }
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('some test', (done) => {
+test('some test', async () => {
     const project = emptyProject()
 
-    of(project)
-        .pipe(
-            addMacro(),
-            mergeMap((project) => {
-                const state = new Deployers.InnerObservablesPool({
-                    parentUid: 'test',
-                    environment: project.environment,
-                })
-                return state.inner$({
+    const test$ = of(project).pipe(
+        addMacro(),
+        mergeMap((project) => {
+            const state = new Deployers.InnerObservablesPool({
+                parentUid: 'test',
+                environment: project.environment,
+            })
+            return state.inner$({
+                workflow: {
+                    branches: ['(test-macro#macro)'],
+                    configurations: { macro: { takeCount: 2 } },
+                },
+                input: '0(#macro)',
+                output: '(#macro)0',
+                message: { data: 5 },
+                purgeOnDone: true,
+            })
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+    const d = await firstValueFrom(test$)
+    expect(d).toHaveLength(2)
+})
+
+test('with merge map', async () => {
+    const project = emptyProject()
+    let state: Deployers.InnerObservablesPool
+    const test$ = of(project).pipe(
+        addMacro(),
+        tap((project) => {
+            state = new Deployers.InnerObservablesPool({
+                parentUid: 'test',
+                environment: project.environment,
+            })
+        }),
+        mergeMap(() => {
+            // outer observable
+            return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
+                map((data) => ({ data })),
+            )
+        }),
+        mergeMap(({ data }) => {
+            return state
+                .inner$({
                     workflow: {
                         branches: ['(test-macro#macro)'],
-                        configurations: { macro: { takeCount: 2 } },
+                        configurations: {
+                            macro: { takeCount: 3, interval: 100 },
+                        },
                     },
                     input: '0(#macro)',
                     output: '(#macro)0',
-                    message: { data: 5 },
-                    purgeOnDone: true,
+                    message: { data },
+                    purgeOnDone: false,
                 })
-            }),
-            tap((d) => {
-                console.log(d)
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((d) => {
-            expect(d).toHaveLength(2)
-            done()
-        })
+                .pipe(delay(0))
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+
+    const d = await firstValueFrom(test$)
+    expect(d).toHaveLength(6)
+    const values = d.map(({ data }) => data)
+    // mergeMap does not enforce a particular policy, we may end in practice one
+    // of the two following possibilities
+    const expected = [
+        [2, 2, 10, 2, 10, 10],
+        [2, 2, 2, 10, 10, 10],
+    ]
+    expect(expected).toContainEqual(values)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('with merge map', (done) => {
+test('with switch map', async () => {
     const project = emptyProject()
     let state: Deployers.InnerObservablesPool
-    of(project)
-        .pipe(
-            addMacro(),
-            tap((project) => {
-                state = new Deployers.InnerObservablesPool({
-                    parentUid: 'test',
-                    environment: project.environment,
-                })
-            }),
-            mergeMap(() => {
-                // outer observable
-                return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
-                    map((data) => ({ data })),
-                )
-            }),
-            mergeMap(({ data }) => {
-                return state
-                    .inner$({
-                        workflow: {
-                            branches: ['(test-macro#macro)'],
-                            configurations: {
-                                macro: { takeCount: 3, interval: 100 },
-                            },
-                        },
-                        input: '0(#macro)',
-                        output: '(#macro)0',
-                        message: { data },
-                        purgeOnDone: false,
-                    })
-                    .pipe(delay(0))
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((d) => {
-            expect(d).toHaveLength(6)
-            const values = d.map(({ data }) => data)
-            expect(values).toEqual([2, 2, 10, 2, 10, 10])
-            done()
-        })
-})
-
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('with switch map', (done) => {
-    const project = emptyProject()
-    let state: Deployers.InnerObservablesPool
-    of(project)
-        .pipe(
-            addMacro(),
-            tap((project) => {
-                state = new Deployers.InnerObservablesPool({
-                    parentUid: 'test',
-                    environment: project.environment,
-                })
-            }),
-            mergeMap(() => {
-                // outer observable
-                return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
-                    map((data) => ({ data })),
-                )
-            }),
-            switchMap(({ data }) => {
-                return state
-                    .inner$({
-                        workflow: {
-                            branches: ['(test-macro#macro)'],
-                            configurations: {
-                                macro: { takeCount: 3, interval: 100 },
-                            },
-                        },
-                        message: { data },
-                        input: '0(#macro)',
-                        output: '(#macro)0',
-                        purgeOnDone: false,
-                    })
-                    .pipe(delay(0))
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((d) => {
-            expect(d).toHaveLength(5)
-            const values = d.map(({ data }) => data)
-            expect(values).toEqual([2, 2, 10, 10, 10])
-            done()
-        })
-})
-
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('with concat map', (done) => {
-    const project = emptyProject()
-    let state: Deployers.InnerObservablesPool
-    of(project)
-        .pipe(
-            addMacro(),
-            tap((project) => {
-                state = new Deployers.InnerObservablesPool({
-                    parentUid: 'test',
-                    environment: project.environment,
-                })
-            }),
-            mergeMap(() => {
-                // outer observable
-                return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
-                    map((data) => ({ data })),
-                )
-            }),
-            concatMap(({ data }) => {
-                const args = {
+    const test$ = of(project).pipe(
+        addMacro(),
+        tap((project) => {
+            state = new Deployers.InnerObservablesPool({
+                parentUid: 'test',
+                environment: project.environment,
+            })
+        }),
+        mergeMap(() => {
+            // outer observable
+            return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
+                map((data) => ({ data })),
+            )
+        }),
+        switchMap(({ data }) => {
+            return state
+                .inner$({
                     workflow: {
                         branches: ['(test-macro#macro)'],
                         configurations: {
@@ -245,15 +195,54 @@ test('with concat map', (done) => {
                     input: '0(#macro)',
                     output: '(#macro)0',
                     purgeOnDone: false,
-                }
-                return state.inner$(args).pipe(delay(0))
-            }),
-            reduce((acc, e) => [...acc, e], []),
-        )
-        .subscribe((d) => {
-            expect(d).toHaveLength(6)
-            const values = d.map(({ data }) => data)
-            expect(values).toEqual([2, 2, 2, 10, 10, 10])
-            done()
-        })
+                })
+                .pipe(delay(0))
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+
+    const d = await firstValueFrom(test$)
+    expect(d).toHaveLength(5)
+    const values = d.map(({ data }) => data)
+    expect(values).toEqual([2, 2, 10, 10, 10])
+})
+
+test('with concat map', async () => {
+    const project = emptyProject()
+    let state: Deployers.InnerObservablesPool
+    const test$ = of(project).pipe(
+        addMacro(),
+        tap((project) => {
+            state = new Deployers.InnerObservablesPool({
+                parentUid: 'test',
+                environment: project.environment,
+            })
+        }),
+        mergeMap(() => {
+            // outer observable
+            return merge(of(1).pipe(delay(0)), of(5).pipe(delay(200))).pipe(
+                map((data) => ({ data })),
+            )
+        }),
+        concatMap(({ data }) => {
+            const args = {
+                workflow: {
+                    branches: ['(test-macro#macro)'],
+                    configurations: {
+                        macro: { takeCount: 3, interval: 100 },
+                    },
+                },
+                message: { data },
+                input: '0(#macro)',
+                output: '(#macro)0',
+                purgeOnDone: false,
+            }
+            return state.inner$(args).pipe(delay(0))
+        }),
+        reduce((acc, e) => [...acc, e], []),
+    )
+    const d = await firstValueFrom(test$)
+    expect(d).toHaveLength(6)
+    const values = d.map(({ data }) => data)
+    expect(values).toEqual([2, 2, 2, 10, 10, 10])
 })

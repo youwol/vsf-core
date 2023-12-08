@@ -1,5 +1,5 @@
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
-import { from, Observable, of } from 'rxjs'
+import { firstValueFrom, from, Observable, of } from 'rxjs'
 import { mergeMap, tap } from 'rxjs/operators'
 import { Configurations } from '../lib'
 import { MacroConfiguration, ProjectState } from '../lib/project'
@@ -113,61 +113,55 @@ test('add a macro + API (index) + instance', async () => {
     })
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('add 2 macros & play', (done) => {
+test('add 2 macros & play', async () => {
     const project = emptyProject()
-    of(project)
-        .pipe(
-            mergeMap(() => {
-                return from(
-                    project.with({
-                        workflow: {
-                            branches: [
-                                '(test-macro0#macroOf)>>(test-macro1#macroMap)',
-                            ],
-                        },
-                        macros: [
-                            {
-                                typeId: 'test-macro0',
-                                workflow: { branches: ['(of#of)>>(map#map)'] },
-                                api: {
-                                    outputs: ['(#map)0'],
-                                },
-                            },
-                            {
-                                typeId: 'test-macro1',
-                                workflow: { branches: ['(map#map)'] },
-                                api: {
-                                    inputs: ['0(#map)'],
-                                    outputs: ['(#map)0'],
-                                },
-                            },
+    const test$ = of(project).pipe(
+        mergeMap(() => {
+            return from(
+                project.with({
+                    workflow: {
+                        branches: [
+                            '(test-macro0#macroOf)>>(test-macro1#macroMap)',
                         ],
-                    }),
-                )
-            }),
-            tap((project) => {
-                const { modules, connections } = project.instancePool
-                expect(modules).toHaveLength(2)
-                expect(connections).toHaveLength(1)
-                expect(project.environment.macrosToolbox.modules).toHaveLength(
-                    2,
-                )
-                const flatPool = project.instancePool.inspector().flat()
-                expect(flatPool.connections).toHaveLength(2)
-                expect(flatPool.modules).toHaveLength(5)
-            }),
-            mergeMap((project) => {
-                return project.instancePool.inspector().getObservable({
-                    moduleId: 'macroMap',
-                    slotId: 'output_0$',
-                })
-            }),
-        )
-        .subscribe((message) => {
-            expect(message.data).toEqual({})
-            done()
-        })
+                    },
+                    macros: [
+                        {
+                            typeId: 'test-macro0',
+                            workflow: { branches: ['(of#of)>>(map#map)'] },
+                            api: {
+                                outputs: ['(#map)0'],
+                            },
+                        },
+                        {
+                            typeId: 'test-macro1',
+                            workflow: { branches: ['(map#map)'] },
+                            api: {
+                                inputs: ['0(#map)'],
+                                outputs: ['(#map)0'],
+                            },
+                        },
+                    ],
+                }),
+            )
+        }),
+        tap((project) => {
+            const { modules, connections } = project.instancePool
+            expect(modules).toHaveLength(2)
+            expect(connections).toHaveLength(1)
+            expect(project.environment.macrosToolbox.modules).toHaveLength(2)
+            const flatPool = project.instancePool.inspector().flat()
+            expect(flatPool.connections).toHaveLength(2)
+            expect(flatPool.modules).toHaveLength(5)
+        }),
+        mergeMap((project) => {
+            return project.instancePool.inspector().getObservable({
+                moduleId: 'macroMap',
+                slotId: 'output_0$',
+            })
+        }),
+    )
+    const message = await firstValueFrom(test$)
+    expect(message.data).toEqual({})
 })
 
 function createMacro() {
@@ -228,62 +222,56 @@ function createMacro() {
         )
     }
 }
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('add 2 macros + default config & play', (done) => {
+
+test('add 2 macros + default config & play', async () => {
     const project = emptyProject()
-    of(project)
-        .pipe(
-            createMacro(),
-            mergeMap((project) => {
-                return from(
-                    project.with({
-                        workflow: { branches: ['(test-macro0#macro)'] },
-                    }),
-                )
-            }),
-            mergeMap((project) => {
-                return project.instancePool.inspector().getObservable({
-                    moduleId: 'macro',
-                    slotId: 'output_0$',
-                })
-            }),
-        )
-        .subscribe((message) => {
-            expect(message.data).toBe(42)
-            done()
-        })
+    const test$ = of(project).pipe(
+        createMacro(),
+        mergeMap((project) => {
+            return from(
+                project.with({
+                    workflow: { branches: ['(test-macro0#macro)'] },
+                }),
+            )
+        }),
+        mergeMap((project) => {
+            return project.instancePool.inspector().getObservable({
+                moduleId: 'macro',
+                slotId: 'output_0$',
+            })
+        }),
+    )
+
+    const message = await firstValueFrom(test$)
+    expect(message.data).toBe(42)
 })
 
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('add 2 macros + dyn. config & play', (done) => {
+test('add 2 macros + dyn. config & play', async () => {
     const project = emptyProject()
-    of(project)
-        .pipe(
-            createMacro(),
-            mergeMap((project) => {
-                return from(
-                    project.with({
-                        workflow: {
-                            branches: ['(test-macro0#macro)'],
-                            configurations: {
-                                macro: {
-                                    value: 1,
-                                    factor: 10,
-                                },
+    const test$ = of(project).pipe(
+        createMacro(),
+        mergeMap((project) => {
+            return from(
+                project.with({
+                    workflow: {
+                        branches: ['(test-macro0#macro)'],
+                        configurations: {
+                            macro: {
+                                value: 1,
+                                factor: 10,
                             },
                         },
-                    }),
-                )
-            }),
-            mergeMap((project) => {
-                return project.instancePool.inspector().getObservable({
-                    moduleId: 'macro',
-                    slotId: 'output_0$',
-                })
-            }),
-        )
-        .subscribe((message) => {
-            expect(message.data).toBe(10)
-            done()
-        })
+                    },
+                }),
+            )
+        }),
+        mergeMap((project) => {
+            return project.instancePool.inspector().getObservable({
+                moduleId: 'macro',
+                slotId: 'output_0$',
+            })
+        }),
+    )
+    const message = await firstValueFrom(test$)
+    expect(message.data).toBe(10)
 })

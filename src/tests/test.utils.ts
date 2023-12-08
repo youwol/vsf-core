@@ -2,7 +2,14 @@ import './mock-requests'
 import { toolbox } from './toolbox'
 import { Environment, ProjectState } from '../lib/project'
 import { RootRouter } from '@youwol/http-primitives'
-import { Client, backendConfiguration } from '@youwol/webpm-client'
+import {
+    Client,
+    backendConfiguration,
+    WorkersPoolTypes,
+    InstallInputs,
+    installTestWorkersPoolModule,
+} from '@youwol/webpm-client'
+import { setup } from '../auto-generated'
 
 export function emptyProject() {
     return new ProjectState({
@@ -34,4 +41,27 @@ export function setupCdnHttpConnection(
         pathResource: '/api/assets-gateway/raw/package',
     })
     Client.Headers = RootRouter.Headers
+}
+
+export function installTestWorkersEnvironment() {
+    return installTestWorkersPoolModule({
+        onBeforeWorkerInstall: ({
+            message,
+        }: {
+            message: WorkersPoolTypes.MessageInstall
+        }) => {
+            // We replace the request to install @youwol/vsf-core
+            // This module will be picked from the actual sources of this project.
+            const install = message.cdnInstallation as InstallInputs
+            const vsfCore = `@youwol/vsf-core#${setup.version}`
+            install.modules = install.modules.filter(
+                (item) => item !== `@youwol/vsf-core#${setup.version}`,
+            )
+            const alias = Object.entries(install.aliases).find(
+                ([_, v]) =>
+                    typeof v === 'string' && v.includes('@youwol/vsf-core'),
+            )[0]
+            globalThis[alias] = vsfCore
+        },
+    })
 }

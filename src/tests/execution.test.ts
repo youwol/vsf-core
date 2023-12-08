@@ -1,12 +1,12 @@
 import { mergeMap } from 'rxjs/operators'
 import { Mesh, MeshStandardMaterial } from 'three'
-import { from } from 'rxjs'
+import { firstValueFrom, from } from 'rxjs'
 import { emptyProject, setupCdnHttpConnection } from './test.utils'
 
 setupCdnHttpConnection()
-// eslint-disable-next-line jest/no-done-callback -- more readable that way
-test('execution', (done) => {
-    from(
+
+test('execution', async () => {
+    const test$ = from(
         emptyProject().with({
             workflow: {
                 branches: ['(of#of)>>(filter#filter)>#a0>(sphere#s0)'],
@@ -19,17 +19,14 @@ test('execution', (done) => {
                 },
             },
         }),
+    ).pipe(
+        mergeMap((project) => {
+            return project.getObservable({
+                moduleId: 's0',
+                slotId: 'output$',
+            })
+        }),
     )
-        .pipe(
-            mergeMap((project) => {
-                return project.getObservable({
-                    moduleId: 's0',
-                    slotId: 'output$',
-                })
-            }),
-        )
-        .subscribe(({ data }) => {
-            expect(data).toBeInstanceOf(Mesh)
-            done()
-        })
+    const { data } = await firstValueFrom(test$)
+    expect(data).toBeInstanceOf(Mesh)
 })
