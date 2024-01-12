@@ -1188,7 +1188,7 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
-"@youwol/eslint-config@1.0.0":
+"@youwol/eslint-config@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@youwol/eslint-config/-/eslint-config-1.0.0.tgz#867c06947cc32085d9bac832d4905a36b11442ac"
   integrity sha512-w32ZW+2m2vp7Ah+GEU4drzoFGSVwROc0M3HhDruYLkWcZalbCFyBPtjrBD8xBM9r0YlKwjBd5Jmn6TXVVyFr/Q==
@@ -1210,10 +1210,10 @@
   dependencies:
     rxjs "^7.5.6"
 
-"@youwol/jest-preset@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@youwol/jest-preset/-/jest-preset-1.0.0.tgz#de4dbe03ceaa091f4e6fc1b5be78f3adb2aeb889"
-  integrity sha512-xH+c8XdA2BRd3ojtzJa9aKVoJavMHamrC/r7OFPO7TqPZrL3+PwgUS87gPcYQENxnanobGOXuCBSJ3tyrD73uA==
+"@youwol/jest-preset@^1.0.0":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@youwol/jest-preset/-/jest-preset-1.0.1.tgz#67370eb57c1bd0a31c17164108b1dbf4f3afc8fe"
+  integrity sha512-upbgFYnmqZUCxz3JmL66VsW1TNV45LABw1BZLbw7xHqcsk5HeTrrg1OtESTKNokL/UwTxib0b+Rf9Rqn134n6Q==
   dependencies:
     "@types/jest" "^29.5.6"
     isomorphic-fetch "^3.0.0"
@@ -1231,7 +1231,7 @@
     "@youwol/rx-vdom" "^1.0.1"
     rxjs "^7.5.6"
 
-"@youwol/prettier-config@1.0.0":
+"@youwol/prettier-config@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@youwol/prettier-config/-/prettier-config-1.0.0.tgz#f4ae9ec39793c66e5f3b7976c2da4b82e2c9ebe2"
   integrity sha512-qlYeQf/be2Bqa/jfpu3aW2RTve7NRWC1umDH8XyDTL7ns2KE6B8VgxwQhE3L9yyRc5TZfPDATg+TvD/W32Y7oQ==
@@ -1256,7 +1256,7 @@
     conditional-type-checks "^1.0.6"
     csstype "^2.6.0"
 
-"@youwol/tsconfig@1.0.0":
+"@youwol/tsconfig@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@youwol/tsconfig/-/tsconfig-1.0.0.tgz#76e8569781dc4bdc53f27dc0b4f3cd6e17e1bd52"
   integrity sha512-R+8tI08X56yOpSfGTJ2gG5GWZVpirr63Prmtfe3EQgc0pXhNpE4kzoxS6ByYsRZPn+ydGJxE61P424uycm+rNQ==
