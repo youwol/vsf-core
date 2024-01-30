@@ -185,9 +185,8 @@ export type GetGenericInput<Type> = Type extends IOs.Input<infer X> ? X : never
  * Generic type of Observable, or never if not possible.
  * @typeParam Type IOs.Input type
  */
-export type GetGenericObservable<Type> = Type extends Observable<infer X>
-    ? X
-    : never
+export type GetGenericObservable<Type> =
+    Type extends Observable<infer X> ? X : never
 
 /**
  * Argument of the {@link OutputsMapper}.
