@@ -75,7 +75,7 @@ for file in [
     ".prettierignore",
     "LICENSE",
     "package.json",
-    # "tsconfig.json", because of the rx-vdom-config.ts
+    "tsconfig.json",
     "webpack.config.ts",
 ]:
     shutil.copyfile(src=folder_path / ".template" / file, dst=folder_path / file)
