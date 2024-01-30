@@ -31,35 +31,36 @@ export type ImmutableObj<T, Depth extends 'deep' | 'shallow' = 'deep'> = {
  * *  do not handle Tuple (cause errors)
  * *  do not handle IsUnknown (cause errors)
  */
-export type Immutable<T> = T extends Exclude<Builtin, Error>
-    ? T
-    : T extends Map<infer Keys, infer Values>
-      ? ReadonlyMap<Immutable<Keys>, Immutable<Values>>
-      : T extends ReadonlyMap<infer Keys, infer Values>
-        ? ReadonlyMap<Immutable<Keys>, Immutable<Values>>
-        : T extends WeakMap<infer Keys, infer Values>
-          ? WeakMap<Immutable<Keys>, Immutable<Values>>
-          : T extends Set<infer Values>
-            ? Set<Immutable<Values>>
-            : T extends ReadonlySet<infer Values>
-              ? ReadonlySet<Immutable<Values>>
-              : T extends WeakSet<infer Values>
-                ? WeakSet<Immutable<Values>>
-                : T extends Promise<infer Value>
-                  ? Promise<Immutable<Value>>
-                  : T extends BehaviorSubject<infer Value>
-                    ? BehaviorSubject<Immutable<Value>>
-                    : T extends ReplaySubject<infer Value>
-                      ? ReplaySubject<Immutable<Value>>
-                      : T extends Subject<infer Value>
-                        ? Subject<Immutable<Value>>
-                        : T extends Observable<infer Value>
-                          ? Observable<Immutable<Value>>
-                          : T extends AnyArray<infer Values>
-                            ? Immutables<Values> //T extends IsTuple<T> ? ImmutableObj<T> : Immutables<Values>
-                            : T extends object
-                              ? ImmutableObj<T>
-                              : Readonly<T>
+export type Immutable<T> =
+    T extends Exclude<Builtin, Error>
+        ? T
+        : T extends Map<infer Keys, infer Values>
+          ? ReadonlyMap<Immutable<Keys>, Immutable<Values>>
+          : T extends ReadonlyMap<infer Keys, infer Values>
+            ? ReadonlyMap<Immutable<Keys>, Immutable<Values>>
+            : T extends WeakMap<infer Keys, infer Values>
+              ? WeakMap<Immutable<Keys>, Immutable<Values>>
+              : T extends Set<infer Values>
+                ? Set<Immutable<Values>>
+                : T extends ReadonlySet<infer Values>
+                  ? ReadonlySet<Immutable<Values>>
+                  : T extends WeakSet<infer Values>
+                    ? WeakSet<Immutable<Values>>
+                    : T extends Promise<infer Value>
+                      ? Promise<Immutable<Value>>
+                      : T extends BehaviorSubject<infer Value>
+                        ? BehaviorSubject<Immutable<Value>>
+                        : T extends ReplaySubject<infer Value>
+                          ? ReplaySubject<Immutable<Value>>
+                          : T extends Subject<infer Value>
+                            ? Subject<Immutable<Value>>
+                            : T extends Observable<infer Value>
+                              ? Observable<Immutable<Value>>
+                              : T extends AnyArray<infer Values>
+                                ? Immutables<Values> //T extends IsTuple<T> ? ImmutableObj<T> : Immutables<Values>
+                                : T extends object
+                                  ? ImmutableObj<T>
+                                  : Readonly<T>
 /**
  * Shorthand utility type for `Observable<Immutable<T>>`
  */
