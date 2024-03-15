@@ -6,7 +6,12 @@ import {
     setupCdnHttpConnection,
 } from './test.utils'
 
-jest.setTimeout(15 * 1000)
+// Typically, the default timeout duration of 5 seconds is sufficient. However, the installation process from remote
+// environments, as encountered in this test suite, has occasionally failed (as observed in nightly builds).
+// The purpose of extending the timeout is to assess its effect on this issue.
+// TG-2062 : High rate of failure for some vsf-core tests suites
+jest.setTimeout(30 * 1000)
+
 console.log = () => {
     /*no op*/
 }
