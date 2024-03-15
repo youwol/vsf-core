@@ -53,6 +53,13 @@ test('start$ & end$', async () => {
 })
 
 test('transmission delay', async () => {
+    const expectInRange = (
+        value: number,
+        { from, to }: { from: number; to: number },
+    ) => {
+        expect(value).toBeGreaterThanOrEqual(from)
+        expect(value).toBeLessThanOrEqual(to)
+    }
     const test$ = from(
         emptyProject().with({
             workflow: {
@@ -77,10 +84,10 @@ test('transmission delay', async () => {
     const ends = await firstValueFrom(test$)
     const stamps = ends.map((e) => e - ends[0])
     expect(stamps[0]).toBe(0)
-    // For the next assertions we remove 1 ms from the truly expected delay.
-    // Just because sometimes things are not working exactly as expected...I don't know why.
-    expect(stamps[1]).toBeGreaterThanOrEqual(49)
-    expect(stamps[1]).toBeLessThanOrEqual(54)
-    expect(stamps[2]).toBeGreaterThanOrEqual(99)
-    expect(stamps[2]).toBeLessThanOrEqual(104)
+    // The following assertions account for a margin beyond the anticipated delay to accommodate variability.
+    // While ideally, we expect the timings to be stamps[1] -> 50 and stamps[2] -> 100, deviations are notably more
+    // pronounced in macOS jobs during the py-youwol nightly builds.
+    // This discrepancy has led to a high failure rate in certain vsf-core test suites, as tracked in TG-2062.
+    expectInRange(stamps[1], { from: 40, to: 75 })
+    expectInRange(stamps[2], { from: 90, to: 125 })
 })
