@@ -1,25 +1,15 @@
 
 const runTimeDependencies = {
     "externals": {
-        "rxjs": "^7.5.6",
-        "@youwol/webpm-client": "^3.0.0",
         "@youwol/logging": "^0.2.0",
         "@youwol/rx-tree-views": "^0.3.1",
+        "@youwol/webpm-client": "^3.0.0",
+        "rxjs": "^7.5.6",
         "ts-essentials": "^9.3.1"
     },
     "includedInBundle": {}
 }
 const externals = {
-    "rxjs": {
-        "commonjs": "rxjs",
-        "commonjs2": "rxjs",
-        "root": "rxjs_APIv7"
-    },
-    "@youwol/webpm-client": {
-        "commonjs": "@youwol/webpm-client",
-        "commonjs2": "@youwol/webpm-client",
-        "root": "@youwol/webpm-client_APIv3"
-    },
     "@youwol/logging": {
         "commonjs": "@youwol/logging",
         "commonjs2": "@youwol/logging",
@@ -30,10 +20,15 @@ const externals = {
         "commonjs2": "@youwol/rx-tree-views",
         "root": "@youwol/rx-tree-views_APIv03"
     },
-    "ts-essentials": {
-        "commonjs": "ts-essentials",
-        "commonjs2": "ts-essentials",
-        "root": "ts-essentials_APIv9"
+    "@youwol/webpm-client": {
+        "commonjs": "@youwol/webpm-client",
+        "commonjs2": "@youwol/webpm-client",
+        "root": "@youwol/webpm-client_APIv3"
+    },
+    "rxjs": {
+        "commonjs": "rxjs",
+        "commonjs2": "rxjs",
+        "root": "rxjs_APIv7"
     },
     "rxjs/operators": {
         "commonjs": "rxjs/operators",
@@ -42,17 +37,14 @@ const externals = {
             "rxjs_APIv7",
             "operators"
         ]
+    },
+    "ts-essentials": {
+        "commonjs": "ts-essentials",
+        "commonjs2": "ts-essentials",
+        "root": "ts-essentials_APIv9"
     }
 }
 const exportedSymbols = {
-    "rxjs": {
-        "apiKey": "7",
-        "exportedSymbol": "rxjs"
-    },
-    "@youwol/webpm-client": {
-        "apiKey": "3",
-        "exportedSymbol": "@youwol/webpm-client"
-    },
     "@youwol/logging": {
         "apiKey": "02",
         "exportedSymbol": "@youwol/logging"
@@ -60,6 +52,14 @@ const exportedSymbols = {
     "@youwol/rx-tree-views": {
         "apiKey": "03",
         "exportedSymbol": "@youwol/rx-tree-views"
+    },
+    "@youwol/webpm-client": {
+        "apiKey": "3",
+        "exportedSymbol": "@youwol/webpm-client"
+    },
+    "rxjs": {
+        "apiKey": "7",
+        "exportedSymbol": "rxjs"
     },
     "ts-essentials": {
         "apiKey": "9",
