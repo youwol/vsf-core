@@ -64,6 +64,17 @@ export interface DeployerTrait {
     inspector(): Inspector
 
     /**
+     * Get a running instance, either module or connection.
+     *
+     * Short access for {@link Inspector.get}.
+     *
+     * @param id id of the instance
+     */
+    get(
+        id: string,
+    ): Immutable<Connections.ConnectionTrait | Modules.ImplementationTrait>
+
+    /**
      * Deploy a {@link Chart}.
      * Environment is kept unchanged: eventual dependencies should have been installed first (e.g. using
      * {@link EnvironmentTrait}).
@@ -240,6 +251,12 @@ export class InstancePool implements DeployerTrait {
 
     inspector(): Inspector {
         return new Inspector({ pool: this })
+    }
+
+    get(
+        id: string,
+    ): Immutable<Connections.ConnectionTrait | Modules.ImplementationTrait> {
+        return this.inspector().get(id)
     }
 }
 

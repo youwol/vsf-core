@@ -566,6 +566,15 @@ export class ProjectState {
         })
     }
 
+    getHtml(id: string, config?: unknown) {
+        if (this.getModule(id) && this.getModule(id).html) {
+            return this.getModule(id).html(config)
+        }
+        if (this.views[id]) {
+            return this.views[id](this.instancePool, config)
+        }
+    }
+
     /**
      * Register {@link FlowchartAnnotation} elements in the project.
      * Any element of the workflow rendered in the canvas (e.g. modules, connections, layers) matching
