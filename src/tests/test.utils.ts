@@ -6,8 +6,8 @@ import {
     Client,
     backendConfiguration,
     WorkersPoolTypes,
-    InstallInputs,
     installTestWorkersPoolModule,
+    normalizeInstallInputs,
 } from '@youwol/webpm-client'
 import { setup } from '../auto-generated'
 
@@ -52,12 +52,12 @@ export function installTestWorkersEnvironment() {
         }) => {
             // We replace the request to install @youwol/vsf-core
             // This module will be picked from the actual sources of this project.
-            const install = message.cdnInstallation as InstallInputs
+            const install = normalizeInstallInputs(message.cdnInstallation)
             const vsfCore = `@youwol/vsf-core#${setup.version}`
-            install.modules = install.modules.filter(
+            install.esm.modules = install.esm.modules.filter(
                 (item) => item !== `@youwol/vsf-core#${setup.version}`,
             )
-            const alias = Object.entries(install.aliases).find(
+            const alias = Object.entries(install.esm.aliases).find(
                 ([_, v]) =>
                     typeof v === 'string' && v.includes('@youwol/vsf-core'),
             )[0]

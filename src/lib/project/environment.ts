@@ -8,7 +8,11 @@ import {
 } from '@youwol/logging'
 import { Observable, ReplaySubject } from 'rxjs'
 import { filter, map, scan, shareReplay } from 'rxjs/operators'
-import { install, installWorkersPoolModule } from '@youwol/webpm-client'
+import {
+    install,
+    installWorkersPoolModule,
+    normalizeInstallInputs,
+} from '@youwol/webpm-client'
 // eslint-disable-next-line unused-imports/no-unused-imports -- For documentation in `install`
 import { ProjectElements } from './models'
 import { setup } from '../../auto-generated'
@@ -24,6 +28,7 @@ import {
 } from '../common'
 import { Modules, Deployers, Macros, Configurations } from '..'
 import { defaultViewsFactory } from './'
+import { asMutable } from '../..'
 
 export const customModulesToolbox = {
     name: 'Custom Modules',
@@ -321,21 +326,42 @@ export class Environment implements EnvironmentTrait {
                     })
                     .reduce(
                         (acc, { factory }) => {
-                            const dependencies =
-                                factory.declaration.dependencies
+                            const dependencies = normalizeInstallInputs(
+                                asMutable(factory.declaration.dependencies),
+                            )
                             return {
-                                modules: [
-                                    ...acc.modules,
-                                    ...(dependencies.modules || []),
-                                ],
-                                scripts: [
-                                    ...acc.scripts,
-                                    ...(dependencies.scripts || []),
-                                ],
+                                esm: {
+                                    modules: [
+                                        ...acc.esm.modules,
+                                        ...(dependencies.esm.modules || []),
+                                    ],
+                                    scripts: [
+                                        ...acc.esm.scripts,
+                                        ...(dependencies.esm.scripts || []),
+                                    ],
+                                },
+                                backends: {
+                                    modules: [
+                                        ...acc.backends.modules,
+                                        ...(dependencies.backends.modules ||
+                                            []),
+                                    ],
+                                },
+                                pyodide: {
+                                    modules: [
+                                        ...acc.pyodide.modules,
+                                        ...(dependencies.pyodide.modules || []),
+                                    ],
+                                },
                                 css: [...acc.css, ...(dependencies.css || [])],
                             }
                         },
-                        { modules: [], scripts: [], css: [] },
+                        {
+                            esm: { modules: [], scripts: [] },
+                            backends: { modules: [] },
+                            pyodide: { modules: [] },
+                            css: [],
+                        },
                     )
 
                 ctx.info('Dependencies installation', {
@@ -343,17 +369,35 @@ export class Environment implements EnvironmentTrait {
                     withDependencies,
                 })
                 if (
-                    withDependencies.modules.length +
-                        withDependencies.scripts.length +
+                    withDependencies.esm.modules.length +
+                        withDependencies.esm.scripts.length +
+                        withDependencies.backends.modules.length +
+                        withDependencies.pyodide.modules.length +
                         withDependencies.css.length ==
                     0
                 ) {
                     return
                 }
                 await install({
-                    modules: [...new Set(withDependencies.modules)],
-                    scripts: [...new Set(withDependencies.scripts)],
-                    css: [...new Set(withDependencies.css)],
+                    esm: {
+                        modules: Array.from(
+                            new Set(withDependencies.esm.modules),
+                        ),
+                        scripts: Array.from(
+                            new Set(withDependencies.esm.scripts),
+                        ),
+                    },
+                    backends: {
+                        modules: Array.from(
+                            new Set(withDependencies.backends.modules),
+                        ),
+                    },
+                    pyodide: {
+                        modules: Array.from(
+                            new Set(withDependencies.pyodide.modules),
+                        ),
+                    },
+                    css: Array.from(new Set(withDependencies.css)),
                 })
             },
         )

@@ -3,7 +3,7 @@ const runTimeDependencies = {
     "externals": {
         "@youwol/logging": "^0.2.0",
         "@youwol/rx-tree-views": "^0.3.1",
-        "@youwol/webpm-client": "^3.0.0",
+        "@youwol/webpm-client": "^3.0.7",
         "rxjs": "^7.5.6",
         "ts-essentials": "^9.3.1"
     },
@@ -85,7 +85,7 @@ const entries = {
 export const setup = {
     name:'@youwol/vsf-core',
         assetId:'QHlvdXdvbC92c2YtY29yZQ==',
-    version:'0.3.2-wip',
+    version:'0.3.2',
     shortDescription:"Core layer of Visual Studio Flow ecosystem",
     developerDocumentation:'https://platform.youwol.com/applications/@youwol/cdn-explorer/latest?package=@youwol/vsf-core&tab=doc',
     npmPackage:'https://www.npmjs.com/package/@youwol/vsf-core',
@@ -131,7 +131,7 @@ export const setup = {
         const parameters = installParameters || {}
         const scripts = [
             ...(parameters.scripts || []),
-            `@youwol/vsf-core#0.3.2-wip~dist/@youwol/vsf-core/${entry.name}.js`
+            `@youwol/vsf-core#0.3.2~dist/@youwol/vsf-core/${entry.name}.js`
         ]
         const modules = [
             ...(parameters.modules || []),

@@ -47,9 +47,9 @@ test('import libraries', async () => {
 test('install dependencies', async () => {
     let env = new Environment()
     env = await env.install({ toolboxes: ['@youwol/vsf-pmp'], libraries: [] })
-    expect(globalThis['THREE']).toBeFalsy()
+    expect(globalThis['three']).toBeFalsy()
     await env.installDependencies({ modules: [{ typeId: 'toThree' }] })
-    expect(globalThis['THREE']).toBeTruthy()
+    expect(globalThis['three']).toBeTruthy()
     const module = await env.instantiateModule({ typeId: 'toThree', scope: {} })
     expect(module).toBeTruthy()
 })
