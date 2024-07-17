@@ -18,7 +18,7 @@ pkg_json = parse_json(folder_path / "package.json")
 
 load_dependencies = {
     "rxjs": "^7.5.6",
-    "@youwol/webpm-client": "^3.0.0",
+    "@youwol/webpm-client": "^3.0.7",
     "@youwol/logging": "^0.2.0",
 }
 

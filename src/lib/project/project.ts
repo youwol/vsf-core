@@ -104,6 +104,11 @@ export class ProjectState {
      */
     public readonly runningWorksheets: Immutables<RunningWorksheet> = []
 
+    /**
+     * Historic of project creation.
+     */
+    public readonly historic: Immutables<ProjectElements> = []
+
     constructor(
         params: {
             main?: Immutable<Workflows.WorkflowModel>
@@ -113,11 +118,25 @@ export class ProjectState {
             environment?: Immutable<Environment>
             worksheets?: Immutables<Worksheet>
             runningWorksheets?: Immutables<RunningWorksheet>
+            historic?: Immutables<ProjectElements>
         } = {},
     ) {
         Object.assign(this, params)
     }
 
+    public addHistoric(command: Immutable<ProjectElements>) {
+        return new ProjectState({
+            ...this,
+            historic: [...this.historic, command],
+        })
+    }
+    async clone() {
+        let p = new ProjectState()
+        for (const cmd of this.historic) {
+            p = await p.with(cmd)
+        }
+        return p
+    }
     /**
      * Install toolboxes & libraries.
      *
@@ -191,7 +210,8 @@ export class ProjectState {
         }
         elements = { ...defaultElements, ...elements }
 
-        let project: ProjectState = await this.install({
+        let project: ProjectState = this.addHistoric(elements)
+        project = await project.install({
             toolboxes: elements.toolboxes,
             libraries: elements.libraries,
         })
@@ -544,6 +564,15 @@ export class ProjectState {
                 [viewId]: vDOM,
             },
         })
+    }
+
+    getHtml(id: string, config?: unknown) {
+        if (this.getModule(id) && this.getModule(id).html) {
+            return this.getModule(id).html(config)
+        }
+        if (this.views[id]) {
+            return this.views[id](this.instancePool, config)
+        }
     }
 
     /**

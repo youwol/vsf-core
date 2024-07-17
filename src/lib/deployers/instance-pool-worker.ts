@@ -131,6 +131,10 @@ export class InstancePoolWorker implements DeployerTrait, WorkerProcessTrait {
         })
     }
 
+    get(id: string) {
+        return this.inspector().get(id)
+    }
+
     inspector() {
         return new Inspector({ pool: this })
     }
