@@ -85,7 +85,7 @@ const entries = {
 export const setup = {
     name:'@youwol/vsf-core',
         assetId:'QHlvdXdvbC92c2YtY29yZQ==',
-    version:'0.3.3',
+    version:'0.3.4-wip',
     shortDescription:"Core layer of Visual Studio Flow ecosystem",
     developerDocumentation:'https://platform.youwol.com/applications/@youwol/cdn-explorer/latest?package=@youwol/vsf-core&tab=doc',
     npmPackage:'https://www.npmjs.com/package/@youwol/vsf-core',
@@ -131,7 +131,7 @@ export const setup = {
         const parameters = installParameters || {}
         const scripts = [
             ...(parameters.scripts || []),
-            `@youwol/vsf-core#0.3.3~dist/@youwol/vsf-core/${entry.name}.js`
+            `@youwol/vsf-core#0.3.4-wip~dist/@youwol/vsf-core/${entry.name}.js`
         ]
         const modules = [
             ...(parameters.modules || []),
