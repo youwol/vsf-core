@@ -79,6 +79,7 @@ function prepareMessage({
         ),
         scope,
         context: rawMessage.context,
+        logger: step1.context,
     }
     step1.context.info("Module's input message prepared", inputMessage)
     return inputMessage

@@ -102,6 +102,7 @@ export type ProcessingMessage<TData = unknown, TConfigInstance = unknown> = {
     context: MessageContext
     configuration: Immutable<TConfigInstance>
     scope: Scope
+    logger: ContextLoggerTrait
 }
 
 /**
