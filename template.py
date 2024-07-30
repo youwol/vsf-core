@@ -50,6 +50,7 @@ template = Template(
             "three": "^0.152.0",
             "@types/three": "^0.152.0",
             "@youwol/http-primitives": "^0.2.0",
+            "@youwol/http-clients": "^3.0.0",
         },
     ),
     userGuide=False,
@@ -70,7 +71,6 @@ shutil.copyfile(
 
 for file in [
     "README.md",
-    ".gitignore",
     ".npmignore",
     ".prettierignore",
     "LICENSE",

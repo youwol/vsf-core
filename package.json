@@ -56,7 +56,8 @@
         "@youwol/rx-vdom": "^1.0.1",
         "three": "^0.152.0",
         "@types/three": "^0.152.0",
-        "@youwol/http-primitives": "^0.2.0"
+        "@youwol/http-primitives": "^0.2.0",
+        "@youwol/http-clients": "^3.0.0"
     },
     "webpm": {
         "dependencies": {

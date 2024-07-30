@@ -1306,6 +1306,14 @@
     eslint-plugin-tsdoc "^0.2.17"
     eslint-plugin-unused-imports "^3.1.0"
 
+"@youwol/http-clients@^3.0.0":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@youwol/http-clients/-/http-clients-3.0.1.tgz#b1ea113d7ce0c1addd9795b61c8c4b2c3ea81cb0"
+  integrity sha512-HyBhKE9lMDb5VweF9+jzA9F3Bnd+nNq9a970yJPwWAW28oM4Csebv0vlPhPIj4IgwXKzP5AZh4lTccAICIoDsQ==
+  dependencies:
+    "@youwol/http-primitives" "^0.2.0"
+    rxjs "^7.5.6"
+
 "@youwol/http-primitives@^0.2.0", "@youwol/http-primitives@^0.2.4":
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/@youwol/http-primitives/-/http-primitives-0.2.4.tgz#4d41aab6d12f72f03d1982c3b93acadea2c700ae"
