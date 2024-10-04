@@ -231,7 +231,14 @@ export function transmitInputMessage(
                 kind,
                 macro: macroUid,
                 ...target,
-                message,
+                // The 'logger' attribute cannot be serialized.
+                // It will be created within the worker by the modules.
+                message: message && {
+                    data: message.data,
+                    configuration: message.configuration,
+                    context: message.context,
+                    scope: message.scope,
+                },
             },
         })
     }
